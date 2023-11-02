@@ -36,7 +36,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritCommentUri;
-import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritPatchSetUri;
+import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritDiffPostfixUri;
+import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritPatchSetFilesUri;
 import static com.googlesource.gerrit.plugins.chatgpt.listener.EventListenerHandler.buildFullChangeId;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.mockito.Mockito.mock;
@@ -67,17 +68,26 @@ public class ChatGptReviewTest {
         when(config.getGptTemperature()).thenReturn(1.0);
         when(config.getGptStreamOutput()).thenReturn(true);
         when(config.getMaxReviewLines()).thenReturn(500);
+        when(config.getMaxReviewFileSize()).thenReturn(10000);
         when(config.getEnabledProjects()).thenReturn("");
         when(config.isProjectEnable()).thenReturn(true);
     }
 
     private void setupMockRequests() {
-        // Mocks the behavior of the getPatchSet request
-        WireMock.stubFor(WireMock.get(gerritPatchSetUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID)))
+        // Mocks the behavior of the gerritPatchSetFiles request
+        WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID)))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .withBody(Base64.getEncoder().encodeToString("myPatch".getBytes()))));
+                        .withBodyFile("gerritPatchSetFiles.json")));
+
+        // Mocks the behavior of the gerritPatchSet diff request
+        WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID)) +
+                            gerritDiffPostfixUri("test_file.py"))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(HTTP_OK)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                        .withBodyFile("gerritPatchSetDiff.json")));
 
         // Mocks the behavior of the askGpt request
         byte[] gptAnswer = Base64.getDecoder().decode("ZGF0YTogeyJpZCI6ImNoYXRjbXBsLTdSZDVOYVpEOGJNVTRkdnBVV2" +

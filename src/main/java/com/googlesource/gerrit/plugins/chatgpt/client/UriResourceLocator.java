@@ -10,8 +10,12 @@ public class UriResourceLocator {
         return "/a";
     }
 
-    public static String gerritPatchSetUri(String fullChangeId) {
-        return "/changes/" + fullChangeId + "/revisions/current/patch";
+    public static String gerritDiffPostfixUri(String filename) {
+        return "/" + filename + "/diff";
+    }
+
+    public static String gerritPatchSetFilesUri(String fullChangeId) {
+        return "/changes/" + fullChangeId + "/revisions/current/files";
     }
 
     public static String gerritCommentUri(String fullChangeId) {

@@ -11,7 +11,9 @@ public class Configuration {
 
     public static final String OPENAI_DOMAIN = "https://api.openai.com";
     public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
-    public static final String DEFAULT_GPT_PROMPT = "Act as a Code Review Helper, please review this patch set: ";
+    public static final String DEFAULT_GPT_PROMPT = "Act as a Code Review Helper. Review only the \"a\" (lines " +
+            "removed) and \"b\" (lines added) items of the following diff, using the lines in the \"ab\" items as " +
+            "context. ";
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
     public static final String KEY_GPT_PROMPT = "gptPrompt";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
@@ -21,6 +23,7 @@ public class Configuration {
     private static final boolean DEFAULT_PATCH_SET_REDUCTION = false;
     private static final boolean DEFAULT_PROJECT_ENABLE = false;
     private static final int DEFAULT_MAX_REVIEW_LINES = 1000;
+    private static final int DEFAULT_MAX_REVIEW_FILE_SIZE = 10000;
     private static final String KEY_GPT_TOKEN = "gptToken";
     private static final String KEY_GERRIT_AUTH_BASE_URL = "gerritAuthBaseUrl";
     private static final String KEY_GERRIT_USERNAME = "gerritUserName";
@@ -34,6 +37,7 @@ public class Configuration {
     private static final String KEY_ENABLED_PROJECTS = "enabledProjects";
     private static final String KEY_PATCH_SET_REDUCTION = "patchSetReduction";
     private static final String KEY_MAX_REVIEW_LINES = "maxReviewLines";
+    private static final String KEY_MAX_REVIEW_FILE_SIZE = "maxReviewFileSize";
     private final Map<String, Object> configsDynamically = Maps.newHashMap();
     private final PluginConfig globalConfig;
     private final PluginConfig projectConfig;
@@ -104,6 +108,10 @@ public class Configuration {
 
     public int getMaxReviewLines() {
         return getInt(KEY_MAX_REVIEW_LINES, DEFAULT_MAX_REVIEW_LINES);
+    }
+
+    public int getMaxReviewFileSize() {
+        return getInt(KEY_MAX_REVIEW_FILE_SIZE, DEFAULT_MAX_REVIEW_FILE_SIZE);
     }
 
     private String getValidatedOrThrow(String key) {
