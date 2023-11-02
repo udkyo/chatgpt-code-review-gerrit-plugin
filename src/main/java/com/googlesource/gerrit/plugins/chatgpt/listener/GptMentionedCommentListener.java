@@ -38,6 +38,7 @@ public class GptMentionedCommentListener implements EventListener {
         try {
             Configuration config = configCreator.createConfig(projectNameKey);
             String comment = ((CommentAddedEvent) event).comment;
+            log.debug("Processing comment: {}", comment);
             if (comment == null || !comment.contains("@" + config.getGerritUserName())) {
                 log.debug("Skipping action since the comment does not mention the ChatGpt bot." +
                                 " Expected bot name in comment: {}, Actual comment text: {}",

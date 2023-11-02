@@ -68,6 +68,8 @@ public class PatchSetReviewer {
             batches.add(batch.toString());
         }
         log.info("Review batches created: {}", batches.size());
+        log.debug("batches: {}", batches);
+
         return batches;
     }
 

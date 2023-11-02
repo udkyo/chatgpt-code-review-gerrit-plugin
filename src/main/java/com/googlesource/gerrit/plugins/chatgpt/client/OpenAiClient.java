@@ -24,10 +24,12 @@ public class OpenAiClient {
 
     public String ask(Configuration config, String patchSet) throws Exception {
         HttpRequest request = createRequest(config, patchSet);
+        log.debug("request: {}", request.toString());
 
         HttpResponse<String> response = httpClientWithRetry.execute(request);
 
         String body = response.body();
+        log.debug("body: {}", body);
         if (body == null) {
             throw new IOException("responseBody is null");
         }
@@ -45,11 +47,14 @@ public class OpenAiClient {
 
     private HttpRequest createRequest(Configuration config, String patchSet) {
         String requestBody = createRequestBody(config, patchSet);
+        URI uri = URI.create(URI.create(config.getGptDomain()) + UriResourceLocator.chatCompletionsUri());
+        log.debug("GPT request URI: {}", uri);
+        log.debug("GPT requestBody: {}", requestBody);
 
         return HttpRequest.newBuilder()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + config.getGptToken())
                 .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                .uri(URI.create(URI.create(config.getGptDomain()) + UriResourceLocator.chatCompletionsUri()))
+                .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                 .build();
     }

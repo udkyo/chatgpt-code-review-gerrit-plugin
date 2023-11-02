@@ -54,12 +54,17 @@ public class GerritClient {
         map.put("message", message);
         String json = gson.toJson(map);
 
+        URI uri = URI.create(config.getGerritAuthBaseUrl()
+                        + UriResourceLocator.gerritCommentUri(fullChangeId));
+        String auth = generateBasicAuth(config.getGerritUserName(),
+                        config.getGerritPassword());
+        log.debug("postComment uri: {}", uri);
+        log.debug("postComment auth: {}", auth);
+        log.debug("postComment json: {}", json);
         HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, generateBasicAuth(config.getGerritUserName(),
-                        config.getGerritPassword()))
+                .header(HttpHeaders.AUTHORIZATION, auth)
                 .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                .uri(URI.create(config.getGerritAuthBaseUrl()
-                        + UriResourceLocator.gerritCommentUri(fullChangeId)))
+                .uri(uri)
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .build();
 
