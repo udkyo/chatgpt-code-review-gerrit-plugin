@@ -65,6 +65,7 @@ public class ChatGptReviewTest {
         when(config.getGerritAuthBaseUrl()).thenReturn("http://localhost:9527");
         when(config.getGptDomain()).thenReturn("http://localhost:9527");
         when(config.getGptTemperature()).thenReturn(1.0);
+        when(config.getGptStreamOutput()).thenReturn(true);
         when(config.getMaxReviewLines()).thenReturn(500);
         when(config.getEnabledProjects()).thenReturn("");
         when(config.isProjectEnable()).thenReturn(true);

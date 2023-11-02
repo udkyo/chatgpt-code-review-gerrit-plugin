@@ -33,16 +33,28 @@ public class OpenAiClient {
         if (body == null) {
             throw new IOException("responseBody is null");
         }
+        String content = extractContent(config, body);
+        log.debug("content: {}", content);
 
-        StringBuilder finalContent = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new StringReader(body))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                extractContentFromLine(line).ifPresent(finalContent::append);
+        return content;
+    }
+
+    public String extractContent(Configuration config, String body) throws Exception {
+        if (config.getGptStreamOutput()) {
+            StringBuilder finalContent = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new StringReader(body))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    extractContentFromLine(line).ifPresent(finalContent::append);
+                }
             }
+            return finalContent.toString();
         }
-
-        return finalContent.toString();
+        else {
+            ChatCompletionResponseMessage chatCompletionResponseMessage =
+                    gson.fromJson(body, ChatCompletionResponseMessage.class);
+            return chatCompletionResponseMessage.getChoices().get(0).getMessage().getContent();
+        }
     }
 
     private HttpRequest createRequest(Configuration config, String patchSet) {
@@ -75,7 +87,7 @@ public class OpenAiClient {
                 .model(config.getGptModel())
                 .messages(messages)
                 .temperature(config.getGptTemperature())
-                .stream(true)
+                .stream(config.getGptStreamOutput())
                 .build();
 
         return gson.toJson(chatCompletionRequest);

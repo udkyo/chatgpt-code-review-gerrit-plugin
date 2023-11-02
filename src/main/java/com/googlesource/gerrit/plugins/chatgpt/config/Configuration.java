@@ -15,6 +15,7 @@ public class Configuration {
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
     public static final String KEY_GPT_PROMPT = "gptPrompt";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
+    private static final boolean DEFAULT_STREAM_OUTPUT = true;
     private static final boolean DEFAULT_GLOBAL_ENABLE = false;
     private static final String DEFAULT_ENABLED_PROJECTS = "";
     private static final boolean DEFAULT_PATCH_SET_REDUCTION = false;
@@ -27,6 +28,7 @@ public class Configuration {
     private static final String KEY_GPT_DOMAIN = "gptDomain";
     private static final String KEY_GPT_MODEL = "gptModel";
     private static final String KEY_GPT_TEMPERATURE = "gptTemperature";
+    private static final String KEY_STREAM_OUTPUT = "gptStreamOutput";
     private static final String KEY_PROJECT_ENABLE = "isEnabled";
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";
     private static final String KEY_ENABLED_PROJECTS = "enabledProjects";
@@ -78,6 +80,10 @@ public class Configuration {
 
     public double getGptTemperature() {
         return Double.parseDouble(getString(KEY_GPT_TEMPERATURE, DEFAULT_GPT_TEMPERATURE));
+    }
+
+    public boolean getGptStreamOutput() {
+        return getBoolean(KEY_STREAM_OUTPUT, DEFAULT_STREAM_OUTPUT);
     }
 
     public boolean isProjectEnable() {

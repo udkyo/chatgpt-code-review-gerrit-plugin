@@ -197,6 +197,7 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
   your preferred prompt.
 - `gptTemperature`: The default value is 1. What sampling temperature to use, between 0 and 2. Higher values like 0.8
   will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+- `gptStreamOutput`: The default value is true. Whether the response is expected in stream output mode or not.
 - `patchSetReduction`: The default value is false. If set to true, the plugin will attempt to reduce patch content by
   compressing redundant blank lines, tabs, import statements, etc., in order to decrease the token count.
 - `maxReviewLines`: The default value is 1000. This sets a limit on the number of lines of code included in the review.
