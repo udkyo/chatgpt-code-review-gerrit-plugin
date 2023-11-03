@@ -14,9 +14,12 @@ public class Configuration {
     public static final String DEFAULT_GPT_PROMPT = "Act as a Code Review Helper. Review only the \"a\" (lines " +
             "removed) and \"b\" (lines added) items of the following diff, using the lines in the \"ab\" items as " +
             "context. ";
+    public static final String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_PROMPT = "Also, check if the content of the commit " +
+            "message in the \"/COMMIT_MSG\" item matches with the changes. ";
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
     public static final String KEY_GPT_PROMPT = "gptPrompt";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
+    private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
     private static final boolean DEFAULT_STREAM_OUTPUT = true;
     private static final boolean DEFAULT_GLOBAL_ENABLE = false;
     private static final String DEFAULT_ENABLED_PROJECTS = "";
@@ -32,6 +35,7 @@ public class Configuration {
     private static final String KEY_GPT_MODEL = "gptModel";
     private static final String KEY_GPT_TEMPERATURE = "gptTemperature";
     private static final String KEY_STREAM_OUTPUT = "gptStreamOutput";
+    private static final String KEY_REVIEW_COMMIT_MESSAGES = "gptReviewCommitMessages";
     private static final String KEY_PROJECT_ENABLE = "isEnabled";
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";
     private static final String KEY_ENABLED_PROJECTS = "enabledProjects";
@@ -76,14 +80,25 @@ public class Configuration {
     }
 
     public String getGptPrompt() {
+        String prompt;
         if (configsDynamically.get(KEY_GPT_PROMPT) != null) {
-            return configsDynamically.get(KEY_GPT_PROMPT).toString();
+            prompt = configsDynamically.get(KEY_GPT_PROMPT).toString();
         }
-        return getString(KEY_GPT_PROMPT, DEFAULT_GPT_PROMPT);
+        else {
+            prompt = getString(KEY_GPT_PROMPT, DEFAULT_GPT_PROMPT);
+            if (getGptReviewCommitMessages()) {
+                prompt += DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_PROMPT;
+            }
+        }
+        return prompt;
     }
 
     public double getGptTemperature() {
         return Double.parseDouble(getString(KEY_GPT_TEMPERATURE, DEFAULT_GPT_TEMPERATURE));
+    }
+
+    public boolean getGptReviewCommitMessages() {
+        return getBoolean(KEY_REVIEW_COMMIT_MESSAGES, DEFAULT_REVIEW_COMMIT_MESSAGES);
     }
 
     public boolean getGptStreamOutput() {

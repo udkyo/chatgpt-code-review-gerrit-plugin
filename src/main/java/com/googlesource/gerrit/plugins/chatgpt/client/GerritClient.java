@@ -49,7 +49,7 @@ public class GerritClient {
         List<String> files = new ArrayList<>();
         for (Map.Entry<String, Map<String, String>> file : map.entrySet()) {
             String filename = file.getKey();
-            if (!filename.equals("/COMMIT_MSG")) {
+            if (!filename.equals("/COMMIT_MSG") || config.getGptReviewCommitMessages()) {
                 Integer size = Integer.valueOf(file.getValue().get("size"));
                 if (size > config.getMaxReviewFileSize()) {
                     log.info("File '{}' not reviewed because its size exceeds the fixed maximum allowable size.",

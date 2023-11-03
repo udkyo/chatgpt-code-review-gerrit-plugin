@@ -1,5 +1,9 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
+import java.net.URLEncoder;
+import java.io.UnsupportedEncodingException;
+
+
 public class UriResourceLocator {
 
     private UriResourceLocator() {
@@ -11,7 +15,11 @@ public class UriResourceLocator {
     }
 
     public static String gerritDiffPostfixUri(String filename) {
-        return "/" + filename + "/diff";
+        try {
+            return "/" + URLEncoder.encode(filename, "UTF-8") + "/diff";
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e.getCause());
+        }
     }
 
     public static String gerritPatchSetFilesUri(String fullChangeId) {
