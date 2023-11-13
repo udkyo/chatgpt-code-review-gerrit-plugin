@@ -140,7 +140,7 @@ public static int stringToInt(String inputString) throws IllegalArgumentExceptio
 
     # 可选参数
     gptModel = {gptModel}
-    gptPrompt = {gptPrompt}
+    gptSystemPrompt = {gptSystemPrompt}
     ...
 ```
 
@@ -170,7 +170,7 @@ $gerrit_site/etc/`secure.config` 文件中进行编辑，并添加以下内容�
 
     # 可选参数
     gptModel = {gptModel}
-    gptPrompt = {gptPrompt}
+    gptSystemPrompt = {gptSystemPrompt}
     ...
 ```
 
@@ -182,7 +182,7 @@ $gerrit_site/etc/`secure.config` 文件中进行编辑，并添加以下内容�
 ### 可选参数
 
 - `gptModel`：默认模型是 gpt-3.5-turbo。你也可以配置成 gpt-3.5-turbo-16k、gpt-4 或 gpt-4-32k。
-- `gptPrompt`：默认提示是 "Act as a Code Review Helper, please review this patch set:"。你可以修改成自己喜欢的 prompt。
+- `gptSystemPrompt`：默认提示是 "Act as a Code Review Helper, please review this patch set:"。你可以修改成自己喜欢的 prompt。
 - `gptTemperature`: 默认值为 1。范围在 0 到 2 之间。较高的值如 1.8 会使输出结果更具随机性，而较低的值如 0.2 则会让输出更加集中和确定性强。
 - `patchSetReduction`：默认值是 false。如果设置为 true，插件会尝试压缩 patch 内容，包括但不限于多余的空行、制表符、import
   语句等，以便减少 token 数量等。

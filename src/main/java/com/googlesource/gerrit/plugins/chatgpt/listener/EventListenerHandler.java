@@ -5,9 +5,11 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gerrit.entities.BranchNameKey;
 import com.google.gerrit.entities.Change;
 import com.google.gerrit.entities.Project;
+import com.google.gerrit.server.events.Event;
 import com.google.gerrit.server.events.ChangeEvent;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.PatchSetReviewer;
+import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,11 +27,13 @@ public class EventListenerHandler {
             .build();
     private final ExecutorService executorService = new ThreadPoolExecutor(
             1, 1, 0L, TimeUnit.MILLISECONDS, queue, threadFactory, handler);
+    private final GerritClient gerritClient;
     private CompletableFuture<Void> latestFuture;
 
     @Inject
-    public EventListenerHandler(PatchSetReviewer reviewer) {
+    public EventListenerHandler(PatchSetReviewer reviewer, GerritClient gerritClient) {
         this.reviewer = reviewer;
+        this.gerritClient = gerritClient;
 
         addShutdownHoot();
     }
@@ -52,12 +56,17 @@ public class EventListenerHandler {
         }));
     }
 
-    public void handleEvent(Configuration config, ChangeEvent changeEvent) {
+    public void handleEvent(Configuration config, Event event) {
+        ChangeEvent changeEvent = (ChangeEvent) event;
+        String eventType = event.getType();
+        log.info("Event type {}", eventType);
         Project.NameKey projectNameKey = changeEvent.getProjectNameKey();
         BranchNameKey branchNameKey = changeEvent.getBranchNameKey();
         Change.Key changeKey = changeEvent.getChangeKey();
 
         String fullChangeId = buildFullChangeId(projectNameKey, branchNameKey, changeKey);
+
+        gerritClient.initialize(config);
 
         List<String> enabledProjects = Splitter.on(",").omitEmptyStrings()
                 .splitToList(config.getEnabledProjects());
@@ -66,6 +75,12 @@ public class EventListenerHandler {
                 !config.isProjectEnable()) {
             log.info("The project {} is not enabled for review", projectNameKey);
             return;
+        }
+
+        if ("comment-added".equals(eventType)) {
+            if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
+                return;
+            }
         }
 
         // Execute the potentially time-consuming operation asynchronously

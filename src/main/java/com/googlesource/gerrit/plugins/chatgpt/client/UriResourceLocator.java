@@ -26,6 +26,10 @@ public class UriResourceLocator {
         return "/changes/" + fullChangeId + "/revisions/current/files";
     }
 
+    public static String gerritGetAllPatchSetCommentsUri(String fullChangeId) {
+        return "/changes/" + fullChangeId + "/comments";
+    }
+
     public static String gerritCommentUri(String fullChangeId) {
         return gerritAuthPrefixUri() + "/changes/" + fullChangeId + "/revisions/current/review";
     }

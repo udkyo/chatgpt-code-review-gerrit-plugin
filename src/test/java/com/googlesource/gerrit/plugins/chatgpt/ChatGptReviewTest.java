@@ -36,6 +36,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritCommentUri;
+import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritGetAllPatchSetCommentsUri;
 import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritDiffPostfixUri;
 import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritPatchSetFilesUri;
 import static com.googlesource.gerrit.plugins.chatgpt.listener.EventListenerHandler.buildFullChangeId;
@@ -74,20 +75,28 @@ public class ChatGptReviewTest {
     }
 
     private void setupMockRequests() {
+        String fullChangeId = buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID);
         // Mocks the behavior of the gerritPatchSetFiles request
-        WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID)))
+        WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(fullChangeId))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
                         .withBodyFile("gerritPatchSetFiles.json")));
 
         // Mocks the behavior of the gerritPatchSet diff request
-        WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID)) +
+        WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(fullChangeId) +
                             gerritDiffPostfixUri("test_file.py"))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
                         .withBodyFile("gerritPatchSetDiff.json")));
+
+        // Mocks the behavior of the gerritPatchSet comments request
+        WireMock.stubFor(WireMock.get(gerritGetAllPatchSetCommentsUri(fullChangeId))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(HTTP_OK)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                        .withBodyFile("gerritPatchSetComments.json")));
 
         // Mocks the behavior of the askGpt request
         byte[] gptAnswer = Base64.getDecoder().decode("ZGF0YTogeyJpZCI6ImNoYXRjbXBsLTdSZDVOYVpEOGJNVTRkdnBVV2" +
@@ -108,7 +117,7 @@ public class ChatGptReviewTest {
                         .withBody(new String(gptAnswer))));
 
         // Mocks the behavior of the postReview request
-        WireMock.stubFor(WireMock.post(gerritCommentUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID)))
+        WireMock.stubFor(WireMock.post(gerritCommentUri(fullChangeId))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)));
     }
@@ -125,7 +134,7 @@ public class ChatGptReviewTest {
         when(event.getProjectNameKey()).thenReturn(PROJECT_NAME);
         when(event.getBranchNameKey()).thenReturn(BRANCH_NAME);
         when(event.getChangeKey()).thenReturn(CHANGE_ID);
-        EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer);
+        EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer, gerritClient);
 
         PatchSetCreatedListener patchSetCreatedListener = new PatchSetCreatedListener(mockConfigCreator, eventListenerHandler);
         patchSetCreatedListener.onEvent(event);
@@ -154,7 +163,7 @@ public class ChatGptReviewTest {
         when(event.getProjectNameKey()).thenReturn(PROJECT_NAME);
         when(event.getBranchNameKey()).thenReturn(BRANCH_NAME);
         when(event.getChangeKey()).thenReturn(CHANGE_ID);
-        EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer);
+        EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer, gerritClient);
 
         GptMentionedCommentListener gptMentionedCommentListener = new GptMentionedCommentListener(mockConfigCreator, eventListenerHandler);
         event.comment = "@gpt Hello!";

@@ -37,19 +37,6 @@ public class GptMentionedCommentListener implements EventListener {
 
         try {
             Configuration config = configCreator.createConfig(projectNameKey);
-            String comment = ((CommentAddedEvent) event).comment;
-            log.debug("Processing comment: {}", comment);
-            if (comment == null || !comment.contains("@" + config.getGerritUserName())) {
-                log.debug("Skipping action since the comment does not mention the ChatGpt bot." +
-                                " Expected bot name in comment: {}, Actual comment text: {}",
-                        config.getGerritUserName(), comment);
-                return;
-            }
-
-            String questionToGpt = comment.substring(comment.indexOf("@" + config.getGerritUserName())
-                    + config.getGerritUserName().length() + 1);
-            config.configureDynamically(Configuration.KEY_GPT_PROMPT, questionToGpt);
-
             eventListenerHandler.handleEvent(config, changeEvent);
         } catch (NoSuchProjectException e) {
             log.error("Project not found: {}", projectNameKey, e);

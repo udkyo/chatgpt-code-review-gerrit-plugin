@@ -74,11 +74,11 @@ public class OpenAiClient {
     private String createRequestBody(Configuration config, String patchSet) {
         ChatCompletionRequest.Message systemMessage = ChatCompletionRequest.Message.builder()
                 .role("system")
-                .content(config.getGptPrompt())
+                .content(config.getGptSystemPrompt())
                 .build();
         ChatCompletionRequest.Message userMessage = ChatCompletionRequest.Message.builder()
                 .role("user")
-                .content(patchSet)
+                .content(config.getGptUserPrompt(patchSet))
                 .build();
 
         List<ChatCompletionRequest.Message> messages = List.of(systemMessage, userMessage);

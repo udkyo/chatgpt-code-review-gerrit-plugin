@@ -11,13 +11,21 @@ public class Configuration {
 
     public static final String OPENAI_DOMAIN = "https://api.openai.com";
     public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
-    public static final String DEFAULT_GPT_PROMPT = "Act as a Code Review Helper. Review only the \"a\" (lines " +
-            "removed) and \"b\" (lines added) items of the following diff, using the lines in the \"ab\" items as " +
-            "context. ";
-    public static final String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_PROMPT = "Also, check if the content of the commit " +
-            "message in the \"/COMMIT_MSG\" item matches with the changes. ";
+    public static final String DEFAULT_GPT_SYSTEM_PROMPT = "Act as a Code Review Helper of Patchset Diffs. In a " +
+            "Patchset Diff, the \"a\" items are the lines removed, the \"b\" items are the lines added, and the " +
+            "\"ab\" items are the unchanged lines.";
+    public static final String DEFAULT_GPT_USER_PROMPT = "Review the \"a\" and \"b\" items of the following Patchset " +
+            "Diff, using the lines in the \"ab\" items as context.\n";
+    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_1 = "I have some requests about the following Patchset " +
+            "Diff:\n";
+    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_2 = "Here are my requests:\n";
+    public static final String DEFAULT_GPT_CUSTOM_USER_CONTEXT_PROMPT = "In reference to the code `%s` (from line %d " +
+            "of file \"%s\"), ";
+    public static final String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT = "Also, check if the content of the " +
+            "commit message in the \"/COMMIT_MSG\" item matches with the changes. ";
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
-    public static final String KEY_GPT_PROMPT = "gptPrompt";
+    public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
+    public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
     private static final boolean DEFAULT_STREAM_OUTPUT = true;
@@ -51,6 +59,11 @@ public class Configuration {
         this.projectConfig = projectConfig;
     }
 
+    public void resetDynamicConfiguration() {
+        configsDynamically.clear();
+        log.debug("configsDynamically initialized: {}", configsDynamically);
+    }
+
     public <T> void configureDynamically(String key, T value) {
         configsDynamically.put(key, value);
     }
@@ -79,18 +92,28 @@ public class Configuration {
         return getString(KEY_GPT_MODEL, DEFAULT_GPT_MODEL);
     }
 
-    public String getGptPrompt() {
-        String prompt;
-        if (configsDynamically.get(KEY_GPT_PROMPT) != null) {
-            prompt = configsDynamically.get(KEY_GPT_PROMPT).toString();
+    public String getGptSystemPrompt() {
+        return getString(KEY_GPT_SYSTEM_PROMPT, DEFAULT_GPT_SYSTEM_PROMPT);
+    }
+
+    public String getGptUserPrompt(String patchSet) {
+        StringBuilder prompt = new StringBuilder();
+        String gptUserPrompt = configsDynamically.get(KEY_GPT_USER_PROMPT).toString();
+        if (gptUserPrompt != null && !gptUserPrompt.isEmpty()) {
+            log.debug("ConfigsDynamically value found: {}", gptUserPrompt);
+            prompt.append(DEFAULT_GPT_CUSTOM_USER_PROMPT_1)
+                    .append(patchSet)
+                    .append(DEFAULT_GPT_CUSTOM_USER_PROMPT_2)
+                    .append(gptUserPrompt);
         }
         else {
-            prompt = getString(KEY_GPT_PROMPT, DEFAULT_GPT_PROMPT);
+            prompt.append(getString(KEY_GPT_USER_PROMPT, DEFAULT_GPT_USER_PROMPT));
             if (getGptReviewCommitMessages()) {
-                prompt += DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_PROMPT;
+                prompt.append(DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT);
             }
+            prompt.append(patchSet);
         }
-        return prompt;
+        return prompt.toString();
     }
 
     public double getGptTemperature() {

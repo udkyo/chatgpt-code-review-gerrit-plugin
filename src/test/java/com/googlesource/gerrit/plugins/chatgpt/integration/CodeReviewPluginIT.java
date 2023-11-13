@@ -11,6 +11,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
 import static junit.framework.TestCase.assertNotNull;
 import static org.mockito.Mockito.when;
 
@@ -33,7 +37,7 @@ public class CodeReviewPluginIT {
         when(config.getGptDomain()).thenReturn(Configuration.OPENAI_DOMAIN);
         when(config.getGptToken()).thenReturn("Your GPT token");
         when(config.getGptModel()).thenReturn(Configuration.DEFAULT_GPT_MODEL);
-        when(config.getGptPrompt()).thenReturn(Configuration.DEFAULT_GPT_PROMPT);
+        when(config.getGptSystemPrompt()).thenReturn(Configuration.DEFAULT_GPT_SYSTEM_PROMPT);
 
         String answer = openAiClient.ask(config, "hello");
         log.info("answer: {}", answer);
@@ -46,7 +50,8 @@ public class CodeReviewPluginIT {
         when(config.getGerritUserName()).thenReturn("Your Gerrit username");
         when(config.getGerritPassword()).thenReturn("Your Gerrit password");
 
-        String patchSet = gerritClient.getPatchSet(config, "${changeId}");
+        gerritClient.initialize(config);
+        String patchSet = gerritClient.getPatchSet("${changeId}");
         log.info("patchSet: {}", patchSet);
         assertNotNull(patchSet);
     }
@@ -57,6 +62,11 @@ public class CodeReviewPluginIT {
         when(config.getGerritUserName()).thenReturn("Your Gerrit username");
         when(config.getGerritPassword()).thenReturn("Your Gerrit password");
 
-        gerritClient.postComment(config, "Your changeId", "message");
+        List<HashMap<String, Object>> reviewBatches = new ArrayList<>();
+        reviewBatches.add(new HashMap<>());
+        reviewBatches.get(0).put("message", "message");
+
+        gerritClient.initialize(config);
+        gerritClient.postComments("Your changeId", reviewBatches);
     }
 }

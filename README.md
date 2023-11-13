@@ -150,7 +150,7 @@ as follows:
 
     # Optional parameters
     gptModel = {gptModel}
-    gptPrompt = {gptPrompt}
+    gptSystemPrompt = {gptSystemPrompt}
     ...
 ```
 
@@ -181,7 +181,7 @@ To add the following content, please edit the `project.config` file in `refs/met
 
     # Optional parameters
     gptModel = {gptModel}
-    gptPrompt = {gptPrompt}
+    gptSystemPrompt = {gptSystemPrompt}
     ...
 ```
 
@@ -193,8 +193,7 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 ### Optional Parameters
 
 - `gptModel`: The default model is gpt-3.5-turbo. You can also configure it to gpt-3.5-turbo-16k, gpt-4 or gpt-4-32k.
-- `gptPrompt`: The default prompt is "Act as a Code Review Helper, please review this patch set:". You can modify it to
-  your preferred prompt.
+- `gptSystemPrompt`: You can modify the default system prompt to your preferred prompt.
 - `gptTemperature`: The default value is 1. What sampling temperature to use, between 0 and 2. Higher values like 0.8
   will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
 - `gptReviewCommitMessages`: The default value is false. When enabled by setting to true, this option also verifies if
