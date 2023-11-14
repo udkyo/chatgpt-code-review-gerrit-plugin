@@ -49,6 +49,10 @@ public class PatchSetReviewer {
         reviewBatches = new ArrayList<>();
         commentProperties = gerritClient.getCommentProperties();
         String patchSet = gerritClient.getPatchSet(fullChangeId);
+        if (patchSet.isEmpty()) {
+            log.info("No file to review has been found in the Patchset");
+            return;
+        }
         if (config.isPatchSetReduction()) {
             patchSet = reducePatchSet(patchSet);
             log.debug("Reduced patch set: {}", patchSet);

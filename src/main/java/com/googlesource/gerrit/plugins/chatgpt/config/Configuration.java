@@ -4,7 +4,10 @@ import com.google.common.collect.Maps;
 import com.google.gerrit.server.config.PluginConfig;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class Configuration {
@@ -31,6 +34,34 @@ public class Configuration {
     private static final boolean DEFAULT_STREAM_OUTPUT = true;
     private static final boolean DEFAULT_GLOBAL_ENABLE = false;
     private static final String DEFAULT_ENABLED_PROJECTS = "";
+    private static final String DEFAULT_ENABLED_FILE_EXTENSIONS = String.join(",", new String[]{
+            ".py",
+            ".java",
+            ".js",
+            ".ts",
+            ".html",
+            ".css",
+            ".cs",
+            ".cpp",
+            ".c",
+            ".h",
+            ".php",
+            ".rb",
+            ".swift",
+            ".kt",
+            ".r",
+            ".jl",
+            ".go",
+            ".scala",
+            ".pl",
+            ".pm",
+            ".rs",
+            ".dart",
+            ".lua",
+            ".sh",
+            ".vb",
+            ".bat"
+    });
     private static final boolean DEFAULT_PATCH_SET_REDUCTION = false;
     private static final boolean DEFAULT_PROJECT_ENABLE = false;
     private static final int DEFAULT_MAX_REVIEW_LINES = 1000;
@@ -50,6 +81,7 @@ public class Configuration {
     private static final String KEY_PATCH_SET_REDUCTION = "patchSetReduction";
     private static final String KEY_MAX_REVIEW_LINES = "maxReviewLines";
     private static final String KEY_MAX_REVIEW_FILE_SIZE = "maxReviewFileSize";
+    private static final String KEY_ENABLED_FILE_EXTENSIONS = "enabledFileExtensions";
     private final Map<String, Object> configsDynamically = Maps.newHashMap();
     private final PluginConfig globalConfig;
     private final PluginConfig projectConfig;
@@ -150,6 +182,12 @@ public class Configuration {
 
     public int getMaxReviewFileSize() {
         return getInt(KEY_MAX_REVIEW_FILE_SIZE, DEFAULT_MAX_REVIEW_FILE_SIZE);
+    }
+
+    public List<String> getEnabledFileExtensions() {
+        Pattern separator=Pattern.compile("\\s*,\\s*");
+        String fileExtensions = globalConfig.getString(KEY_ENABLED_FILE_EXTENSIONS, DEFAULT_ENABLED_FILE_EXTENSIONS);
+        return Arrays.asList(separator.split(fileExtensions));
     }
 
     private String getValidatedOrThrow(String key) {

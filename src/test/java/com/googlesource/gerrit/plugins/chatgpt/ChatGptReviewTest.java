@@ -29,6 +29,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -70,6 +71,9 @@ public class ChatGptReviewTest {
         when(config.getMaxReviewLines()).thenReturn(500);
         when(config.getMaxReviewFileSize()).thenReturn(10000);
         when(config.getEnabledProjects()).thenReturn("");
+        when(config.getEnabledFileExtensions()).thenReturn(new ArrayList<>() {{
+            add(".py");
+        }});
         when(config.isProjectEnable()).thenReturn(true);
     }
 

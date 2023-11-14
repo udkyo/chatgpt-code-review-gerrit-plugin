@@ -202,6 +202,9 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `patchSetReduction`: The default value is false. If set to true, the plugin will attempt to reduce patch content by
   compressing redundant blank lines, tabs, import statements, etc., in order to decrease the token count.
 - `maxReviewLines`: The default value is 1000. This sets a limit on the number of lines of code included in the review.
+- `enabledFileExtensions`: This limits the reviewed files to the given types. Default file extensions are ".py, .java,
+  .js, .ts, .html, .css, .cs, .cpp, .c, .h, .php, .rb, .swift, .kt, .r, .jl, .go, .scala, .pl, .pm, .rs, .dart, .lua,
+  .sh, .vb, .bat".
 - `enabledProjects (for global configuration only)`:
   The default value is an empty string. If globalEnable is set to false, the plugin will only run in the repositories
   specified here. The value should be a comma-separated list of repository names, for example: "
