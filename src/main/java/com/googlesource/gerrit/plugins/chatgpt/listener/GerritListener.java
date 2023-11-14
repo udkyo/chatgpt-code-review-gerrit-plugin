@@ -4,6 +4,7 @@ import com.google.gerrit.entities.Project;
 import com.google.gerrit.server.events.ChangeEvent;
 import com.google.gerrit.server.events.Event;
 import com.google.gerrit.server.events.EventListener;
+import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 import com.google.gerrit.server.project.NoSuchProjectException;
 import com.google.inject.Inject;
@@ -12,20 +13,20 @@ import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class PatchSetCreatedListener implements EventListener {
+public class GerritListener implements EventListener {
     private final ConfigCreator configCreator;
 
     private final EventListenerHandler eventListenerHandler;
 
     @Inject
-    public PatchSetCreatedListener(ConfigCreator configCreator, EventListenerHandler eventListenerHandler) {
+    public GerritListener(ConfigCreator configCreator, EventListenerHandler eventListenerHandler) {
         this.configCreator = configCreator;
         this.eventListenerHandler = eventListenerHandler;
     }
 
     @Override
     public void onEvent(Event event) {
-        if (!(event instanceof PatchSetCreatedEvent)) {
+        if (!(event instanceof CommentAddedEvent || event instanceof PatchSetCreatedEvent)) {
             log.debug("The event is not a PatchSetCreatedEvent, it is: {}", event);
             return;
         }

@@ -17,8 +17,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.config.ConfigCreator;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.listener.EventListenerHandler;
-import com.googlesource.gerrit.plugins.chatgpt.listener.GptMentionedCommentListener;
-import com.googlesource.gerrit.plugins.chatgpt.listener.PatchSetCreatedListener;
+import com.googlesource.gerrit.plugins.chatgpt.listener.GerritListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 import org.junit.Assert;
@@ -136,8 +135,8 @@ public class ChatGptReviewTest {
         when(event.getChangeKey()).thenReturn(CHANGE_ID);
         EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer, gerritClient);
 
-        PatchSetCreatedListener patchSetCreatedListener = new PatchSetCreatedListener(mockConfigCreator, eventListenerHandler);
-        patchSetCreatedListener.onEvent(event);
+        GerritListener gerritListener = new GerritListener(mockConfigCreator, eventListenerHandler);
+        gerritListener.onEvent(event);
         CompletableFuture<Void> future = eventListenerHandler.getLatestFuture();
         future.get();
 
@@ -165,9 +164,9 @@ public class ChatGptReviewTest {
         when(event.getChangeKey()).thenReturn(CHANGE_ID);
         EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer, gerritClient);
 
-        GptMentionedCommentListener gptMentionedCommentListener = new GptMentionedCommentListener(mockConfigCreator, eventListenerHandler);
+        GerritListener gerritListener = new GerritListener(mockConfigCreator, eventListenerHandler);
         event.comment = "@gpt Hello!";
-        gptMentionedCommentListener.onEvent(event);
+        gerritListener.onEvent(event);
         CompletableFuture<Void> future = eventListenerHandler.getLatestFuture();
         future.get();
 

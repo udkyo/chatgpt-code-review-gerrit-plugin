@@ -2,6 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCommentRange;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
