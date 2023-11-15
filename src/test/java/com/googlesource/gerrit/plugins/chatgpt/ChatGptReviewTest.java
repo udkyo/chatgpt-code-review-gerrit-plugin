@@ -8,6 +8,7 @@ import com.google.common.net.HttpHeaders;
 import com.google.gerrit.entities.BranchNameKey;
 import com.google.gerrit.entities.Change;
 import com.google.gerrit.entities.Project;
+import com.google.gerrit.server.config.PluginConfig;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 import com.google.gerrit.server.project.NoSuchProjectException;
@@ -26,10 +27,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -47,9 +49,15 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class ChatGptReviewTest {
+    private static final String GERRIT_AUTH_BASE_URL = "http://localhost:9527";
+    private static final String GERRIT_USER_NAME = "test";
+    private static final String GERRIT_PASSWORD = "test";
+    private static final String GPT_TOKEN = "tk-test";
+    private static final String GPT_DOMAIN = "http://localhost:9527";
     private static final Project.NameKey PROJECT_NAME = Project.NameKey.parse("myProject");
     private static final Change.Key CHANGE_ID = Change.Key.parse("myChangeId");
     private static final BranchNameKey BRANCH_NAME = BranchNameKey.create(PROJECT_NAME, "myBranchName");
+    private static final boolean GPT_STREAM_OUTPUT = true;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(9527);
@@ -63,30 +71,47 @@ public class ChatGptReviewTest {
     }
 
     private void initConfig() {
-        config = mock(Configuration.class);
-        when(config.getGerritAuthBaseUrl()).thenReturn("http://localhost:9527");
-        when(config.getGptDomain()).thenReturn("http://localhost:9527");
-        when(config.getGptTemperature()).thenReturn(1.0);
-        when(config.getGptStreamOutput()).thenReturn(true);
-        when(config.getMaxReviewLines()).thenReturn(500);
-        when(config.getMaxReviewFileSize()).thenReturn(10000);
-        when(config.getEnabledProjects()).thenReturn("");
-        when(config.getEnabledFileExtensions()).thenReturn(new ArrayList<>() {{
-            add(".py");
-        }});
-        when(config.isProjectEnable()).thenReturn(true);
+        PluginConfig globalConfig = mock(PluginConfig.class);
+        Answer<Object> returnDefaultArgument = invocation -> {
+            // Return the second argument (i.e., the Default value) passed to the method
+            return invocation.getArgument(1);
+        };
+
+        // Mock the Global Config values not provided by Default
+        when(globalConfig.getString("gerritAuthBaseUrl")).thenReturn(GERRIT_AUTH_BASE_URL);
+        when(globalConfig.getString("gerritUserName")).thenReturn(GERRIT_USER_NAME);
+        when(globalConfig.getString("gerritPassword")).thenReturn(GERRIT_PASSWORD);
+        when(globalConfig.getString("gptToken")).thenReturn(GPT_TOKEN);
+
+        // Mock the Global Config values to the Defaults passed as second arguments of the `get*` methods.
+        when(globalConfig.getString(Mockito.anyString(), Mockito.anyString())).thenAnswer(returnDefaultArgument);
+        when(globalConfig.getInt(Mockito.anyString(), Mockito.anyInt())).thenAnswer(returnDefaultArgument);
+        when(globalConfig.getBoolean(Mockito.anyString(), Mockito.anyBoolean())).thenAnswer(returnDefaultArgument);
+
+        // Mock the Global Config values that differ from the ones provided by Default
+        when(globalConfig.getString(Mockito.eq("gptDomain"), Mockito.anyString()))
+                .thenReturn(GPT_DOMAIN);
+        when(globalConfig.getBoolean(Mockito.eq("gptStreamOutput"), Mockito.anyBoolean()))
+                .thenReturn(GPT_STREAM_OUTPUT);
+
+        PluginConfig projectConfig = mock(PluginConfig.class);
+
+        // Mock the Project Config values
+        when(projectConfig.getBoolean(Mockito.eq("isEnabled"), Mockito.anyBoolean())).thenReturn(true);
+
+        config = new Configuration(globalConfig, projectConfig);
     }
 
     private void setupMockRequests() {
         String fullChangeId = buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID);
-        // Mocks the behavior of the gerritPatchSetFiles request
+        // Mock the behavior of the gerritPatchSetFiles request
         WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(fullChangeId))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
                         .withBodyFile("gerritPatchSetFiles.json")));
 
-        // Mocks the behavior of the gerritPatchSet diff request
+        // Mock the behavior of the gerritPatchSet diff request
         WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(fullChangeId) +
                             gerritDiffPostfixUri("test_file.py"))
                 .willReturn(WireMock.aResponse()
@@ -94,14 +119,14 @@ public class ChatGptReviewTest {
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
                         .withBodyFile("gerritPatchSetDiff.json")));
 
-        // Mocks the behavior of the gerritPatchSet comments request
+        // Mock the behavior of the gerritPatchSet comments request
         WireMock.stubFor(WireMock.get(gerritGetAllPatchSetCommentsUri(fullChangeId))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
                         .withBodyFile("gerritPatchSetComments.json")));
 
-        // Mocks the behavior of the askGpt request
+        // Mock the behavior of the askGpt request
         byte[] gptAnswer = Base64.getDecoder().decode("ZGF0YTogeyJpZCI6ImNoYXRjbXBsLTdSZDVOYVpEOGJNVTRkdnBVV2" +
                 "9hM3Q2RG83RkkzIiwib2JqZWN0IjoiY2hhdC5jb21wbGV0aW9uLmNodW5rIiwiY3JlYXRlZCI6MTY4NjgxOTQ1NywibW9kZWw" +
                 "iOiJncHQtMy41LXR1cmJvLTAzMDEiLCJjaG9pY2VzIjpbeyJkZWx0YSI6eyJyb2xlIjoiYXNzaXN0YW50In0sImluZGV4Ijow" +
@@ -119,7 +144,7 @@ public class ChatGptReviewTest {
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
                         .withBody(new String(gptAnswer))));
 
-        // Mocks the behavior of the postReview request
+        // Mock the behavior of the postReview request
         WireMock.stubFor(WireMock.post(gerritCommentUri(fullChangeId))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)));
