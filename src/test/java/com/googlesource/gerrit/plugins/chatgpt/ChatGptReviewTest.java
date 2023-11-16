@@ -12,6 +12,9 @@ import com.google.gerrit.server.config.PluginConfig;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 import com.google.gerrit.server.project.NoSuchProjectException;
+import com.google.gson.JsonArray;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.OpenAiClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
@@ -32,6 +35,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -49,6 +56,8 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class ChatGptReviewTest {
+    private static final Path basePath = Paths.get("src/test/resources/__files");
+
     private static final String GERRIT_AUTH_BASE_URL = "http://localhost:9527";
     private static final String GERRIT_USER_NAME = "test";
     private static final String GERRIT_PASSWORD = "test";
@@ -58,6 +67,8 @@ public class ChatGptReviewTest {
     private static final Change.Key CHANGE_ID = Change.Key.parse("myChangeId");
     private static final BranchNameKey BRANCH_NAME = BranchNameKey.create(PROJECT_NAME, "myBranchName");
     private static final boolean GPT_STREAM_OUTPUT = true;
+
+    private final Gson gson = new Gson();
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(9527);
@@ -150,8 +161,17 @@ public class ChatGptReviewTest {
                         .withStatus(HTTP_OK)));
     }
 
+    private String getReviewUserPrompt() throws IOException {
+        StringBuilder prompt = new StringBuilder(Configuration.DEFAULT_GPT_USER_PROMPT);
+        String diffContent = new String(Files.readAllBytes(basePath.resolve("gerritPatchSetDiff.json")));
+        prompt.append("[").append(diffContent).append("]\n");
+
+        return prompt.toString();
+    }
+
     @Test
-    public void patchSetCreatedOrUpdated() throws InterruptedException, NoSuchProjectException, ExecutionException {
+    public void patchSetCreatedOrUpdated() throws InterruptedException, NoSuchProjectException, ExecutionException,
+            IOException {
         GerritClient gerritClient = new GerritClient();
         OpenAiClient openAiClient = new OpenAiClient();
         PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, openAiClient);
@@ -173,6 +193,12 @@ public class ChatGptReviewTest {
                 WireMock.urlEqualTo(gerritCommentUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
         List<LoggedRequest> loggedRequests = WireMock.findAll(requestPatternBuilder);
         Assert.assertEquals(1, loggedRequests.size());
+        JsonObject gptRequestBody = gson.fromJson(openAiClient.getRequestBody(), JsonObject.class);
+        JsonArray prompts = gptRequestBody.get("messages").getAsJsonArray();
+        String systemPrompt = prompts.get(0).getAsJsonObject().get("content").getAsString();
+        Assert.assertEquals(Configuration.DEFAULT_GPT_SYSTEM_PROMPT, systemPrompt);
+        String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
+        Assert.assertEquals(getReviewUserPrompt(), userPrompt);
         String requestBody = loggedRequests.get(0).getBodyAsString();
         Assert.assertEquals("{\"message\":\"Hello!\\n\"}", requestBody);
 

@@ -22,8 +22,13 @@ import java.util.Optional;
 @Slf4j
 @Singleton
 public class OpenAiClient {
+    private String requestBody;
     private final Gson gson = new Gson();
     private final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
+
+    public String getRequestBody() {
+        return requestBody;
+    }
 
     public String ask(Configuration config, String patchSet) throws Exception {
         HttpRequest request = createRequest(config, patchSet);
@@ -61,7 +66,7 @@ public class OpenAiClient {
     }
 
     private HttpRequest createRequest(Configuration config, String patchSet) {
-        String requestBody = createRequestBody(config, patchSet);
+        requestBody = createRequestBody(config, patchSet);
         URI uri = URI.create(URI.create(config.getGptDomain()) + UriResourceLocator.chatCompletionsUri());
         log.debug("GPT request URI: {}", uri);
         log.debug("GPT requestBody: {}", requestBody);
