@@ -211,7 +211,9 @@ public class Configuration {
 
     private int getInt(String key, int defaultValue) {
         int valueForProject = projectConfig.getInt(key, defaultValue);
-        if (valueForProject != defaultValue) {
+        // To avoid misinterpreting an undefined value as zero, a secondary check is performed by retrieving the value
+        // as a String.
+        if (valueForProject != 0 && projectConfig.getString(key, "") != null) {
             return valueForProject;
         }
         return globalConfig.getInt(key, defaultValue);
