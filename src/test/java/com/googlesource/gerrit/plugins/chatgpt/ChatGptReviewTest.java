@@ -9,6 +9,7 @@ import com.google.gerrit.entities.BranchNameKey;
 import com.google.gerrit.entities.Change;
 import com.google.gerrit.entities.Project;
 import com.google.gerrit.server.config.PluginConfig;
+import com.google.gerrit.server.data.AccountAttribute;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 import com.google.gerrit.server.project.NoSuchProjectException;
@@ -59,6 +60,8 @@ public class ChatGptReviewTest {
     private static final Path basePath = Paths.get("src/test/resources/__files");
 
     private static final String GERRIT_AUTH_BASE_URL = "http://localhost:9527";
+    private static final String GERRIT_ACCOUNT_NAME = "Test";
+    private static final String GERRIT_ACCOUNT_EMAIL = "test@example.com";
     private static final String GERRIT_USER_NAME = "test";
     private static final String GERRIT_PASSWORD = "test";
     private static final String GPT_TOKEN = "tk-test";
@@ -67,8 +70,14 @@ public class ChatGptReviewTest {
     private static final Change.Key CHANGE_ID = Change.Key.parse("myChangeId");
     private static final BranchNameKey BRANCH_NAME = BranchNameKey.create(PROJECT_NAME, "myBranchName");
     private static final boolean GPT_STREAM_OUTPUT = true;
+    private static final long TEST_TIMESTAMP = 1699270812;
+    private static final String REVIEW_TAG_COMMENTS = "[ID:0] comment 2\n" +
+            "[ID:1] In reference to the code `TypeClassOrPath` (from line 5 of file \"test_file.py\"), message\n";
 
     private final Gson gson = new Gson();
+
+    private String reviewUserPrompt;
+    private String commentUserPrompt;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(9527);
@@ -76,9 +85,10 @@ public class ChatGptReviewTest {
     private Configuration config;
 
     @Before
-    public void before() {
+    public void before() throws IOException {
         initConfig();
         setupMockRequests();
+        initComparisonContent();
     }
 
     private void initConfig() {
@@ -161,17 +171,18 @@ public class ChatGptReviewTest {
                         .withStatus(HTTP_OK)));
     }
 
-    private String getReviewUserPrompt() throws IOException {
-        StringBuilder prompt = new StringBuilder(Configuration.DEFAULT_GPT_USER_PROMPT);
+    private void initComparisonContent() throws IOException {
         String diffContent = new String(Files.readAllBytes(basePath.resolve("gerritPatchSetDiff.json")));
-        prompt.append("[").append(diffContent).append("]\n");
-
-        return prompt.toString();
+        String gerritPatchsetDiffContent = "[" + diffContent + "]\n";
+        reviewUserPrompt = Configuration.DEFAULT_GPT_USER_PROMPT + gerritPatchsetDiffContent;
+        commentUserPrompt = Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_1 +
+                gerritPatchsetDiffContent +
+                Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_2 +
+                REVIEW_TAG_COMMENTS;
     }
 
     @Test
-    public void patchSetCreatedOrUpdated() throws InterruptedException, NoSuchProjectException, ExecutionException,
-            IOException {
+    public void patchSetCreatedOrUpdated() throws InterruptedException, NoSuchProjectException, ExecutionException {
         GerritClient gerritClient = new GerritClient();
         OpenAiClient openAiClient = new OpenAiClient();
         PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, openAiClient);
@@ -198,7 +209,7 @@ public class ChatGptReviewTest {
         String systemPrompt = prompts.get(0).getAsJsonObject().get("content").getAsString();
         Assert.assertEquals(Configuration.DEFAULT_GPT_SYSTEM_PROMPT, systemPrompt);
         String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
-        Assert.assertEquals(getReviewUserPrompt(), userPrompt);
+        Assert.assertEquals(reviewUserPrompt, userPrompt);
         String requestBody = loggedRequests.get(0).getBodyAsString();
         Assert.assertEquals("{\"message\":\"Hello!\\n\"}", requestBody);
 
@@ -217,10 +228,18 @@ public class ChatGptReviewTest {
         when(event.getProjectNameKey()).thenReturn(PROJECT_NAME);
         when(event.getBranchNameKey()).thenReturn(BRANCH_NAME);
         when(event.getChangeKey()).thenReturn(CHANGE_ID);
+        when(event.getType()).thenReturn("comment-added");
+        event.author = () -> {
+            AccountAttribute accountAttribute = new AccountAttribute();
+            accountAttribute.name = GERRIT_ACCOUNT_NAME;
+            accountAttribute.username = GERRIT_USER_NAME;
+            accountAttribute.email = GERRIT_ACCOUNT_EMAIL;
+            return accountAttribute;
+        };
+        event.eventCreatedOn = TEST_TIMESTAMP;
         EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer, gerritClient);
 
         GerritListener gerritListener = new GerritListener(mockConfigCreator, eventListenerHandler);
-        event.comment = "@gpt Hello!";
         gerritListener.onEvent(event);
         CompletableFuture<Void> future = eventListenerHandler.getLatestFuture();
         future.get();
@@ -229,8 +248,10 @@ public class ChatGptReviewTest {
                 WireMock.urlEqualTo(gerritCommentUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
         List<LoggedRequest> loggedRequests = WireMock.findAll(requestPatternBuilder);
         Assert.assertEquals(1, loggedRequests.size());
-        String requestBody = loggedRequests.get(0).getBodyAsString();
-        Assert.assertEquals("{\"message\":\"Hello!\\n\"}", requestBody);
+        JsonObject gptRequestBody = gson.fromJson(openAiClient.getRequestBody(), JsonObject.class);
+        JsonArray prompts = gptRequestBody.get("messages").getAsJsonArray();
+        String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
+        Assert.assertEquals(commentUserPrompt, userPrompt);
 
     }
 
