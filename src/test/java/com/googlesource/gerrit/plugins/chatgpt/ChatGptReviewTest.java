@@ -10,6 +10,7 @@ import com.google.gerrit.entities.Change;
 import com.google.gerrit.entities.Project;
 import com.google.gerrit.server.config.PluginConfig;
 import com.google.gerrit.server.data.AccountAttribute;
+import com.google.gerrit.server.data.PatchSetAttribute;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.PatchSetCreatedEvent;
 import com.google.gerrit.server.project.NoSuchProjectException;
@@ -45,6 +46,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
+import static com.google.gerrit.extensions.client.ChangeKind.REWORK;
 import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritCommentUri;
 import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritGetAllPatchSetCommentsUri;
 import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.gerritDiffPostfixUri;
@@ -193,6 +195,12 @@ public class ChatGptReviewTest {
         when(event.getProjectNameKey()).thenReturn(PROJECT_NAME);
         when(event.getBranchNameKey()).thenReturn(BRANCH_NAME);
         when(event.getChangeKey()).thenReturn(CHANGE_ID);
+        when(event.getType()).thenReturn("patchset-created");
+        event.patchSet = () -> {
+            PatchSetAttribute patchSetAttribute = new PatchSetAttribute();
+            patchSetAttribute.kind = REWORK;
+            return patchSetAttribute;
+        };
         EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer, gerritClient);
 
         GerritListener gerritListener = new GerritListener(mockConfigCreator, eventListenerHandler);

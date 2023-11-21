@@ -58,7 +58,6 @@ public class GerritClient extends GerritClientComments {
     private String getFileDiffsJson(String fullChangeId, List<String> files) throws Exception {
         List<String> diffs = new ArrayList<>();
         List<String> enabledFileExtensions = config.getEnabledFileExtensions();
-        int totalReviewedFiles = 0;
         for (String filename : files) {
             boolean isCommitMessage = filename.equals("/COMMIT_MSG");
             if (!isCommitMessage && (filename.lastIndexOf(".") < 1 ||
@@ -72,12 +71,6 @@ public class GerritClient extends GerritClientComments {
             log.debug("fileDiffJson: {}", fileDiffJson);
             filesNewContent.put(filename, getFileNewContent(fileDiffJson));
             diffs.add(fileDiffJson);
-            if (!isCommitMessage) {
-                totalReviewedFiles++;
-            }
-        }
-        if (totalReviewedFiles == 0) {
-            return "";
         }
         return "[" + String.join(",", diffs) + "]\n";
     }

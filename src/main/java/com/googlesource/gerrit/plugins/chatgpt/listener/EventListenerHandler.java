@@ -5,8 +5,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gerrit.entities.BranchNameKey;
 import com.google.gerrit.entities.Change;
 import com.google.gerrit.entities.Project;
+import com.google.gerrit.extensions.client.ChangeKind;
+import com.google.gerrit.server.data.PatchSetAttribute;
 import com.google.gerrit.server.events.Event;
-import com.google.gerrit.server.events.ChangeEvent;
+import com.google.gerrit.server.events.PatchSetEvent;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.PatchSetReviewer;
 import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
@@ -14,7 +16,11 @@ import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.*;
+import java.util.function.Supplier;
+
+import static com.google.gerrit.extensions.client.ChangeKind.REWORK;
 
 @Slf4j
 public class EventListenerHandler {
@@ -57,12 +63,12 @@ public class EventListenerHandler {
     }
 
     public void handleEvent(Configuration config, Event event) {
-        ChangeEvent changeEvent = (ChangeEvent) event;
-        String eventType = event.getType();
+        PatchSetEvent patchSetEvent = (PatchSetEvent) event;
+        String eventType = Optional.ofNullable(event.getType()).orElse("");
         log.info("Event type {}", eventType);
-        Project.NameKey projectNameKey = changeEvent.getProjectNameKey();
-        BranchNameKey branchNameKey = changeEvent.getBranchNameKey();
-        Change.Key changeKey = changeEvent.getChangeKey();
+        Project.NameKey projectNameKey = patchSetEvent.getProjectNameKey();
+        BranchNameKey branchNameKey = patchSetEvent.getBranchNameKey();
+        Change.Key changeKey = patchSetEvent.getChangeKey();
 
         String fullChangeId = buildFullChangeId(projectNameKey, branchNameKey, changeKey);
 
@@ -77,10 +83,29 @@ public class EventListenerHandler {
             return;
         }
 
-        if ("comment-added".equals(eventType)) {
-            if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
+        switch (eventType) {
+            case "patchset-created":
+                try {
+                    Supplier<PatchSetAttribute> patchSetAttribute = patchSetEvent.patchSet;
+                    ChangeKind patchSetEventKind = patchSetAttribute.get().kind;
+                    if (patchSetEventKind != REWORK) {
+                        log.info("Change kind '{}' not processed", patchSetEventKind);
+                        return;
+                    }
+                }
+                catch (NullPointerException e) {
+                    log.debug("PatchSet event kind not retrieved");
+                    return;
+                }
+                break;
+            case "comment-added":
+                if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
+                    log.info("No bot-addressed comment found");
+                    return;
+                }
+                break;
+            default:
                 return;
-            }
         }
 
         // Execute the potentially time-consuming operation asynchronously

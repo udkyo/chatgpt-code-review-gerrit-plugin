@@ -1,7 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.listener;
 
 import com.google.gerrit.entities.Project;
-import com.google.gerrit.server.events.ChangeEvent;
+import com.google.gerrit.server.events.PatchSetEvent;
 import com.google.gerrit.server.events.Event;
 import com.google.gerrit.server.events.EventListener;
 import com.google.gerrit.server.events.CommentAddedEvent;
@@ -32,12 +32,12 @@ public class GerritListener implements EventListener {
         }
 
         log.info("Processing event: {}", event);
-        ChangeEvent changeEvent = (ChangeEvent) event;
-        Project.NameKey projectNameKey = changeEvent.getProjectNameKey();
+        PatchSetEvent patchSetEvent = (PatchSetEvent) event;
+        Project.NameKey projectNameKey = patchSetEvent.getProjectNameKey();
 
         try {
             Configuration config = configCreator.createConfig(projectNameKey);
-            eventListenerHandler.handleEvent(config, changeEvent);
+            eventListenerHandler.handleEvent(config, patchSetEvent);
         } catch (NoSuchProjectException e) {
             log.error("Project not found: {}", projectNameKey, e);
         }
