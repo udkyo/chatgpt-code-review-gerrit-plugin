@@ -62,7 +62,6 @@ public class Configuration {
             ".vb",
             ".bat"
     });
-    private static final boolean DEFAULT_PATCH_SET_REDUCTION = false;
     private static final boolean DEFAULT_PROJECT_ENABLE = false;
     private static final int DEFAULT_MAX_REVIEW_LINES = 1000;
     private static final int DEFAULT_MAX_REVIEW_FILE_SIZE = 10000;
@@ -78,7 +77,6 @@ public class Configuration {
     private static final String KEY_PROJECT_ENABLE = "isEnabled";
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";
     private static final String KEY_ENABLED_PROJECTS = "enabledProjects";
-    private static final String KEY_PATCH_SET_REDUCTION = "patchSetReduction";
     private static final String KEY_MAX_REVIEW_LINES = "maxReviewLines";
     private static final String KEY_MAX_REVIEW_FILE_SIZE = "maxReviewFileSize";
     private static final String KEY_ENABLED_FILE_EXTENSIONS = "enabledFileExtensions";
@@ -170,10 +168,6 @@ public class Configuration {
 
     public String getEnabledProjects() {
         return globalConfig.getString(KEY_ENABLED_PROJECTS, DEFAULT_ENABLED_PROJECTS);
-    }
-
-    public boolean isPatchSetReduction() {
-        return getBoolean(KEY_PATCH_SET_REDUCTION, DEFAULT_PATCH_SET_REDUCTION);
     }
 
     public int getMaxReviewLines() {

@@ -199,8 +199,6 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `gptReviewCommitMessages`: The default value is false. When enabled by setting to true, this option also verifies if
   the commit message matches with the content of the review.
 - `gptStreamOutput`: The default value is true. Whether the response is expected in stream output mode or not.
-- `patchSetReduction`: The default value is false. If set to true, the plugin will attempt to reduce patch content by
-  compressing redundant blank lines, tabs, import statements, etc., in order to decrease the token count.
 - `maxReviewLines`: The default value is 1000. This sets a limit on the number of lines of code included in the review.
 - `enabledFileExtensions`: This limits the reviewed files to the given types. Default file extensions are ".py, .java,
   .js, .ts, .html, .css, .cs, .cpp, .c, .h, .php, .rb, .swift, .kt, .r, .jl, .go, .scala, .pl, .pm, .rs, .dart, .lua,

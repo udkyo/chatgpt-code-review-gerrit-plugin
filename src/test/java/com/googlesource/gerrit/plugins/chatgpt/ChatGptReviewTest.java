@@ -59,8 +59,7 @@ import static org.mockito.Mockito.when;
 @Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class ChatGptReviewTest {
-    private static final Path basePath = Paths.get("src/test/resources/__files");
-
+    private static final Path basePath = Paths.get("src/test/resources");
     private static final String GERRIT_AUTH_BASE_URL = "http://localhost:9527";
     private static final String GERRIT_ACCOUNT_NAME = "Test";
     private static final String GERRIT_ACCOUNT_EMAIL = "test@example.com";
@@ -116,6 +115,8 @@ public class ChatGptReviewTest {
                 .thenReturn(GPT_DOMAIN);
         when(globalConfig.getBoolean(Mockito.eq("gptStreamOutput"), Mockito.anyBoolean()))
                 .thenReturn(GPT_STREAM_OUTPUT);
+        when(globalConfig.getBoolean(Mockito.eq("gptReviewCommitMessages"), Mockito.anyBoolean()))
+                .thenReturn(true);
 
         PluginConfig projectConfig = mock(PluginConfig.class);
 
@@ -134,13 +135,19 @@ public class ChatGptReviewTest {
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
                         .withBodyFile("gerritPatchSetFiles.json")));
 
-        // Mock the behavior of the gerritPatchSet diff request
+        // Mock the behavior of the gerritPatchSet diff requests
+        WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(fullChangeId) +
+                            gerritDiffPostfixUri("/COMMIT_MSG"))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(HTTP_OK)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                        .withBodyFile("gerritPatchSetDiffCommitMsg.json")));
         WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(fullChangeId) +
                             gerritDiffPostfixUri("test_file.py"))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .withBodyFile("gerritPatchSetDiff.json")));
+                        .withBodyFile("gerritPatchSetDiffTestFile.json")));
 
         // Mock the behavior of the gerritPatchSet comments request
         WireMock.stubFor(WireMock.get(gerritGetAllPatchSetCommentsUri(fullChangeId))
@@ -174,11 +181,12 @@ public class ChatGptReviewTest {
     }
 
     private void initComparisonContent() throws IOException {
-        String diffContent = new String(Files.readAllBytes(basePath.resolve("gerritPatchSetDiff.json")));
-        String gerritPatchsetDiffContent = "[" + diffContent + "]\n";
-        reviewUserPrompt = Configuration.DEFAULT_GPT_USER_PROMPT + gerritPatchsetDiffContent;
+        String diffContent = new String(Files.readAllBytes(basePath.resolve("reducePatchSet/patchSetDiffOutput.json")));
+        reviewUserPrompt = Configuration.DEFAULT_GPT_USER_PROMPT +
+                Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT
+                + diffContent;
         commentUserPrompt = Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_1 +
-                gerritPatchsetDiffContent +
+                diffContent +
                 Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_2 +
                 REVIEW_TAG_COMMENTS;
     }

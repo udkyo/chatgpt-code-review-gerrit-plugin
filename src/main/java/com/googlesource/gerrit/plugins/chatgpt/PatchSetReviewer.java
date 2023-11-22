@@ -9,7 +9,6 @@ import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.googlesource.gerrit.plugins.chatgpt.client.ReviewUtils.extractID;
 
@@ -32,19 +31,6 @@ public class PatchSetReviewer {
         this.openAiClient = openAiClient;
     }
 
-    public static String reducePatchSet(String patchSet) {
-        Set<String> skipPrefixes = new HashSet<>(Arrays.asList(
-                "import", "-", "+package", "+import", "From", "Date:", "Subject:",
-                "Change-Id:", "diff --git", "index", "---", "+++", "@@", "Binary files differ"
-        ));
-
-        return Arrays.stream(patchSet.split("\n"))
-                .map(String::trim)
-                .filter(line -> skipPrefixes.stream().noneMatch(line::startsWith))
-                .filter(line -> !line.trim().isEmpty())
-                .collect(Collectors.joining("\n"));
-    }
-
     public void review(Configuration config, String fullChangeId) throws Exception {
         reviewBatches = new ArrayList<>();
         commentProperties = gerritClient.getCommentProperties();
@@ -52,10 +38,6 @@ public class PatchSetReviewer {
         if (patchSet.isEmpty()) {
             log.info("No file to review has been found in the Patchset");
             return;
-        }
-        if (config.isPatchSetReduction()) {
-            patchSet = reducePatchSet(patchSet);
-            log.debug("Reduced patch set: {}", patchSet);
         }
         config.configureDynamically(Configuration.KEY_GPT_USER_PROMPT, gerritClient.getTaggedPrompt());
 

@@ -2,6 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionRequest;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponse;
@@ -23,7 +24,9 @@ import java.util.Optional;
 @Singleton
 public class OpenAiClient {
     private String requestBody;
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder()
+            .disableHtmlEscaping()
+            .create();
     private final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
 
     public String getRequestBody() {
@@ -68,8 +71,8 @@ public class OpenAiClient {
     private HttpRequest createRequest(Configuration config, String patchSet) {
         requestBody = createRequestBody(config, patchSet);
         URI uri = URI.create(URI.create(config.getGptDomain()) + UriResourceLocator.chatCompletionsUri());
-        log.debug("GPT request URI: {}", uri);
-        log.debug("GPT requestBody: {}", requestBody);
+        log.info("GPT request URI: {}", uri);
+        log.info("GPT requestBody: {}", requestBody);
 
         return HttpRequest.newBuilder()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + config.getGptToken())
