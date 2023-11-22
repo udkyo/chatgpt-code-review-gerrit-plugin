@@ -32,6 +32,7 @@ public class Configuration {
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
     private static final boolean DEFAULT_REVIEW_PATCHSET = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
+    private static final boolean DEFAULT_FULL_FILE_REVIEW = true;
     private static final boolean DEFAULT_STREAM_OUTPUT = true;
     private static final boolean DEFAULT_GLOBAL_ENABLE = false;
     private static final String DEFAULT_ENABLED_PROJECTS = "";
@@ -76,6 +77,7 @@ public class Configuration {
     private static final String KEY_STREAM_OUTPUT = "gptStreamOutput";
     private static final String KEY_REVIEW_COMMIT_MESSAGES = "gptReviewCommitMessages";
     private static final String KEY_REVIEW_PATCHSET = "gptReviewPatchset";
+    private static final String KEY_FULL_FILE_REVIEW = "gptFullFileReview";
     private static final String KEY_PROJECT_ENABLE = "isEnabled";
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";
     private static final String KEY_ENABLED_PROJECTS = "enabledProjects";
@@ -158,6 +160,10 @@ public class Configuration {
 
     public boolean getGptReviewCommitMessages() {
         return getBoolean(KEY_REVIEW_COMMIT_MESSAGES, DEFAULT_REVIEW_COMMIT_MESSAGES);
+    }
+
+    public boolean getGptFullFileReview() {
+        return getBoolean(KEY_FULL_FILE_REVIEW, DEFAULT_FULL_FILE_REVIEW);
     }
 
     public boolean getGptStreamOutput() {

@@ -81,10 +81,12 @@ public class GerritClient extends GerritClientComments {
             if (isCommitMessage) {
                 fieldValue = filterCommitMessageContent(fieldValue);
             }
-            // Get the corresponding `a`, `b` or `ab` field from the output diff class
-            Field outputDiffField = OutputFileDiff.Content.class.getDeclaredField(fieldName);
-            // Store the new field's value in the output diff content `outputContentItem`
-            outputDiffField.set(outputContentItem, String.join("\n", fieldValue));
+            if (config.getGptFullFileReview() || !fieldName.equals("ab")) {
+                // Get the corresponding `a`, `b` or `ab` field from the output diff class
+                Field outputDiffField = OutputFileDiff.Content.class.getDeclaredField(fieldName);
+                // Store the new field's value in the output diff content `outputContentItem`
+                outputDiffField.set(outputContentItem, String.join("\n", fieldValue));
+            }
             // If the lines modified in the PatchSet are not deleted, they are utilized to populate newFileContent
             if (fieldName.contains("b")) {
                 newFileContent.addAll(fieldValue);

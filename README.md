@@ -200,6 +200,9 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
   they are created or updated.
 - `gptReviewCommitMessages`: The default value is false. When enabled by setting to true, this option also verifies if
   the commit message matches with the content of the review.
+- `gptFullFileReview`: Enabled by default. Activating this option sends both unchanged lines and changes to ChatGPT for
+  review, offering additional context information. Deactivating it (set to false) results in only the changed lines
+  being submitted for review.
 - `gptStreamOutput`: The default value is true. Whether the response is expected in stream output mode or not.
 - `maxReviewLines`: The default value is 1000. This sets a limit on the number of lines of code included in the review.
 - `enabledFileExtensions`: This limits the reviewed files to the given types. Default file extensions are ".py, .java,
