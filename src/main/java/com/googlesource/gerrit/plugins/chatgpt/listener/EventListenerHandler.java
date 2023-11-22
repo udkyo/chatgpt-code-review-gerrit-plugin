@@ -62,6 +62,26 @@ public class EventListenerHandler {
         }));
     }
 
+    private boolean isPatchsetReviewEnabled(Configuration config, PatchSetEvent patchSetEvent) {
+        if (!config.getGptReviewPatchSet()) {
+            log.debug("Disabled review function for created or updated Patchsets.");
+            return false;
+        }
+        try {
+            Supplier<PatchSetAttribute> patchSetAttribute = patchSetEvent.patchSet;
+            ChangeKind patchSetEventKind = patchSetAttribute.get().kind;
+            if (patchSetEventKind != REWORK) {
+                log.info("Change kind '{}' not processed", patchSetEventKind);
+                return false;
+            }
+        }
+        catch (NullPointerException e) {
+            log.debug("PatchSet event properties not retrieved");
+            return false;
+        }
+        return true;
+    }
+
     public void handleEvent(Configuration config, Event event) {
         PatchSetEvent patchSetEvent = (PatchSetEvent) event;
         String eventType = Optional.ofNullable(event.getType()).orElse("");
@@ -85,22 +105,13 @@ public class EventListenerHandler {
 
         switch (eventType) {
             case "patchset-created":
-                try {
-                    Supplier<PatchSetAttribute> patchSetAttribute = patchSetEvent.patchSet;
-                    ChangeKind patchSetEventKind = patchSetAttribute.get().kind;
-                    if (patchSetEventKind != REWORK) {
-                        log.info("Change kind '{}' not processed", patchSetEventKind);
-                        return;
-                    }
-                }
-                catch (NullPointerException e) {
-                    log.debug("PatchSet event kind not retrieved");
+                if (!isPatchsetReviewEnabled(config, patchSetEvent)) {
                     return;
                 }
                 break;
             case "comment-added":
                 if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
-                    log.info("No bot-addressed comment found");
+                    log.info("Found no comment to review");
                     return;
                 }
                 break;

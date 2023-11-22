@@ -196,6 +196,8 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `gptSystemPrompt`: You can modify the default system prompt to your preferred prompt.
 - `gptTemperature`: The default value is 1. What sampling temperature to use, between 0 and 2. Higher values like 0.8
   will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+- `gptReviewPatchset`: Set to true by default. When switched to false, it disables the automatic review of Patchsets as
+  they are created or updated.
 - `gptReviewCommitMessages`: The default value is false. When enabled by setting to true, this option also verifies if
   the commit message matches with the content of the review.
 - `gptStreamOutput`: The default value is true. Whether the response is expected in stream output mode or not.

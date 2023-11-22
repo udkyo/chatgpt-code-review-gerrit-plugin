@@ -30,6 +30,7 @@ public class Configuration {
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
+    private static final boolean DEFAULT_REVIEW_PATCHSET = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
     private static final boolean DEFAULT_STREAM_OUTPUT = true;
     private static final boolean DEFAULT_GLOBAL_ENABLE = false;
@@ -74,6 +75,7 @@ public class Configuration {
     private static final String KEY_GPT_TEMPERATURE = "gptTemperature";
     private static final String KEY_STREAM_OUTPUT = "gptStreamOutput";
     private static final String KEY_REVIEW_COMMIT_MESSAGES = "gptReviewCommitMessages";
+    private static final String KEY_REVIEW_PATCHSET = "gptReviewPatchset";
     private static final String KEY_PROJECT_ENABLE = "isEnabled";
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";
     private static final String KEY_ENABLED_PROJECTS = "enabledProjects";
@@ -148,6 +150,10 @@ public class Configuration {
 
     public double getGptTemperature() {
         return Double.parseDouble(getString(KEY_GPT_TEMPERATURE, DEFAULT_GPT_TEMPERATURE));
+    }
+
+    public boolean getGptReviewPatchSet() {
+        return getBoolean(KEY_REVIEW_PATCHSET, DEFAULT_REVIEW_PATCHSET);
     }
 
     public boolean getGptReviewCommitMessages() {
