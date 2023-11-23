@@ -48,4 +48,12 @@ public class GerritClientBase {
         return response.body();
     }
 
+    public boolean isDisabledAuthor(String authorUsername) {
+        List<String> enabledAuthors = config.getEnabledAuthors();
+        List<String> disabledAuthors = config.getDisabledAuthors();
+        return !enabledAuthors.contains(Configuration.ENABLED_AUTHORS_ALL)
+                && !enabledAuthors.contains(authorUsername)
+                || disabledAuthors.contains(authorUsername);
+    }
+
 }

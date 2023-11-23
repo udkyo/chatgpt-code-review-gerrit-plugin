@@ -1,7 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.google.common.net.HttpHeaders;
-import com.google.gerrit.server.data.AccountAttribute;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.Event;
 import com.google.gson.Gson;
@@ -24,7 +23,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 
@@ -181,12 +179,15 @@ public class GerritClientComments extends GerritClientBase {
     public boolean retrieveLastComments(Event event, String fullChangeId) {
         commentsStartTimestamp = event.eventCreatedOn;
         CommentAddedEvent commentAddedEvent = (CommentAddedEvent) event;
-        Supplier<AccountAttribute> author = commentAddedEvent.author;
-        authorUsername = author.get().username;
+        authorUsername = commentAddedEvent.author.get().username;
         log.debug("Comments start datetime: {}", commentsStartTimestamp);
         log.debug("Author username: {} - ChatGPT username: {}", authorUsername, config.getGerritUserName());
         if (authorUsername.equals(config.getGerritUserName())) {
             log.debug("These are the Chatbot's own comments, do not process them.");
+            return false;
+        }
+        if (isDisabledAuthor(authorUsername)) {
+            log.info("Review of comments from author '{}' is disabled.", authorUsername);
             return false;
         }
         addAllComments(fullChangeId);

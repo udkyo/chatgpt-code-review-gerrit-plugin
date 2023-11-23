@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 import static com.google.gerrit.extensions.client.ChangeKind.REWORK;
 
@@ -68,10 +67,15 @@ public class EventListenerHandler {
             return false;
         }
         try {
-            Supplier<PatchSetAttribute> patchSetAttribute = patchSetEvent.patchSet;
-            ChangeKind patchSetEventKind = patchSetAttribute.get().kind;
+            PatchSetAttribute patchSetAttribute = patchSetEvent.patchSet.get();
+            ChangeKind patchSetEventKind = patchSetAttribute.kind;
             if (patchSetEventKind != REWORK) {
                 log.info("Change kind '{}' not processed", patchSetEventKind);
+                return false;
+            }
+            String authorUsername = patchSetAttribute.author.username;
+            if (gerritClient.isDisabledAuthor(authorUsername)) {
+                log.info("Review of Patchsets from author '{}' is disabled.", authorUsername);
                 return false;
             }
         }

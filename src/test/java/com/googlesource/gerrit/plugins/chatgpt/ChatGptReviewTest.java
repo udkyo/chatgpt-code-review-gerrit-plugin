@@ -191,6 +191,14 @@ public class ChatGptReviewTest {
                 REVIEW_TAG_COMMENTS;
     }
 
+    private AccountAttribute createTestAccountAttribute() {
+        AccountAttribute accountAttribute = new AccountAttribute();
+        accountAttribute.name = GERRIT_ACCOUNT_NAME;
+        accountAttribute.username = GERRIT_USER_NAME;
+        accountAttribute.email = GERRIT_ACCOUNT_EMAIL;
+        return accountAttribute;
+    }
+
     @Test
     public void patchSetCreatedOrUpdated() throws InterruptedException, NoSuchProjectException, ExecutionException {
         GerritClient gerritClient = new GerritClient();
@@ -207,6 +215,7 @@ public class ChatGptReviewTest {
         event.patchSet = () -> {
             PatchSetAttribute patchSetAttribute = new PatchSetAttribute();
             patchSetAttribute.kind = REWORK;
+            patchSetAttribute.author = createTestAccountAttribute();
             return patchSetAttribute;
         };
         EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer, gerritClient);
@@ -245,13 +254,7 @@ public class ChatGptReviewTest {
         when(event.getBranchNameKey()).thenReturn(BRANCH_NAME);
         when(event.getChangeKey()).thenReturn(CHANGE_ID);
         when(event.getType()).thenReturn("comment-added");
-        event.author = () -> {
-            AccountAttribute accountAttribute = new AccountAttribute();
-            accountAttribute.name = GERRIT_ACCOUNT_NAME;
-            accountAttribute.username = GERRIT_USER_NAME;
-            accountAttribute.email = GERRIT_ACCOUNT_EMAIL;
-            return accountAttribute;
-        };
+        event.author = this::createTestAccountAttribute;
         event.eventCreatedOn = TEST_TIMESTAMP;
         EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer, gerritClient);
 

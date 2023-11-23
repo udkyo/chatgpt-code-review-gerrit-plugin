@@ -29,12 +29,15 @@ public class Configuration {
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
+    public static final String ENABLED_AUTHORS_ALL = "ALL";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
     private static final boolean DEFAULT_REVIEW_PATCHSET = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
     private static final boolean DEFAULT_FULL_FILE_REVIEW = true;
     private static final boolean DEFAULT_STREAM_OUTPUT = true;
     private static final boolean DEFAULT_GLOBAL_ENABLE = false;
+    private static final String DEFAULT_DISABLED_AUTHORS = "";
+    private static final String DEFAULT_ENABLED_AUTHORS = ENABLED_AUTHORS_ALL;
     private static final String DEFAULT_ENABLED_PROJECTS = "";
     private static final String DEFAULT_ENABLED_FILE_EXTENSIONS = String.join(",", new String[]{
             ".py",
@@ -80,6 +83,8 @@ public class Configuration {
     private static final String KEY_FULL_FILE_REVIEW = "gptFullFileReview";
     private static final String KEY_PROJECT_ENABLE = "isEnabled";
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";
+    private static final String KEY_DISABLED_AUTHORS = "disabledAuthors";
+    private static final String KEY_ENABLED_AUTHORS = "enabledAuthors";
     private static final String KEY_ENABLED_PROJECTS = "enabledProjects";
     private static final String KEY_MAX_REVIEW_LINES = "maxReviewLines";
     private static final String KEY_MAX_REVIEW_FILE_SIZE = "maxReviewFileSize";
@@ -178,6 +183,14 @@ public class Configuration {
         return globalConfig.getBoolean(KEY_GLOBAL_ENABLE, DEFAULT_GLOBAL_ENABLE);
     }
 
+    public List<String> getDisabledAuthors() {
+        return splitConfig(globalConfig.getString(KEY_DISABLED_AUTHORS, DEFAULT_DISABLED_AUTHORS));
+    }
+
+    public List<String> getEnabledAuthors() {
+        return splitConfig(globalConfig.getString(KEY_ENABLED_AUTHORS, DEFAULT_ENABLED_AUTHORS));
+    }
+
     public String getEnabledProjects() {
         return globalConfig.getString(KEY_ENABLED_PROJECTS, DEFAULT_ENABLED_PROJECTS);
     }
@@ -191,9 +204,7 @@ public class Configuration {
     }
 
     public List<String> getEnabledFileExtensions() {
-        Pattern separator=Pattern.compile("\\s*,\\s*");
-        String fileExtensions = globalConfig.getString(KEY_ENABLED_FILE_EXTENSIONS, DEFAULT_ENABLED_FILE_EXTENSIONS);
-        return Arrays.asList(separator.split(fileExtensions));
+        return splitConfig(globalConfig.getString(KEY_ENABLED_FILE_EXTENSIONS, DEFAULT_ENABLED_FILE_EXTENSIONS));
     }
 
     private String getValidatedOrThrow(String key) {
@@ -233,6 +244,10 @@ public class Configuration {
         return globalConfig.getBoolean(key, defaultValue);
     }
 
+    private List<String> splitConfig(String value) {
+        Pattern separator=Pattern.compile("\\s*,\\s*");
+        return Arrays.asList(separator.split(value));
+    }
 
 }
 
