@@ -6,6 +6,7 @@ import com.google.gerrit.entities.BranchNameKey;
 import com.google.gerrit.entities.Change;
 import com.google.gerrit.entities.Project;
 import com.google.gerrit.extensions.client.ChangeKind;
+import com.google.gerrit.server.data.ChangeAttribute;
 import com.google.gerrit.server.data.PatchSetAttribute;
 import com.google.gerrit.server.events.Event;
 import com.google.gerrit.server.events.PatchSetEvent;
@@ -33,6 +34,7 @@ public class EventListenerHandler {
     private final ExecutorService executorService = new ThreadPoolExecutor(
             1, 1, 0L, TimeUnit.MILLISECONDS, queue, threadFactory, handler);
     private final GerritClient gerritClient;
+    private Configuration config;
     private CompletableFuture<Void> latestFuture;
 
     @Inject
@@ -61,32 +63,71 @@ public class EventListenerHandler {
         }));
     }
 
-    private boolean isPatchsetReviewEnabled(Configuration config, PatchSetEvent patchSetEvent) {
+    private Optional<PatchSetAttribute> getPatchSetAttribute(PatchSetEvent patchSetEvent) {
+        try {
+            return Optional.ofNullable(patchSetEvent.patchSet.get());
+        }
+        catch (NullPointerException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<String> getTopic(PatchSetEvent patchSetEvent) {
+        try {
+            ChangeAttribute changeAttribute = patchSetEvent.change.get();
+            return Optional.ofNullable(changeAttribute.topic);
+        }
+        catch (NullPointerException e) {
+            return Optional.empty();
+        }
+    }
+
+    private boolean isReviewEnabled(PatchSetEvent patchSetEvent, Project.NameKey projectNameKey) {
+        List<String> enabledProjects = Splitter.on(",").omitEmptyStrings()
+                .splitToList(config.getEnabledProjects());
+        if (!config.isGlobalEnable() &&
+                !enabledProjects.contains(projectNameKey.get()) &&
+                !config.isProjectEnable()) {
+            log.info("The project {} is not enabled for review", projectNameKey);
+            return false;
+        }
+
+        String topic = getTopic(patchSetEvent).orElse("");
+        log.debug("PatchSet Topic retrieved: '{}'", topic);
+        if (gerritClient.isDisabledTopic(topic)) {
+            log.info("Disabled review for Patchsets with Topic '{}'", topic);
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isPatchSetReviewEnabled(PatchSetEvent patchSetEvent) {
         if (!config.getGptReviewPatchSet()) {
             log.debug("Disabled review function for created or updated Patchsets.");
             return false;
         }
-        try {
-            PatchSetAttribute patchSetAttribute = patchSetEvent.patchSet.get();
-            ChangeKind patchSetEventKind = patchSetAttribute.kind;
-            if (patchSetEventKind != REWORK) {
-                log.info("Change kind '{}' not processed", patchSetEventKind);
-                return false;
-            }
-            String authorUsername = patchSetAttribute.author.username;
-            if (gerritClient.isDisabledAuthor(authorUsername)) {
-                log.info("Review of Patchsets from author '{}' is disabled.", authorUsername);
-                return false;
-            }
+        Optional<PatchSetAttribute> patchSetAttributeOptional = getPatchSetAttribute(patchSetEvent);
+        if (patchSetAttributeOptional.isEmpty()) {
+            log.info("PatchSetAttribute event properties not retrieved");
+            return false;
         }
-        catch (NullPointerException e) {
-            log.debug("PatchSet event properties not retrieved");
+        PatchSetAttribute patchSetAttribute = patchSetAttributeOptional.get();
+        ChangeKind patchSetEventKind = patchSetAttribute.kind;
+        if (patchSetEventKind != REWORK) {
+            log.info("Change kind '{}' not processed", patchSetEventKind);
+            return false;
+        }
+        String authorUsername = patchSetAttribute.author.username;
+        if (gerritClient.isDisabledAuthor(authorUsername)) {
+            log.info("Review of Patchsets from author '{}' is disabled.", authorUsername);
             return false;
         }
         return true;
     }
 
     public void handleEvent(Configuration config, Event event) {
+        this.config = config;
         PatchSetEvent patchSetEvent = (PatchSetEvent) event;
         String eventType = Optional.ofNullable(event.getType()).orElse("");
         log.info("Event type {}", eventType);
@@ -98,18 +139,12 @@ public class EventListenerHandler {
 
         gerritClient.initialize(config);
 
-        List<String> enabledProjects = Splitter.on(",").omitEmptyStrings()
-                .splitToList(config.getEnabledProjects());
-        if (!config.isGlobalEnable() &&
-                !enabledProjects.contains(projectNameKey.get()) &&
-                !config.isProjectEnable()) {
-            log.info("The project {} is not enabled for review", projectNameKey);
+        if (!isReviewEnabled(patchSetEvent, projectNameKey)) {
             return;
         }
-
         switch (eventType) {
             case "patchset-created":
-                if (!isPatchsetReviewEnabled(config, patchSetEvent)) {
+                if (!isPatchSetReviewEnabled(patchSetEvent)) {
                     return;
                 }
                 break;

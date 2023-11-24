@@ -56,4 +56,12 @@ public class GerritClientBase {
                 || disabledAuthors.contains(authorUsername);
     }
 
+    public boolean isDisabledTopic(String topic) {
+        List<String> enabledTopicFilter = config.getEnabledTopicFilter();
+        List<String> disabledTopicFilter = config.getDisabledTopicFilter();
+        return !enabledTopicFilter.contains(Configuration.ENABLED_TOPICS_ALL)
+                && enabledTopicFilter.stream().noneMatch(topic::contains)
+                || !topic.isEmpty() && disabledTopicFilter.stream().anyMatch(topic::contains);
+    }
+
 }

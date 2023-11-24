@@ -208,6 +208,11 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `enabledAuthors`: By default, every user is enabled to have their Patchsets and comments reviewed. To limit review
   capabilities to specific users, list their usernames in this setting, separated by commas.
 - `disabledAuthors`: Functions oppositely to enabledAuthors.
+- `enabledTopicFilter`: Specifies a list of keywords that trigger ChatGPT reviews based on the topic of the Patchset.
+  When this setting is active, only Patchsets and their associated comments containing at least one of these keywords in
+  the topic are reviewed.
+- `disabledTopicFilter`: Works in contrast to enabledTopicFilter, excluding Patchsets and comments from review if their
+  topics contain specified keywords.
 - `enabledFileExtensions`: This limits the reviewed files to the given types. Default file extensions are ".py, .java,
   .js, .ts, .html, .css, .cs, .cpp, .c, .h, .php, .rb, .swift, .kt, .r, .jl, .go, .scala, .pl, .pm, .rs, .dart, .lua,
   .sh, .vb, .bat".

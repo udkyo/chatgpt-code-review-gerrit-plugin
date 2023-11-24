@@ -30,6 +30,7 @@ public class Configuration {
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
     public static final String ENABLED_AUTHORS_ALL = "ALL";
+    public static final String ENABLED_TOPICS_ALL = "ALL";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
     private static final boolean DEFAULT_REVIEW_PATCHSET = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
@@ -38,6 +39,8 @@ public class Configuration {
     private static final boolean DEFAULT_GLOBAL_ENABLE = false;
     private static final String DEFAULT_DISABLED_AUTHORS = "";
     private static final String DEFAULT_ENABLED_AUTHORS = ENABLED_AUTHORS_ALL;
+    private static final String DEFAULT_DISABLED_TOPIC_FILTER = "";
+    private static final String DEFAULT_ENABLED_TOPIC_FILTER = ENABLED_TOPICS_ALL;
     private static final String DEFAULT_ENABLED_PROJECTS = "";
     private static final String DEFAULT_ENABLED_FILE_EXTENSIONS = String.join(",", new String[]{
             ".py",
@@ -85,6 +88,8 @@ public class Configuration {
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";
     private static final String KEY_DISABLED_AUTHORS = "disabledAuthors";
     private static final String KEY_ENABLED_AUTHORS = "enabledAuthors";
+    private static final String KEY_DISABLED_TOPIC_FILTER = "disabledTopicFilter";
+    private static final String KEY_ENABLED_TOPIC_FILTER = "enabledTopicFilter";
     private static final String KEY_ENABLED_PROJECTS = "enabledProjects";
     private static final String KEY_MAX_REVIEW_LINES = "maxReviewLines";
     private static final String KEY_MAX_REVIEW_FILE_SIZE = "maxReviewFileSize";
@@ -189,6 +194,14 @@ public class Configuration {
 
     public List<String> getEnabledAuthors() {
         return splitConfig(globalConfig.getString(KEY_ENABLED_AUTHORS, DEFAULT_ENABLED_AUTHORS));
+    }
+
+    public List<String> getDisabledTopicFilter() {
+        return splitConfig(globalConfig.getString(KEY_DISABLED_TOPIC_FILTER, DEFAULT_DISABLED_TOPIC_FILTER));
+    }
+
+    public List<String> getEnabledTopicFilter() {
+        return splitConfig(globalConfig.getString(KEY_ENABLED_TOPIC_FILTER, DEFAULT_ENABLED_TOPIC_FILTER));
     }
 
     public String getEnabledProjects() {
