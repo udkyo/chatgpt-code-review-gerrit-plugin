@@ -11,6 +11,7 @@
     <properties>
         <Gerrit-ApiType>plugin</Gerrit-ApiType>
         <Gerrit-ApiVersion>3.3.0</Gerrit-ApiVersion>
+        <maven.test.skip>false</maven.test.skip>
     </properties>
 
     <build>
