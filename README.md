@@ -17,6 +17,11 @@
    mvn -U clean package
     ```
 
+   If the user needs to disable test just run
+   ```bash
+   mvn -U clean package -Dmaven.test.skip=true
+   ```
+
    Alternatively, you can also download the pre-built packages directly from the 'Releases' page on our GitHub
    repository.
    On this page, you will find the released versions and can download the corresponding JAR files. Make sure to select
