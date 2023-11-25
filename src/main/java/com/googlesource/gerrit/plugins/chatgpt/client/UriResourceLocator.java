@@ -10,8 +10,8 @@ public class UriResourceLocator {
         throw new IllegalStateException("Utility class");
     }
 
-    private static String gerritAuthPrefixUri() {
-        return "/a";
+    private static String gerritSetChangesUri(String fullChangeId, String resourcePath) {
+        return "/a/changes/" + fullChangeId + resourcePath;
     }
 
     public static String gerritDiffPostfixUri(String filename) {
@@ -23,15 +23,15 @@ public class UriResourceLocator {
     }
 
     public static String gerritPatchSetFilesUri(String fullChangeId) {
-        return "/changes/" + fullChangeId + "/revisions/current/files";
+        return gerritSetChangesUri(fullChangeId, "/revisions/current/files");
     }
 
     public static String gerritGetAllPatchSetCommentsUri(String fullChangeId) {
-        return "/changes/" + fullChangeId + "/comments";
+        return gerritSetChangesUri(fullChangeId, "/comments");
     }
 
     public static String gerritCommentUri(String fullChangeId) {
-        return gerritAuthPrefixUri() + "/changes/" + fullChangeId + "/revisions/current/review";
+        return gerritSetChangesUri(fullChangeId, "/revisions/current/review");
     }
 
     public static String chatCompletionsUri() {
