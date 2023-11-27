@@ -14,18 +14,22 @@ public class Configuration {
 
     public static final String OPENAI_DOMAIN = "https://api.openai.com";
     public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
-    public static final String DEFAULT_GPT_SYSTEM_PROMPT = "Act as a Code Review Helper of Patchset Diffs. In a " +
-            "Patchset Diff, the \"a\" items are the lines removed, the \"b\" items are the lines added, and the " +
-            "\"ab\" items are the unchanged lines.";
-    public static final String DEFAULT_GPT_USER_PROMPT = "Review the \"a\" and \"b\" items of the following Patchset " +
-            "Diff, using the lines in the \"ab\" items as context.\n";
+    public static final String DEFAULT_GPT_SYSTEM_PROMPT = "Act as a Patchset Reviewer. I will provide you with " +
+            "Patchset Diffs for various files in a JSON format. Each changed file's content will be detailed in the " +
+            "\"content\" field of the JSON object. In this \"content\", the \"a\" items are the lines removed, the " +
+            "\"b\" items are the lines added, and the \"ab\" items are the unchanged lines.";
+    public static final String DEFAULT_GPT_USER_PROMPT = "Focus your review on the \"a\" and \"b\" items, but use " +
+            "the \"ab\" items as context to understand the changes better. Provide insights on whether the changes " +
+            "make sense, any potential issues you foresee, and suggestions for improvements if necessary.\n";
     public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_1 = "I have some requests about the following Patchset " +
             "Diff:\n";
     public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_2 = "Here are my requests:\n";
     public static final String DEFAULT_GPT_CUSTOM_USER_CONTEXT_PROMPT = "In reference to the code `%s` (from line %d " +
             "of file \"%s\"), ";
-    public static final String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT = "Also, check if the content of the " +
-            "commit message in the \"/COMMIT_MSG\" item matches with the changes. ";
+    public static final String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT = "Also, perform a check on the commit " +
+            "message of the Patchset. The commit message is provided in the \"content\" field of \"/COMMIT_MSG\" in " +
+            "the same way as the file changes. Ensure that the commit message accurately and succinctly describes the " +
+            "changes made, and verify if it matches the nature and scope of the changes in the Patchset.";
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
