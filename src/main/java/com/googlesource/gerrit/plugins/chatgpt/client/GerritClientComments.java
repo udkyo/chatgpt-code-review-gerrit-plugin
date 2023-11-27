@@ -186,8 +186,8 @@ public class GerritClientComments extends GerritClientBase {
             log.debug("These are the Chatbot's own comments, do not process them.");
             return false;
         }
-        if (isDisabledAuthor(authorUsername)) {
-            log.info("Review of comments from author '{}' is disabled.", authorUsername);
+        if (isDisabledUser(authorUsername)) {
+            log.info("Review of comments from user '{}' is disabled.", authorUsername);
             return false;
         }
         addAllComments(fullChangeId);

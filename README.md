@@ -210,9 +210,9 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
   being submitted for review.
 - `gptStreamOutput`: The default value is true. Whether the response is expected in stream output mode or not.
 - `maxReviewLines`: The default value is 1000. This sets a limit on the number of lines of code included in the review.
-- `enabledAuthors`: By default, every user is enabled to have their Patchsets and comments reviewed. To limit review
+- `enabledUsers`: By default, every user is enabled to have their Patchsets and comments reviewed. To limit review
   capabilities to specific users, list their usernames in this setting, separated by commas.
-- `disabledAuthors`: Functions oppositely to enabledAuthors.
+- `disabledUsers`: Functions oppositely to enabledUsers.
 - `enabledTopicFilter`: Specifies a list of keywords that trigger ChatGPT reviews based on the topic of the Patchset.
   When this setting is active, only Patchsets and their associated comments containing at least one of these keywords in
   the topic are reviewed.

@@ -29,7 +29,7 @@ public class Configuration {
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
-    public static final String ENABLED_AUTHORS_ALL = "ALL";
+    public static final String ENABLED_USERS_ALL = "ALL";
     public static final String ENABLED_TOPICS_ALL = "ALL";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
     private static final boolean DEFAULT_REVIEW_PATCHSET = true;
@@ -37,8 +37,8 @@ public class Configuration {
     private static final boolean DEFAULT_FULL_FILE_REVIEW = true;
     private static final boolean DEFAULT_STREAM_OUTPUT = true;
     private static final boolean DEFAULT_GLOBAL_ENABLE = false;
-    private static final String DEFAULT_DISABLED_AUTHORS = "";
-    private static final String DEFAULT_ENABLED_AUTHORS = ENABLED_AUTHORS_ALL;
+    private static final String DEFAULT_DISABLED_USERS = "";
+    private static final String DEFAULT_ENABLED_USERS = ENABLED_USERS_ALL;
     private static final String DEFAULT_DISABLED_TOPIC_FILTER = "";
     private static final String DEFAULT_ENABLED_TOPIC_FILTER = ENABLED_TOPICS_ALL;
     private static final String DEFAULT_ENABLED_PROJECTS = "";
@@ -86,8 +86,8 @@ public class Configuration {
     private static final String KEY_FULL_FILE_REVIEW = "gptFullFileReview";
     private static final String KEY_PROJECT_ENABLE = "isEnabled";
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";
-    private static final String KEY_DISABLED_AUTHORS = "disabledAuthors";
-    private static final String KEY_ENABLED_AUTHORS = "enabledAuthors";
+    private static final String KEY_DISABLED_USERS = "disabledUsers";
+    private static final String KEY_ENABLED_USERS = "enabledUsers";
     private static final String KEY_DISABLED_TOPIC_FILTER = "disabledTopicFilter";
     private static final String KEY_ENABLED_TOPIC_FILTER = "enabledTopicFilter";
     private static final String KEY_ENABLED_PROJECTS = "enabledProjects";
@@ -188,12 +188,12 @@ public class Configuration {
         return globalConfig.getBoolean(KEY_GLOBAL_ENABLE, DEFAULT_GLOBAL_ENABLE);
     }
 
-    public List<String> getDisabledAuthors() {
-        return splitConfig(globalConfig.getString(KEY_DISABLED_AUTHORS, DEFAULT_DISABLED_AUTHORS));
+    public List<String> getDisabledUsers() {
+        return splitConfig(globalConfig.getString(KEY_DISABLED_USERS, DEFAULT_DISABLED_USERS));
     }
 
-    public List<String> getEnabledAuthors() {
-        return splitConfig(globalConfig.getString(KEY_ENABLED_AUTHORS, DEFAULT_ENABLED_AUTHORS));
+    public List<String> getEnabledUsers() {
+        return splitConfig(globalConfig.getString(KEY_ENABLED_USERS, DEFAULT_ENABLED_USERS));
     }
 
     public List<String> getDisabledTopicFilter() {

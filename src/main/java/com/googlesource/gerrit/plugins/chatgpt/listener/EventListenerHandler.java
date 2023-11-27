@@ -119,8 +119,8 @@ public class EventListenerHandler {
             return false;
         }
         String authorUsername = patchSetAttribute.author.username;
-        if (gerritClient.isDisabledAuthor(authorUsername)) {
-            log.info("Review of Patchsets from author '{}' is disabled.", authorUsername);
+        if (gerritClient.isDisabledUser(authorUsername)) {
+            log.info("Review of Patchsets from user '{}' is disabled.", authorUsername);
             return false;
         }
         return true;
