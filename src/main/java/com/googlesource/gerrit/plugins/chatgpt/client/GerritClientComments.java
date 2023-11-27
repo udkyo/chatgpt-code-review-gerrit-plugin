@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 
@@ -90,11 +92,18 @@ public class GerritClientComments extends GerritClientBase {
         return filterLastComments(forwardGetRequest(uri));
     }
 
+    private Pattern getBotMentionPattern() {
+        String escapedUserName = Pattern.quote(config.getGerritUserName());
+        String emailRegex = "@" + escapedUserName + "(?:@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})?\\b";
+        return Pattern.compile(emailRegex);
+    }
+
     private boolean isBotAddressed(String comment) {
         log.info("Processing comment: {}", comment);
 
-        if (comment == null || !comment.contains("@" + config.getGerritUserName())) {
-            log.debug("Skipping action since the comment does not mention the ChatGpt bot." +
+        Matcher userMatcher = getBotMentionPattern().matcher(comment);
+        if (!userMatcher.find()) {
+            log.debug("Skipping action since the comment does not mention the ChatGPT bot." +
                             " Expected bot name in comment: {}, Actual comment text: {}",
                     config.getGerritUserName(), comment);
             return false;
@@ -102,9 +111,8 @@ public class GerritClientComments extends GerritClientBase {
         return true;
     }
 
-    private String removeTagsFromComment(String comment) {
-        return comment.substring(comment.indexOf("@" + config.getGerritUserName())
-                + config.getGerritUserName().length() + 1);
+    private String removeMentionsFromComment(String comment) {
+        return comment.replaceAll(getBotMentionPattern().pattern(), "");
     }
 
     private void addAllComments(String fullChangeId) {
@@ -167,7 +175,7 @@ public class GerritClientComments extends GerritClientBase {
             ));
         }
         String commentMessage = commentProperty.get("message").getAsString();
-        commentString.append(removeTagsFromComment(commentMessage).trim());
+        commentString.append(removeMentionsFromComment(commentMessage).trim());
 
         return commentString.toString();
     }

@@ -6,8 +6,9 @@
 
 1. This plugin allows you to use ChatGPT for code review in Gerrit conveniently. After submitting a patchSet, OpenAI
    will provide review feedback in the form of comments.
-2. You can continue to ask ChatGPT by @{gerritUserName} in the comments to further guide it in generating more
-   targeted review comments.
+2. You can continue to ask ChatGPT by @{gerritUserName} or @{gerritEmailAddress} (provided that `gerritEmailAddress` is
+   in the form "gerritUserName@<any_email_domain>") in the comments to further guide it in generating more targeted
+   review comments.
 
 ## Getting Started
 
