@@ -16,9 +16,6 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,30 +23,21 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.googlesource.gerrit.plugins.chatgpt.client.ReviewUtils.getTimeStamp;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 @Slf4j
-public class GerritClientComments extends GerritClientBase {
+public class GerritClientComments extends GerritClientAccount {
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
 
     private final Gson gson = new Gson();
     private long commentsStartTimestamp;
     private String authorUsername;
     protected List<JsonObject> commentProperties;
-    protected HashMap<String, List<String>> filesNewContent;
 
-    public void initialize(Configuration config) {
-        super.initialize(config);
+    public GerritClientComments(Configuration config) {
+        super(config);
         commentProperties  = new ArrayList<>();
-        filesNewContent = new HashMap<>();
-    }
-
-    private long getTimeStamp(String updatedString) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSSSS");
-        LocalDateTime updatedDateTime = LocalDateTime.parse(updatedString, formatter);
-        long updatedTimeStamp = updatedDateTime.toInstant(ZoneOffset.UTC).getEpochSecond();
-        log.debug("TimeStamp: {} ({})", updatedTimeStamp, updatedDateTime);
-        return updatedTimeStamp;
     }
 
     private List<JsonObject> filterLastComments(String responseBody) {
@@ -203,8 +191,7 @@ public class GerritClientComments extends GerritClientBase {
         return !commentProperties.isEmpty();
     }
 
-    public void postComments(String fullChangeId, List<HashMap<String, Object>> reviewBatches)
-            throws Exception {
+    public void postComments(String fullChangeId, List<HashMap<String, Object>> reviewBatches) throws Exception {
         Map<String, Object> map = getContextProperties(reviewBatches);
         if (map.isEmpty()) {
             return;
@@ -229,6 +216,15 @@ public class GerritClientComments extends GerritClientBase {
         if (response.statusCode() != HTTP_OK) {
             log.error("Review post failed with status code: {}", response.statusCode());
         }
+    }
+
+    public String getTaggedPrompt(HashMap<String, List<String>> filesNewContent) {
+        this.filesNewContent = filesNewContent;
+        StringBuilder taggedPrompt = new StringBuilder();
+        for (int i = 0; i < commentProperties.size(); i++) {
+            taggedPrompt.append(String.format("[ID:%d] %s\n", i, getCommentPrompt(i)));
+        }
+        return taggedPrompt.toString();
     }
 
 }

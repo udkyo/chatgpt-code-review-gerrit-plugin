@@ -18,9 +18,11 @@ import static java.net.HttpURLConnection.HTTP_OK;
 public class GerritClientBase {
     protected Configuration config;
     protected final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
+    protected HashMap<String, List<String>> filesNewContent;
 
-    public void initialize(Configuration config) {
+    public GerritClientBase(Configuration config) {
         this.config = config;
+        filesNewContent = new HashMap<>();
         config.resetDynamicConfiguration();
     }
 
@@ -48,20 +50,8 @@ public class GerritClientBase {
         return response.body();
     }
 
-    public boolean isDisabledUser(String authorUsername) {
-        List<String> enabledUsers = config.getEnabledUsers();
-        List<String> disabledUsers = config.getDisabledUsers();
-        return !enabledUsers.contains(Configuration.ENABLED_USERS_ALL)
-                && !enabledUsers.contains(authorUsername)
-                || disabledUsers.contains(authorUsername);
-    }
-
-    public boolean isDisabledTopic(String topic) {
-        List<String> enabledTopicFilter = config.getEnabledTopicFilter();
-        List<String> disabledTopicFilter = config.getDisabledTopicFilter();
-        return !enabledTopicFilter.contains(Configuration.ENABLED_TOPICS_ALL)
-                && enabledTopicFilter.stream().noneMatch(topic::contains)
-                || !topic.isEmpty() && disabledTopicFilter.stream().anyMatch(topic::contains);
+    public HashMap<String, List<String>> getFilesNewContent() {
+        return filesNewContent;
     }
 
 }

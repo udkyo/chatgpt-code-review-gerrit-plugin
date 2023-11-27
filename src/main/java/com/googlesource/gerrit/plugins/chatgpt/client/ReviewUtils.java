@@ -1,5 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,6 +20,12 @@ public class ReviewUtils {
         } else {
             return null;
         }
+    }
+
+    public static long getTimeStamp(String updatedString) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSSSS");
+        LocalDateTime updatedDateTime = LocalDateTime.parse(updatedString, formatter);
+        return updatedDateTime.toInstant(ZoneOffset.UTC).getEpochSecond();
     }
 
 }
