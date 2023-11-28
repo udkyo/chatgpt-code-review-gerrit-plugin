@@ -2,7 +2,8 @@ package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.OutputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
@@ -11,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.URI;
 import java.util.*;
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 
 @Slf4j
 public class GerritClientPatchSet extends GerritClientAccount {
@@ -41,14 +41,12 @@ public class GerritClientPatchSet extends GerritClientAccount {
     private List<String> getAffectedFiles(String fullChangeId) throws Exception {
         URI uri = URI.create(config.getGerritAuthBaseUrl()
                         + UriResourceLocator.gerritPatchSetFilesUri(fullChangeId));
-        String responseBody = forwardGetRequest(uri);
-        Type listType = new TypeToken<Map<String, Map<String, String>>>() {}.getType();
-        Map<String, Map<String, String>> map = gson.fromJson(responseBody, listType);
+        JsonObject affectedFileMap = forwardGetRequestReturnJsonObject(uri);
         List<String> files = new ArrayList<>();
-        for (Map.Entry<String, Map<String, String>> file : map.entrySet()) {
+        for (Map.Entry<String, JsonElement> file : affectedFileMap.entrySet()) {
             String filename = file.getKey();
             if (!filename.equals("/COMMIT_MSG") || config.getGptReviewCommitMessages()) {
-                int size = Integer.parseInt(file.getValue().get("size"));
+                int size = Integer.parseInt(file.getValue().getAsJsonObject().get("size").getAsString());
                 if (size > config.getMaxReviewFileSize()) {
                     log.info("File '{}' not reviewed because its size exceeds the fixed maximum allowable size.",
                             filename);

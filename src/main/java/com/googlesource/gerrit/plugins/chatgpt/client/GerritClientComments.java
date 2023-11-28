@@ -7,12 +7,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -40,18 +38,18 @@ public class GerritClientComments extends GerritClientAccount {
         commentProperties  = new ArrayList<>();
     }
 
-    private List<JsonObject> filterLastComments(String responseBody) {
-        Type type = new TypeToken<Map<String, JsonArray>>(){}.getType();
-        Map<String, JsonArray> jsonMap = gson.fromJson(responseBody, type);
+    private List<JsonObject> getLastComments(String fullChangeId) throws Exception {
+        URI uri = URI.create(config.getGerritAuthBaseUrl()
+                + UriResourceLocator.gerritGetAllPatchSetCommentsUri(fullChangeId));
+        JsonObject lastCommentMap = forwardGetRequestReturnJsonObject(uri);
 
         String latestChangeMessageId = null;
         HashMap<String, List<JsonObject>> latestComments = new HashMap<>();
-
-        for (Map.Entry<String, JsonArray> entry : jsonMap.entrySet()) {
+        for (Map.Entry<String, JsonElement> entry : lastCommentMap.entrySet()) {
             String filename = entry.getKey();
-            log.info("filename: {}", filename);
+            log.info("Commented filename: {}", filename);
 
-            JsonArray commentsArray = entry.getValue();
+            JsonArray commentsArray = entry.getValue().getAsJsonArray();
 
             for (JsonElement element : commentsArray) {
                 JsonObject commentObject = element.getAsJsonObject();
@@ -71,13 +69,6 @@ public class GerritClientComments extends GerritClientAccount {
         }
 
         return latestComments.getOrDefault(latestChangeMessageId, null);
-    }
-
-    private List<JsonObject> getLastComments(String fullChangeId) throws Exception {
-        URI uri = URI.create(config.getGerritAuthBaseUrl()
-                + UriResourceLocator.gerritGetAllPatchSetCommentsUri(fullChangeId));
-
-        return filterLastComments(forwardGetRequest(uri));
     }
 
     private Pattern getBotMentionPattern() {

@@ -3,6 +3,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client;
 import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,6 +57,11 @@ public class GerritClientBase {
     protected JsonArray forwardGetRequestReturnJsonArray(URI uri) throws Exception {
         String responseBody = forwardGetRequest(uri);
         return gson.fromJson(responseBody, JsonArray.class);
+    }
+
+    protected JsonObject forwardGetRequestReturnJsonObject(URI uri) throws Exception {
+        String responseBody = forwardGetRequest(uri);
+        return gson.fromJson(responseBody, JsonObject.class);
     }
 
     public HashMap<String, List<String>> getFilesNewContent() {
