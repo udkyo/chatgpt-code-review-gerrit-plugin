@@ -1,6 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.google.common.net.HttpHeaders;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,9 +18,10 @@ import static java.net.HttpURLConnection.HTTP_OK;
 
 @Slf4j
 public class GerritClientBase {
-    protected Configuration config;
+    protected final Gson gson = new Gson();
     protected final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
     protected HashMap<String, List<String>> filesNewContent;
+    protected Configuration config;
 
     public GerritClientBase(Configuration config) {
         this.config = config;
@@ -42,12 +45,17 @@ public class GerritClientBase {
         HttpResponse<String> response = httpClientWithRetry.execute(request);
 
         if (response.statusCode() != HTTP_OK) {
-            log.error("Failed to get patch. Response: {}", response);
-            throw new IOException("Failed to get patch from Gerrit");
+            log.error("Failed to get response. Response: {}", response);
+            throw new IOException("Failed to get response from Gerrit");
         }
-        log.debug("Successfully obtained patch. Decoding response body.");
+        log.debug("Successfully obtained response.");
 
         return response.body();
+    }
+
+    protected JsonArray forwardGetRequestReturnJsonArray(URI uri) throws Exception {
+        String responseBody = forwardGetRequest(uri);
+        return gson.fromJson(responseBody, JsonArray.class);
     }
 
     public HashMap<String, List<String>> getFilesNewContent() {

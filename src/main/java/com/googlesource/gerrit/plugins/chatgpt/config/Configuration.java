@@ -34,6 +34,7 @@ public class Configuration {
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
     public static final String ENABLED_USERS_ALL = "ALL";
+    public static final String ENABLED_GROUPS_ALL = "ALL";
     public static final String ENABLED_TOPICS_ALL = "ALL";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
     private static final boolean DEFAULT_REVIEW_PATCHSET = true;
@@ -43,6 +44,8 @@ public class Configuration {
     private static final boolean DEFAULT_GLOBAL_ENABLE = false;
     private static final String DEFAULT_DISABLED_USERS = "";
     private static final String DEFAULT_ENABLED_USERS = ENABLED_USERS_ALL;
+    private static final String DEFAULT_DISABLED_GROUPS = "";
+    private static final String DEFAULT_ENABLED_GROUPS = ENABLED_GROUPS_ALL;
     private static final String DEFAULT_DISABLED_TOPIC_FILTER = "";
     private static final String DEFAULT_ENABLED_TOPIC_FILTER = ENABLED_TOPICS_ALL;
     private static final String DEFAULT_ENABLED_PROJECTS = "";
@@ -92,6 +95,8 @@ public class Configuration {
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";
     private static final String KEY_DISABLED_USERS = "disabledUsers";
     private static final String KEY_ENABLED_USERS = "enabledUsers";
+    private static final String KEY_DISABLED_GROUPS = "disabledGroups";
+    private static final String KEY_ENABLED_GROUPS = "enabledGroups";
     private static final String KEY_DISABLED_TOPIC_FILTER = "disabledTopicFilter";
     private static final String KEY_ENABLED_TOPIC_FILTER = "enabledTopicFilter";
     private static final String KEY_ENABLED_PROJECTS = "enabledProjects";
@@ -198,6 +203,14 @@ public class Configuration {
 
     public List<String> getEnabledUsers() {
         return splitConfig(globalConfig.getString(KEY_ENABLED_USERS, DEFAULT_ENABLED_USERS));
+    }
+
+    public List<String> getDisabledGroups() {
+        return splitConfig(globalConfig.getString(KEY_DISABLED_GROUPS, DEFAULT_DISABLED_GROUPS));
+    }
+
+    public List<String> getEnabledGroups() {
+        return splitConfig(globalConfig.getString(KEY_ENABLED_GROUPS, DEFAULT_ENABLED_GROUPS));
     }
 
     public List<String> getDisabledTopicFilter() {

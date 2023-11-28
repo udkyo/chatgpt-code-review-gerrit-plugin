@@ -214,6 +214,9 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `enabledUsers`: By default, every user is enabled to have their Patchsets and comments reviewed. To limit review
   capabilities to specific users, list their usernames in this setting, separated by commas.
 - `disabledUsers`: Functions oppositely to enabledUsers.
+- `enabledGroups`: Initially, all groups are permitted to have their Patchsets and comments reviewed. To restrict review
+  access to certain groups, specify their names in this setting, separating them with commas.
+- `disabledGroups`: Operates in reverse to `enabledGroups`, excluding specified groups from reviews.
 - `enabledTopicFilter`: Specifies a list of keywords that trigger ChatGPT reviews based on the topic of the Patchset.
   When this setting is active, only Patchsets and their associated comments containing at least one of these keywords in
   the topic are reviewed.

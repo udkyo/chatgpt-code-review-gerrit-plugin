@@ -1,0 +1,22 @@
+[
+  {
+    "options": {},
+    "id": "global%3AAnonymous-Users",
+    "name": "Anonymous Users"
+  },
+  {
+    "url": "#/admin/groups/uuid-3510047b0bf5a31ecece5dee813a4d4850f5f3f",
+    "options": {},
+    "group_id": 1,
+    "owner": "Test",
+    "owner_id": "3510047b0bf5a31ecece5dee813a4d4850f5f3f",
+    "created_on": "2023-11-25 16:00:12.000000000",
+    "id": "3510047b0bf5a31ecece5dee813a4d4850f5f3f",
+    "name": "Test"
+  },
+  {
+    "options": {},
+    "id": "global%3ARegistered-Users",
+    "name": "Registered Users"
+  }
+]

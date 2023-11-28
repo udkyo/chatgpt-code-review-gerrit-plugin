@@ -1,7 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import java.net.URLEncoder;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 
 public class UriResourceLocator {
@@ -10,16 +10,28 @@ public class UriResourceLocator {
         throw new IllegalStateException("Utility class");
     }
 
+    private static String gerritAuthPrefixUri() {
+        return "/a";
+    }
+
     private static String gerritSetChangesUri(String fullChangeId, String resourcePath) {
-        return "/a/changes/" + fullChangeId + resourcePath;
+        return gerritAuthPrefixUri() + "/changes/" + fullChangeId + resourcePath;
+    }
+
+    public static String gerritAccountsUri() {
+        return gerritAuthPrefixUri() + "/accounts";
+    }
+
+    public static String gerritAccountIdUri(String userName) {
+        return gerritAccountsUri() + "/?q=username:" + URLEncoder.encode(userName, StandardCharsets.UTF_8);
+    }
+
+    public static String gerritGroupPostfixUri(int accountId) {
+        return "/" + accountId + "/groups";
     }
 
     public static String gerritDiffPostfixUri(String filename) {
-        try {
-            return "/" + URLEncoder.encode(filename, "UTF-8") + "/diff";
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e.getCause());
-        }
+        return "/" + URLEncoder.encode(filename, StandardCharsets.UTF_8) + "/diff";
     }
 
     public static String gerritPatchSetFilesUri(String fullChangeId) {
