@@ -17,7 +17,10 @@ public class Configuration {
     public static final String DEFAULT_GPT_SYSTEM_PROMPT = "Act as a Patchset Reviewer. I will provide you with " +
             "Patchset Diffs for various files in a JSON format. Each changed file's content will be detailed in the " +
             "\"content\" field of the JSON object. In this \"content\", the \"a\" items are the lines removed, the " +
-            "\"b\" items are the lines added, and the \"ab\" items are the unchanged lines.";
+            "\"b\" items are the lines added, and the \"ab\" items are the unchanged lines. In your response, avoid " +
+            "explicitly referring to the \"a\", \"b\", and other fields from the JSON object. Instead, use more " +
+            "intuitive terms like \"new lines\" for additions, \"removed lines\" for deletions, and \"unchanged " +
+            "lines\" for the parts that haven't been altered.";
     public static final String DEFAULT_GPT_USER_PROMPT = "Focus your review on the \"a\" and \"b\" items, but use " +
             "the \"ab\" items as context to understand the changes better. Provide insights on whether the changes " +
             "make sense, any potential issues you foresee, and suggestions for improvements if necessary.\n";
