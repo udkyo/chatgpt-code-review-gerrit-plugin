@@ -95,7 +95,7 @@ public class EventListenerHandler {
         String topic = getTopic(patchSetEvent).orElse("");
         log.debug("PatchSet Topic retrieved: '{}'", topic);
         if (gerritClient.isDisabledTopic(topic)) {
-            log.info("Disabled review for Patchsets with Topic '{}'", topic);
+            log.info("Disabled review for PatchSets with Topic '{}'", topic);
             return false;
         }
 
@@ -104,7 +104,7 @@ public class EventListenerHandler {
 
     private boolean isPatchSetReviewEnabled(PatchSetEvent patchSetEvent) {
         if (!config.getGptReviewPatchSet()) {
-            log.debug("Disabled review function for created or updated Patchsets.");
+            log.info("Disabled review function for created or updated PatchSets.");
             return false;
         }
         Optional<PatchSetAttribute> patchSetAttributeOptional = getPatchSetAttribute(patchSetEvent);
@@ -120,7 +120,7 @@ public class EventListenerHandler {
         }
         String authorUsername = patchSetAttribute.author.username;
         if (gerritClient.isDisabledUser(authorUsername)) {
-            log.info("Review of Patchsets from user '{}' is disabled.", authorUsername);
+            log.info("Review of PatchSets from user '{}' is disabled.", authorUsername);
             return false;
         }
         return true;
@@ -150,7 +150,7 @@ public class EventListenerHandler {
                 break;
             case "comment-added":
                 if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
-                    log.info("Found no comment to review");
+                    log.info("No comments found for review");
                     return;
                 }
                 break;

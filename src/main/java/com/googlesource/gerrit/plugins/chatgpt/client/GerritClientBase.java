@@ -46,10 +46,10 @@ public class GerritClientBase {
         HttpResponse<String> response = httpClientWithRetry.execute(request);
 
         if (response.statusCode() != HTTP_OK) {
-            log.error("Failed to get response. Response: {}", response);
+            log.error("Failed to get response from Gerrit. Response: {}", response);
             throw new IOException("Failed to get response from Gerrit");
         }
-        log.debug("Successfully obtained response.");
+        log.debug("Successfully obtained response from Gerrit.");
 
         return response.body();
     }

@@ -36,10 +36,10 @@ public class PatchSetReviewer {
         commentProperties = gerritClient.getCommentProperties();
         String patchSet = gerritClient.getPatchSet(fullChangeId);
         if (patchSet.isEmpty()) {
-            log.info("No file to review has been found in the Patchset");
+            log.info("No file to review has been found in the PatchSet");
             return;
         }
-        config.configureDynamically(Configuration.KEY_GPT_USER_PROMPT, gerritClient.getTaggedPrompt());
+        config.configureDynamically(Configuration.KEY_GPT_USER_PROMPT, gerritClient.getUserPrompt());
 
         String reviewSuggestion = getReviewSuggestion(config, fullChangeId, patchSet);
         splitReviewIntoBatches(reviewSuggestion);
@@ -47,20 +47,24 @@ public class PatchSetReviewer {
         gerritClient.postComments(fullChangeId, reviewBatches);
     }
 
-    private Integer getBatchID() {
+    private Integer getBatchId() {
         try {
             return Integer.parseInt(currentTag);
         }
         catch (NumberFormatException ex){
-            return -1;
+            return null;
         }
     }
 
     private void addReviewBatch(StringBuilder batch) {
         HashMap<String, Object> batchMap = new HashMap<>();
         batchMap.put("content", batch.toString());
-        Integer batchID = getBatchID();
-        if (batchID >= 0 && commentProperties != null && batchID < commentProperties.size()) {
+        Integer batchID = getBatchId();
+        if (batchID == null) {
+            log.warn("Error retrieving batch ID from currentTag {}", currentTag);
+            return;
+        }
+        if (commentProperties != null && batchID < commentProperties.size()) {
             JsonObject commentProperty = commentProperties.get(batchID);
             if (commentProperty != null &&
                     (commentProperty.has("line") || commentProperty.has("range"))) {

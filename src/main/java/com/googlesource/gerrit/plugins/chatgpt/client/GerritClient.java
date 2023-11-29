@@ -45,8 +45,8 @@ public class GerritClient {
         return gerritClientComments.retrieveLastComments(event, fullChangeId);
     }
 
-    public String getTaggedPrompt() {
-        return gerritClientComments.getTaggedPrompt(gerritClientPatchSet.getFilesNewContent());
+    public String getUserPrompt() {
+        return gerritClientComments.getUserPrompt(gerritClientPatchSet.getFilesNewContent());
     }
 
 }

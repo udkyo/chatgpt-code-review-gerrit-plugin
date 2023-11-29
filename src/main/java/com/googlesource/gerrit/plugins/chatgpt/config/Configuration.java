@@ -14,8 +14,8 @@ public class Configuration {
 
     public static final String OPENAI_DOMAIN = "https://api.openai.com";
     public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
-    public static final String DEFAULT_GPT_SYSTEM_PROMPT = "Act as a Patchset Reviewer. I will provide you with " +
-            "Patchset Diffs for various files in a JSON format. Each changed file's content will be detailed in the " +
+    public static final String DEFAULT_GPT_SYSTEM_PROMPT = "Act as a PatchSet Reviewer. I will provide you with " +
+            "PatchSet Diffs for various files in a JSON format. Each changed file's content will be detailed in the " +
             "\"content\" field of the JSON object. In this \"content\", the \"a\" items are the lines removed, the " +
             "\"b\" items are the lines added, and the \"ab\" items are the unchanged lines. In your response, avoid " +
             "explicitly referring to the \"a\", \"b\", and other fields from the JSON object. Instead, use more " +
@@ -24,15 +24,15 @@ public class Configuration {
     public static final String DEFAULT_GPT_USER_PROMPT = "Focus your review on the \"a\" and \"b\" items, but use " +
             "the \"ab\" items as context to understand the changes better. Provide insights on whether the changes " +
             "make sense, any potential issues you foresee, and suggestions for improvements if necessary.\n";
-    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_1 = "I have some requests about the following Patchset " +
+    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_1 = "I have some requests about the following PatchSet " +
             "Diff:\n";
     public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_2 = "Here are my requests:\n";
     public static final String DEFAULT_GPT_CUSTOM_USER_CONTEXT_PROMPT = "In reference to the code `%s` (from line %d " +
             "of file \"%s\"), ";
     public static final String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT = "Also, perform a check on the commit " +
-            "message of the Patchset. The commit message is provided in the \"content\" field of \"/COMMIT_MSG\" in " +
+            "message of the PatchSet. The commit message is provided in the \"content\" field of \"/COMMIT_MSG\" in " +
             "the same way as the file changes. Ensure that the commit message accurately and succinctly describes the " +
-            "changes made, and verify if it matches the nature and scope of the changes in the Patchset.";
+            "changes made, and verify if it matches the nature and scope of the changes in the PatchSet.";
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
@@ -92,7 +92,7 @@ public class Configuration {
     private static final String KEY_GPT_TEMPERATURE = "gptTemperature";
     private static final String KEY_STREAM_OUTPUT = "gptStreamOutput";
     private static final String KEY_REVIEW_COMMIT_MESSAGES = "gptReviewCommitMessages";
-    private static final String KEY_REVIEW_PATCHSET = "gptReviewPatchset";
+    private static final String KEY_REVIEW_PATCHSET = "gptReviewPatchSet";
     private static final String KEY_FULL_FILE_REVIEW = "gptFullFileReview";
     private static final String KEY_PROJECT_ENABLE = "isEnabled";
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";

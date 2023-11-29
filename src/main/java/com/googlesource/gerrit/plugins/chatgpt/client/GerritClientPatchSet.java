@@ -15,7 +15,7 @@ import java.lang.reflect.Field;
 
 @Slf4j
 public class GerritClientPatchSet extends GerritClientAccount {
-    private static final String[] COMMIT_MESSAGE_FILTER_PREFIXES = {
+    private static final String[] COMMIT_MESSAGE_FILTER_OUT_PREFIXES = {
         "Parent:",
         "Author:",
         "AuthorDate:",
@@ -61,7 +61,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
 
     private List<String> filterCommitMessageContent(List<String> fieldValue) {
         fieldValue.removeIf(s ->
-                s.isEmpty() || Arrays.stream(COMMIT_MESSAGE_FILTER_PREFIXES).anyMatch(s::startsWith));
+                s.isEmpty() || Arrays.stream(COMMIT_MESSAGE_FILTER_OUT_PREFIXES).anyMatch(s::startsWith));
         return fieldValue;
     }
 
@@ -98,7 +98,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
             add("DUMMY LINE #0");
         }};
         InputFileDiff inputFileDiff = gson.fromJson(fileDiffJson, InputFileDiff.class);
-        // Initialize the reduced file diff with fields `meta_a` and `meta_b`
+        // Initialize the reduced output file diff with fields `meta_a` and `meta_b`
         OutputFileDiff outputFileDiff = new OutputFileDiff(inputFileDiff.getMeta_a(), inputFileDiff.getMeta_b());
         List<OutputFileDiff.Content> outputDiffContent = new ArrayList<>();
         List<InputFileDiff.Content> inputDiffContent = inputFileDiff.getContent();

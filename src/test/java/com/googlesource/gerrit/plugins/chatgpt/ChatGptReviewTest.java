@@ -280,9 +280,7 @@ public class ChatGptReviewTest {
         GerritListener gerritListener = new GerritListener(mockConfigCreator, eventListenerHandler);
         gerritListener.onEvent(event);
         CompletableFuture<Void> future = eventListenerHandler.getLatestFuture();
-        Assert.assertThrows(NullPointerException.class, () -> {
-            future.get();
-        });
+        Assert.assertThrows(NullPointerException.class, () -> future.get());
 
     }
 

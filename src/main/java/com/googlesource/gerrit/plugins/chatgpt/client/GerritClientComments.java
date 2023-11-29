@@ -107,7 +107,7 @@ public class GerritClientComments extends GerritClientAccount {
                 }
             }
         } catch (Exception e) {
-            log.error("Error while processing change: {}", fullChangeId, e);
+            log.error("Error while retrieving comments for change: {}", fullChangeId, e);
         }
     }
 
@@ -167,10 +167,9 @@ public class GerritClientComments extends GerritClientAccount {
         commentsStartTimestamp = event.eventCreatedOn;
         CommentAddedEvent commentAddedEvent = (CommentAddedEvent) event;
         authorUsername = commentAddedEvent.author.get().username;
-        log.debug("Comments start datetime: {}", commentsStartTimestamp);
-        log.debug("Author username: {} - ChatGPT username: {}", authorUsername, config.getGerritUserName());
+        log.debug("Found comments by '{}' on {}", authorUsername, commentsStartTimestamp);
         if (authorUsername.equals(config.getGerritUserName())) {
-            log.debug("These are the Chatbot's own comments, do not process them.");
+            log.debug("These are the Bot's own comments, do not process them.");
             return false;
         }
         if (isDisabledUser(authorUsername)) {
@@ -187,14 +186,13 @@ public class GerritClientComments extends GerritClientAccount {
         if (map.isEmpty()) {
             return;
         }
-        String json = gson.toJson(map);
-
         URI uri = URI.create(config.getGerritAuthBaseUrl()
                 + UriResourceLocator.gerritCommentUri(fullChangeId));
+        log.debug("Post-Comment uri: {}", uri);
         String auth = generateBasicAuth(config.getGerritUserName(),
                 config.getGerritPassword());
-        log.debug("postComment uri: {}", uri);
-        log.debug("postComment json: {}", json);
+        String json = gson.toJson(map);
+        log.debug("Post-Comment JSON: {}", json);
         HttpRequest request = HttpRequest.newBuilder()
                 .header(HttpHeaders.AUTHORIZATION, auth)
                 .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
@@ -205,11 +203,11 @@ public class GerritClientComments extends GerritClientAccount {
         HttpResponse<String> response = httpClientWithRetry.execute(request);
 
         if (response.statusCode() != HTTP_OK) {
-            log.error("Review post failed with status code: {}", response.statusCode());
+            log.error("Comment posting failed with status code: {}", response.statusCode());
         }
     }
 
-    public String getTaggedPrompt(HashMap<String, List<String>> filesNewContent) {
+    public String getUserPrompt(HashMap<String, List<String>> filesNewContent) {
         this.filesNewContent = filesNewContent;
         StringBuilder taggedPrompt = new StringBuilder();
         for (int i = 0; i < commentProperties.size(); i++) {

@@ -25,7 +25,7 @@ public class GerritClientAccount extends GerritClientBase {
             return Optional.of(responseArray.get(0).getAsJsonObject().get("_account_id").getAsInt());
         }
         catch (Exception e) {
-            log.info("Could not find account ID for username '{}'", authorUsername);
+            log.error("Could not find account ID for username '{}'", authorUsername);
             return Optional.empty();
         }
     }
@@ -41,7 +41,7 @@ public class GerritClientAccount extends GerritClientBase {
                     .collect(Collectors.toList());
         }
         catch (Exception e) {
-            log.info("Could not find groups for account ID {}", accountId);
+            log.error("Could not find groups for account ID {}", accountId);
             return null;
         }
     }

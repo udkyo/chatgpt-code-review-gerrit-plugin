@@ -35,17 +35,17 @@ public class OpenAiClient {
 
     public String ask(Configuration config, String patchSet) throws Exception {
         HttpRequest request = createRequest(config, patchSet);
-        log.debug("request: {}", request.toString());
+        log.debug("ChatGPT request: {}", request.toString());
 
         HttpResponse<String> response = httpClientWithRetry.execute(request);
 
         String body = response.body();
         log.debug("body: {}", body);
         if (body == null) {
-            throw new IOException("responseBody is null");
+            throw new IOException("ChatGPT response body is null");
         }
         String content = extractContent(config, body);
-        log.debug("content: {}", content);
+        log.debug("ChatGPT response content: {}", content);
 
         return content;
     }
@@ -69,10 +69,10 @@ public class OpenAiClient {
     }
 
     private HttpRequest createRequest(Configuration config, String patchSet) {
-        requestBody = createRequestBody(config, patchSet);
         URI uri = URI.create(URI.create(config.getGptDomain()) + UriResourceLocator.chatCompletionsUri());
-        log.info("GPT request URI: {}", uri);
-        log.info("GPT requestBody: {}", requestBody);
+        log.info("ChatGPT request URI: {}", uri);
+        requestBody = createRequestBody(config, patchSet);
+        log.info("ChatGPT request body: {}", requestBody);
 
         return HttpRequest.newBuilder()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + config.getGptToken())
