@@ -16,6 +16,8 @@ import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -46,7 +48,8 @@ public class EventListenerHandler {
     }
 
     public static String buildFullChangeId(Project.NameKey projectName, BranchNameKey branchName, Change.Key changeKey) {
-        return String.join("~", projectName.get(), branchName.shortName(), changeKey.get());
+        return String.join("~", URLEncoder.encode(projectName.get(), StandardCharsets.UTF_8),
+                branchName.shortName(), changeKey.get());
     }
 
     private void addShutdownHoot() {
