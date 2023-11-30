@@ -70,9 +70,9 @@ public class OpenAiClient {
 
     private HttpRequest createRequest(Configuration config, String patchSet) {
         URI uri = URI.create(URI.create(config.getGptDomain()) + UriResourceLocator.chatCompletionsUri());
-        log.info("ChatGPT request URI: {}", uri);
+        log.debug("ChatGPT request URI: {}", uri);
         requestBody = createRequestBody(config, patchSet);
-        log.info("ChatGPT request body: {}", requestBody);
+        log.debug("ChatGPT request body: {}", requestBody);
 
         return HttpRequest.newBuilder()
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + config.getGptToken())

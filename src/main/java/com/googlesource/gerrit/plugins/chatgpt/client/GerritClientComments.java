@@ -61,7 +61,7 @@ public class GerritClientComments extends GerritClientAccount {
                 long updatedTimeStamp = getTimeStamp(commentObject.get("updated").getAsString());
                 if (commentAuthorUsername.equals(authorUsername) &&
                         updatedTimeStamp >= commentsStartTimestamp - MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT) {
-                    log.info("Found comment with updatedTimeStamp : {}", updatedTimeStamp);
+                    log.debug("Found comment with updatedTimeStamp : {}", updatedTimeStamp);
                     latestChangeMessageId = changeMessageId;
                 }
                 latestComments.computeIfAbsent(changeMessageId, k -> new ArrayList<>()).add(commentObject);
@@ -117,7 +117,7 @@ public class GerritClientComments extends GerritClientAccount {
         for (HashMap<String, Object> reviewBatch : reviewBatches) {
             String message = (String) reviewBatch.get("content");
             if (message.trim().isEmpty()) {
-                log.info("Post comment empty message not submitted.");
+                log.info("Empty message from post comment not submitted.");
                 continue;
             }
             if (reviewBatch.containsKey("line") || reviewBatch.containsKey("range")) {
