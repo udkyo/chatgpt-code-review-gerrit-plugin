@@ -1,13 +1,19 @@
 package com.googlesource.gerrit.plugins.chatgpt;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.client.OpenAiClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestion;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCommentRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Type;
 import java.util.*;
 
 import static com.googlesource.gerrit.plugins.chatgpt.client.ReviewUtils.extractID;
@@ -18,12 +24,15 @@ public class PatchSetReviewer {
     private static final String SPLIT_REVIEW_MSG = "Too many changes. Please consider splitting into patches smaller " +
             "than %s lines for review.";
 
+    private final Gson gson = new Gson();
     private final GerritClient gerritClient;
     private final OpenAiClient openAiClient;
 
     private List<HashMap<String, Object>> reviewBatches;
     private String currentTag;
     private List<JsonObject> commentProperties;
+    private HashMap<String, List<String>> filesNewContent;
+    private boolean isPatchSetEvent;
 
     @Inject
     PatchSetReviewer(GerritClient gerritClient, OpenAiClient openAiClient) {
@@ -42,9 +51,19 @@ public class PatchSetReviewer {
         config.configureDynamically(Configuration.KEY_GPT_USER_PROMPT, gerritClient.getUserPrompt());
 
         String reviewSuggestion = getReviewSuggestion(config, fullChangeId, patchSet);
-        splitReviewIntoBatches(reviewSuggestion);
+        log.info("ChatGPT response: {}", reviewSuggestion);
+        if (isPatchSetEvent && config.getGptReviewByPoints()) {
+            retrieveReviewFromJson(reviewSuggestion);
+        }
+        else {
+            splitReviewIntoBatches(reviewSuggestion);
+        }
 
         gerritClient.postComments(fullChangeId, reviewBatches);
+    }
+
+    public void setIsPatchSetEvent(boolean isPatchSetEvent) {
+        this.isPatchSetEvent = isPatchSetEvent;
     }
 
     private Integer getBatchId() {
@@ -81,6 +100,46 @@ public class PatchSetReviewer {
             }
         }
         reviewBatches.add(batchMap);
+    }
+
+    private Optional<GerritCommentRange> getGerritCommentRange(ChatGptSuggestion suggestion) {
+        Optional<GerritCommentRange> gerritCommentRange = Optional.empty();
+        if (suggestion.getFilename() == null) {
+            return gerritCommentRange;
+        }
+        String filename = suggestion.getFilename();
+        if (filename.equals("/COMMIT_MSG")) {
+            return gerritCommentRange;
+        }
+        if (!filesNewContent.containsKey(filename)) {
+            log.info("Suggestion filename {} not found in the patch", suggestion);
+            return gerritCommentRange;
+        }
+        InlineCode inlineCode = new InlineCode(filesNewContent.get(filename));
+        gerritCommentRange = inlineCode.findCommentRange(suggestion);
+        if (gerritCommentRange.isEmpty()) {
+            log.info("Inline code not found for suggestion {}", suggestion);
+        }
+        return gerritCommentRange;
+    }
+
+    private void retrieveReviewFromJson(String review) {
+        review = review.replaceAll("^`*(?:json)?\\s*|\\s*`+$", "");
+        Type chatGptResponseListType = new TypeToken<List<ChatGptSuggestion>>(){}.getType();
+        List<ChatGptSuggestion> reviewJson = gson.fromJson(review, chatGptResponseListType);
+        filesNewContent = gerritClient.getFilesNewContent();
+        for (ChatGptSuggestion suggestion : reviewJson) {
+            HashMap<String, Object> batchMap = new HashMap<>();
+            batchMap.put("content", suggestion.getSuggestion());
+            Optional<GerritCommentRange> optGerritCommentRange = getGerritCommentRange(suggestion);
+            if (optGerritCommentRange.isPresent()) {
+                GerritCommentRange gerritCommentRange = optGerritCommentRange.get();
+                batchMap.put("filename", suggestion.getFilename());
+                batchMap.put("line", gerritCommentRange.getStart_line());
+                batchMap.put("range", gerritCommentRange);
+            }
+            reviewBatches.add(batchMap);
+        }
     }
 
     private void splitReviewIntoBatches(String review) {

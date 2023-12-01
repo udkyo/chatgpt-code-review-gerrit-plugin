@@ -41,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -77,7 +78,9 @@ public class ChatGptReviewTest {
     private final Gson gson = new Gson();
 
     private String reviewUserPrompt;
+    private String reviewUserPromptByPoints;
     private String commentUserPrompt;
+    private String gerritPatchSetByPoints;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(9527);
@@ -197,13 +200,25 @@ public class ChatGptReviewTest {
 
     private void initComparisonContent() throws IOException {
         String diffContent = new String(Files.readAllBytes(basePath.resolve("reducePatchSet/patchSetDiffOutput.json")));
-        reviewUserPrompt = Configuration.DEFAULT_GPT_USER_PROMPT +
-                Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT
-                + diffContent;
-        commentUserPrompt = Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_1 +
-                diffContent +
-                Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_2 +
-                REVIEW_TAG_COMMENTS;
+        gerritPatchSetByPoints = new String(Files.readAllBytes(basePath.resolve(
+                "__files/gerritPatchSetByPoints.json")));
+        reviewUserPrompt = String.join("\n", Arrays.asList(
+                Configuration.DEFAULT_GPT_USER_PROMPT,
+                Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
+                diffContent
+        ));
+        reviewUserPromptByPoints = String.join("\n", Arrays.asList(
+                Configuration.DEFAULT_GPT_USER_PROMPT,
+                Configuration.DEFAULT_GPT_USER_PROMPT_JSON,
+                Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
+                diffContent
+        ));
+        commentUserPrompt = String.join("\n", Arrays.asList(
+                Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_1,
+                diffContent,
+                Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_2,
+                REVIEW_TAG_COMMENTS
+        ));
     }
 
     private AccountAttribute createTestAccountAttribute() {
@@ -223,6 +238,8 @@ public class ChatGptReviewTest {
 
     @Test
     public void patchSetCreatedOrUpdated() throws InterruptedException, NoSuchProjectException, ExecutionException {
+        when(globalConfig.getBoolean(Mockito.eq("gptReviewByPoints"), Mockito.anyBoolean()))
+                .thenReturn(false);
         Configuration config = new Configuration(globalConfig, projectConfig);
         GerritClient gerritClient = new GerritClient();
         OpenAiClient openAiClient = new OpenAiClient();
@@ -255,6 +272,50 @@ public class ChatGptReviewTest {
         Assert.assertEquals(reviewUserPrompt, userPrompt);
         String requestBody = loggedRequests.get(0).getBodyAsString();
         Assert.assertEquals("{\"message\":\"Hello!\\n\"}", requestBody);
+
+    }
+
+    @Test
+    public void patchSetCreatedOrUpdatedByPoints() throws InterruptedException, NoSuchProjectException, ExecutionException {
+        when(globalConfig.getBoolean(Mockito.eq("gptStreamOutput"), Mockito.anyBoolean()))
+                .thenReturn(false);
+        Configuration config = new Configuration(globalConfig, projectConfig);
+        GerritClient gerritClient = new GerritClient();
+        OpenAiClient openAiClient = new OpenAiClient();
+        PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, openAiClient);
+        ConfigCreator mockConfigCreator = mock(ConfigCreator.class);
+        when(mockConfigCreator.createConfig(ArgumentMatchers.any())).thenReturn(config);
+
+        PatchSetCreatedEvent event = mock(PatchSetCreatedEvent.class);
+        when(event.getProjectNameKey()).thenReturn(PROJECT_NAME);
+        when(event.getBranchNameKey()).thenReturn(BRANCH_NAME);
+        when(event.getChangeKey()).thenReturn(CHANGE_ID);
+        when(event.getType()).thenReturn("patchset-created");
+        event.patchSet = this::createPatchSetAttribute;
+        EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer, gerritClient);
+
+        WireMock.stubFor(WireMock.post(WireMock.urlEqualTo(URI.create(config.getGptDomain()
+                        + UriResourceLocator.chatCompletionsUri()).getPath()))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(HTTP_OK)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                        .withBodyFile("chatGptResponseByPoints.json")));
+
+        GerritListener gerritListener = new GerritListener(mockConfigCreator, eventListenerHandler);
+        gerritListener.onEvent(event);
+        CompletableFuture<Void> future = eventListenerHandler.getLatestFuture();
+        future.get();
+
+        RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(
+                WireMock.urlEqualTo(gerritCommentUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
+        List<LoggedRequest> loggedRequests = WireMock.findAll(requestPatternBuilder);
+        Assert.assertEquals(1, loggedRequests.size());
+        JsonObject gptRequestBody = gson.fromJson(openAiClient.getRequestBody(), JsonObject.class);
+        JsonArray prompts = gptRequestBody.get("messages").getAsJsonArray();
+        String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
+        Assert.assertEquals(reviewUserPromptByPoints, userPrompt);
+        String requestBody = loggedRequests.get(0).getBodyAsString();
+        Assert.assertEquals(gerritPatchSetByPoints, requestBody);
 
     }
 

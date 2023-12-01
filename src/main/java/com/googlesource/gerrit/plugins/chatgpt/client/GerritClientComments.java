@@ -111,6 +111,13 @@ public class GerritClientComments extends GerritClientAccount {
         }
     }
 
+    private void appendMessage(Map<String, Object> map, String message) {
+        if (map.containsKey("message") && map.get("message") != null) {
+            message = map.get("message") + "\n\n" + message;
+        }
+        map.put("message", message);
+    }
+
     private Map<String, Object> getContextProperties(List<HashMap<String, Object>> reviewBatches) {
         Map<String, Object> map = new HashMap<>();
         Map<String, List<Map<String, Object>>> comments = new HashMap<>();
@@ -132,7 +139,7 @@ public class GerritClientComments extends GerritClientAccount {
                 comments.putIfAbsent(filename, filenameComments);
             }
             else {
-                map.put("message", message);
+                appendMessage(map, message);
             }
         }
         if (!comments.isEmpty()) {

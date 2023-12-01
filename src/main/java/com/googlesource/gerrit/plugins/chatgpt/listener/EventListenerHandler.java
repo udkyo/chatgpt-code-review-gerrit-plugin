@@ -137,7 +137,6 @@ public class EventListenerHandler {
         Project.NameKey projectNameKey = patchSetEvent.getProjectNameKey();
         BranchNameKey branchNameKey = patchSetEvent.getBranchNameKey();
         Change.Key changeKey = patchSetEvent.getChangeKey();
-
         String fullChangeId = buildFullChangeId(projectNameKey, branchNameKey, changeKey);
 
         gerritClient.initialize(config);
@@ -150,12 +149,14 @@ public class EventListenerHandler {
                 if (!isPatchSetReviewEnabled(patchSetEvent)) {
                     return;
                 }
+                reviewer.setIsPatchSetEvent(true);
                 break;
             case "comment-added":
                 if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
                     log.info("No comments found for review");
                     return;
                 }
+                reviewer.setIsPatchSetEvent(false);
                 break;
             default:
                 return;

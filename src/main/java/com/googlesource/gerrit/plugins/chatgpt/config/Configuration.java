@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.gerrit.server.config.PluginConfig;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +24,15 @@ public class Configuration {
             "lines\" for the parts that haven't been altered.";
     public static final String DEFAULT_GPT_USER_PROMPT = "Focus your review on the \"a\" and \"b\" items, but use " +
             "the \"ab\" items as context to understand the changes better. Provide insights on whether the changes " +
-            "make sense, any potential issues you foresee, and suggestions for improvements if necessary.\n";
+            "make sense, any potential issues you foresee, and suggestions for improvements if necessary.";
+    public static final String DEFAULT_GPT_USER_PROMPT_JSON = "Provide your feedback in a JSON format. Each " +
+            "suggestion must be formatted as an individual object within an array. The object will always contain " +
+            "the key `suggestion`. For suggestions that are specific to a certain part of the code, the object " +
+            "should additionally include the keys `filename`, `lineNumber`, and `codeSnippet` to precisely identify " +
+            "the relevant code section.";
     public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_1 = "I have some requests about the following PatchSet " +
-            "Diff:\n";
-    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_2 = "Here are my requests:\n";
+            "Diff:";
+    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_2 = "Here are my requests:";
     public static final String DEFAULT_GPT_CUSTOM_USER_CONTEXT_PROMPT = "In reference to the code `%s` (from line %d " +
             "of file \"%s\"), ";
     public static final String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT = "Also, perform a check on the commit " +
@@ -41,6 +47,7 @@ public class Configuration {
     public static final String ENABLED_TOPICS_ALL = "ALL";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
     private static final boolean DEFAULT_REVIEW_PATCHSET = true;
+    private static final boolean DEFAULT_REVIEW_BY_POINTS = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
     private static final boolean DEFAULT_FULL_FILE_REVIEW = true;
     private static final boolean DEFAULT_STREAM_OUTPUT = true;
@@ -91,6 +98,7 @@ public class Configuration {
     private static final String KEY_GPT_MODEL = "gptModel";
     private static final String KEY_GPT_TEMPERATURE = "gptTemperature";
     private static final String KEY_STREAM_OUTPUT = "gptStreamOutput";
+    private static final String KEY_REVIEW_BY_POINTS = "gptReviewByPoints";
     private static final String KEY_REVIEW_COMMIT_MESSAGES = "gptReviewCommitMessages";
     private static final String KEY_REVIEW_PATCHSET = "gptReviewPatchSet";
     private static final String KEY_FULL_FILE_REVIEW = "gptFullFileReview";
@@ -153,23 +161,28 @@ public class Configuration {
     }
 
     public String getGptUserPrompt(String patchSet) {
-        StringBuilder prompt = new StringBuilder();
+        List<String> prompt = new ArrayList<>();
         String gptUserPrompt = configsDynamically.get(KEY_GPT_USER_PROMPT).toString();
         if (gptUserPrompt != null && !gptUserPrompt.isEmpty()) {
             log.debug("ConfigsDynamically value found: {}", gptUserPrompt);
-            prompt.append(DEFAULT_GPT_CUSTOM_USER_PROMPT_1)
-                    .append(patchSet)
-                    .append(DEFAULT_GPT_CUSTOM_USER_PROMPT_2)
-                    .append(gptUserPrompt);
+            prompt.addAll(Arrays.asList(
+                    DEFAULT_GPT_CUSTOM_USER_PROMPT_1,
+                    patchSet,
+                    DEFAULT_GPT_CUSTOM_USER_PROMPT_2,
+                    gptUserPrompt
+            ));
         }
         else {
-            prompt.append(getString(KEY_GPT_USER_PROMPT, DEFAULT_GPT_USER_PROMPT));
-            if (getGptReviewCommitMessages()) {
-                prompt.append(DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT);
+            prompt.add(getString(KEY_GPT_USER_PROMPT, DEFAULT_GPT_USER_PROMPT));
+            if (getGptReviewByPoints()) {
+                prompt.add(DEFAULT_GPT_USER_PROMPT_JSON);
             }
-            prompt.append(patchSet);
+            if (getGptReviewCommitMessages()) {
+                prompt.add(DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT);
+            }
+            prompt.add(patchSet);
         }
-        return prompt.toString();
+        return String.join("\n", prompt);
     }
 
     public double getGptTemperature() {
@@ -178,6 +191,10 @@ public class Configuration {
 
     public boolean getGptReviewPatchSet() {
         return getBoolean(KEY_REVIEW_PATCHSET, DEFAULT_REVIEW_PATCHSET);
+    }
+
+    public boolean getGptReviewByPoints() {
+        return getBoolean(KEY_REVIEW_BY_POINTS, DEFAULT_REVIEW_BY_POINTS);
     }
 
     public boolean getGptReviewCommitMessages() {

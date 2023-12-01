@@ -33,6 +33,10 @@ public class GerritClient {
         return gerritClientPatchSet.isDisabledTopic(topic);
     }
 
+    public HashMap<String, List<String>> getFilesNewContent() {
+        return gerritClientPatchSet.getFilesNewContent();
+    }
+
     public List<JsonObject> getCommentProperties() {
         return gerritClientComments.getCommentProperties();
     }
@@ -46,7 +50,7 @@ public class GerritClient {
     }
 
     public String getUserPrompt() {
-        return gerritClientComments.getUserPrompt(gerritClientPatchSet.getFilesNewContent());
+        return gerritClientComments.getUserPrompt(getFilesNewContent());
     }
 
 }
