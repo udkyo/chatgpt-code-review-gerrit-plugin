@@ -91,7 +91,7 @@ public class EventListenerHandler {
         if (!config.isGlobalEnable() &&
                 !enabledProjects.contains(projectNameKey.get()) &&
                 !config.isProjectEnable()) {
-            log.info("The project {} is not enabled for review", projectNameKey);
+            log.debug("The project {} is not enabled for review", projectNameKey);
             return false;
         }
 
@@ -107,7 +107,7 @@ public class EventListenerHandler {
 
     private boolean isPatchSetReviewEnabled(PatchSetEvent patchSetEvent) {
         if (!config.getGptReviewPatchSet()) {
-            log.info("Disabled review function for created or updated PatchSets.");
+            log.debug("Disabled review function for created or updated PatchSets.");
             return false;
         }
         Optional<PatchSetAttribute> patchSetAttributeOptional = getPatchSetAttribute(patchSetEvent);
@@ -118,7 +118,7 @@ public class EventListenerHandler {
         PatchSetAttribute patchSetAttribute = patchSetAttributeOptional.get();
         ChangeKind patchSetEventKind = patchSetAttribute.kind;
         if (patchSetEventKind != REWORK) {
-            log.info("Change kind '{}' not processed", patchSetEventKind);
+            log.debug("Change kind '{}' not processed", patchSetEventKind);
             return false;
         }
         String authorUsername = patchSetAttribute.author.username;
