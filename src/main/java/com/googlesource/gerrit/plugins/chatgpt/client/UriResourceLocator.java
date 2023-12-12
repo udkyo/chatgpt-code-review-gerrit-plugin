@@ -5,21 +5,18 @@ import java.nio.charset.StandardCharsets;
 
 
 public class UriResourceLocator {
+    private static final String AUTH_PREFIX_URI = "/a";
 
     private UriResourceLocator() {
         throw new IllegalStateException("Utility class");
     }
 
-    private static String gerritAuthPrefixUri() {
-        return "/a";
-    }
-
     private static String gerritSetChangesUri(String fullChangeId, String resourcePath) {
-        return gerritAuthPrefixUri() + "/changes/" + fullChangeId + resourcePath;
+        return AUTH_PREFIX_URI + "/changes/" + fullChangeId + resourcePath;
     }
 
     public static String gerritAccountsUri() {
-        return gerritAuthPrefixUri() + "/accounts";
+        return AUTH_PREFIX_URI + "/accounts";
     }
 
     public static String gerritAccountIdUri(String userName) {
