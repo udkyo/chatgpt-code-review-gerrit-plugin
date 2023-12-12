@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptRequestPoint;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
@@ -148,22 +149,21 @@ public class GerritClientComments extends GerritClientAccount {
         return map;
     }
 
-    protected String getCommentPrompt(int i) {
-        StringBuilder commentString = new StringBuilder();
+    protected ChatGptRequestPoint getRequestPoint(int i) {
+        ChatGptRequestPoint requestPoint = new ChatGptRequestPoint();
         JsonObject commentProperty = commentProperties.get(i);
+        requestPoint.setId(i);
         if (commentProperty.has("line") || commentProperty.has("range")) {
             String filename = commentProperty.get("filename").getAsString();
             InlineCode inlineCode = new InlineCode(filesNewContent.get(filename));
-            commentString.append(String.format(Configuration.DEFAULT_GPT_CUSTOM_USER_CONTEXT_PROMPT,
-                    inlineCode.getInlineCode(commentProperty),
-                    commentProperty.get("line").getAsInt(),
-                    filename
-            ));
+            requestPoint.setFilename(filename);
+            requestPoint.setLineNumber(commentProperty.get("line").getAsInt());
+            requestPoint.setCodeSnippet(inlineCode.getInlineCode(commentProperty));
         }
         String commentMessage = commentProperty.get("message").getAsString();
-        commentString.append(removeMentionsFromComment(commentMessage).trim());
+        requestPoint.setRequest(removeMentionsFromComment(commentMessage).trim());
 
-        return commentString.toString();
+        return requestPoint;
     }
 
     public List<JsonObject> getCommentProperties() {
@@ -216,11 +216,11 @@ public class GerritClientComments extends GerritClientAccount {
 
     public String getUserPrompt(HashMap<String, List<String>> filesNewContent) {
         this.filesNewContent = filesNewContent;
-        StringBuilder taggedPrompt = new StringBuilder();
+        List<ChatGptRequestPoint> requestPoints = new ArrayList<>();
         for (int i = 0; i < commentProperties.size(); i++) {
-            taggedPrompt.append(String.format("[ID:%d] %s\n", i, getCommentPrompt(i)));
+            requestPoints.add(getRequestPoint(i));
         }
-        return taggedPrompt.toString();
+        return requestPoints.isEmpty() ? "" : gson.toJson(requestPoints);
     }
 
 }

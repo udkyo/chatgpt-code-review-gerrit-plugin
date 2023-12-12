@@ -149,14 +149,14 @@ public class EventListenerHandler {
                 if (!isPatchSetReviewEnabled(patchSetEvent)) {
                     return;
                 }
-                reviewer.setIsPatchSetEvent(true);
+                reviewer.setIsCommentEvent(false);
                 break;
             case "comment-added":
                 if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
                     log.info("No comments found for review");
                     return;
                 }
-                reviewer.setIsPatchSetEvent(false);
+                reviewer.setIsCommentEvent(true);
                 break;
             default:
                 return;

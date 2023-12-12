@@ -28,6 +28,7 @@ public class OpenAiClient {
             .disableHtmlEscaping()
             .create();
     private final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
+    private boolean isCommentEvent = false;
 
     public String getRequestBody() {
         return requestBody;
@@ -44,14 +45,18 @@ public class OpenAiClient {
         if (body == null) {
             throw new IOException("ChatGPT response body is null");
         }
-        String content = extractContent(config, body);
-        log.debug("ChatGPT response content: {}", content);
 
-        return content;
+        return extractContent(config, body);
+    }
+
+    public String ask(Configuration config, String patchSet, boolean isCommentEvent) throws Exception {
+        this.isCommentEvent = isCommentEvent;
+
+        return this.ask(config, patchSet);
     }
 
     public String extractContent(Configuration config, String body) throws Exception {
-        if (config.getGptStreamOutput()) {
+        if (config.getGptStreamOutput() && !isCommentEvent) {
             StringBuilder finalContent = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new StringReader(body))) {
                 String line;
@@ -98,7 +103,7 @@ public class OpenAiClient {
                 .model(config.getGptModel())
                 .messages(messages)
                 .temperature(config.getGptTemperature())
-                .stream(config.getGptStreamOutput())
+                .stream(config.getGptStreamOutput() && !isCommentEvent)
                 .build();
 
         return gson.toJson(chatCompletionRequest);

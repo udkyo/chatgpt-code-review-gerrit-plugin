@@ -25,20 +25,22 @@ public class Configuration {
     public static final String DEFAULT_GPT_USER_PROMPT = "Focus your review on the \"a\" and \"b\" items, but use " +
             "the \"ab\" items as context to understand the changes better. Provide insights on whether the changes " +
             "make sense, any potential issues you foresee, and suggestions for improvements if necessary.";
-    public static final String DEFAULT_GPT_USER_PROMPT_JSON = "Provide your feedback in a JSON format. Each " +
+    public static final String DEFAULT_GPT_USER_PROMPT_JSON = "Provide your response in a JSON format. Each " +
             "suggestion must be formatted as an individual object within an array. The object will always contain " +
-            "the key `suggestion`. For suggestions that are specific to a certain part of the code, the object " +
-            "should additionally include the keys `filename`, `lineNumber`, and `codeSnippet` to precisely identify " +
-            "the relevant code section.";
+            "the key `suggestion`";
+    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON = " along with the key `id`, which corresponds to " +
+            "the `id` value from the related request in the request JSON array";
+    public static final String DEFAULT_GPT_USER_PROMPT_JSON_2 = ". For suggestions that are specific to a certain " +
+            "part of the code, the object should additionally include the keys `filename`, `lineNumber`, and " +
+            "`codeSnippet` to precisely identify the relevant code section.";
     public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_1 = "I have some requests about the following PatchSet " +
             "Diff:";
-    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_2 = "Here are my requests:";
-    public static final String DEFAULT_GPT_CUSTOM_USER_CONTEXT_PROMPT = "In reference to the code `%s` (from line %d " +
-            "of file \"%s\"), ";
+    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_2 = "My requests are given in an array and formatted " +
+            "in JSON :";
     public static final String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT = "Also, perform a check on the commit " +
             "message of the PatchSet. The commit message is provided in the \"content\" field of \"/COMMIT_MSG\" in " +
-            "the same way as the file changes. Ensure that the commit message accurately and succinctly describes the " +
-            "changes made, and verify if it matches the nature and scope of the changes in the PatchSet.";
+            "the same way as the file changes. Ensure that the commit message accurately and succinctly describes " +
+            "the changes made, and verify if it matches the nature and scope of the changes in the PatchSet.";
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
@@ -169,13 +171,14 @@ public class Configuration {
                     DEFAULT_GPT_CUSTOM_USER_PROMPT_1,
                     patchSet,
                     DEFAULT_GPT_CUSTOM_USER_PROMPT_2,
-                    gptUserPrompt
+                    gptUserPrompt,
+                    DEFAULT_GPT_USER_PROMPT_JSON + DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON + DEFAULT_GPT_USER_PROMPT_JSON_2
             ));
         }
         else {
             prompt.add(getString(KEY_GPT_USER_PROMPT, DEFAULT_GPT_USER_PROMPT));
             if (getGptReviewByPoints()) {
-                prompt.add(DEFAULT_GPT_USER_PROMPT_JSON);
+                prompt.add(DEFAULT_GPT_USER_PROMPT_JSON + DEFAULT_GPT_USER_PROMPT_JSON_2);
             }
             if (getGptReviewCommitMessages()) {
                 prompt.add(DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT);

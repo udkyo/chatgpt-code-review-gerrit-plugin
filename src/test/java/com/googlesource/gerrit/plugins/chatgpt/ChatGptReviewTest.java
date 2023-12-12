@@ -72,8 +72,8 @@ public class ChatGptReviewTest {
     private static final BranchNameKey BRANCH_NAME = BranchNameKey.create(PROJECT_NAME, "myBranchName");
     private static final boolean GPT_STREAM_OUTPUT = true;
     private static final long TEST_TIMESTAMP = 1699270812;
-    private static final String REVIEW_TAG_COMMENTS = "[ID:0] comment 2\n" +
-            "[ID:1] In reference to the code `TypeClassOrPath` (from line 5 of file \"test_file.py\"), message\n";
+    private static final String REVIEW_TAG_COMMENTS = "[{\"request\":\"comment 2\",\"id\":0},{\"request\":" +
+            "\"message\",\"id\":1,\"filename\":\"test_file.py\",\"lineNumber\":5,\"codeSnippet\":\"TypeClassOrPath\"}]";
 
     private final Gson gson = new Gson();
 
@@ -209,7 +209,7 @@ public class ChatGptReviewTest {
         ));
         reviewUserPromptByPoints = String.join("\n", Arrays.asList(
                 Configuration.DEFAULT_GPT_USER_PROMPT,
-                Configuration.DEFAULT_GPT_USER_PROMPT_JSON,
+                Configuration.DEFAULT_GPT_USER_PROMPT_JSON + Configuration.DEFAULT_GPT_USER_PROMPT_JSON_2,
                 Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
                 diffContent
         ));
@@ -217,7 +217,9 @@ public class ChatGptReviewTest {
                 Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_1,
                 diffContent,
                 Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_2,
-                REVIEW_TAG_COMMENTS
+                REVIEW_TAG_COMMENTS,
+                Configuration.DEFAULT_GPT_USER_PROMPT_JSON + Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON +
+                        Configuration.DEFAULT_GPT_USER_PROMPT_JSON_2
         ));
     }
 
@@ -285,6 +287,12 @@ public class ChatGptReviewTest {
         PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, openAiClient);
         ConfigCreator mockConfigCreator = mock(ConfigCreator.class);
         when(mockConfigCreator.createConfig(ArgumentMatchers.any())).thenReturn(config);
+        WireMock.stubFor(WireMock.post(WireMock.urlEqualTo(URI.create(config.getGptDomain()
+                        + UriResourceLocator.chatCompletionsUri()).getPath()))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(HTTP_OK)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                        .withBodyFile("chatGptResponseByPoints.json")));
 
         PatchSetCreatedEvent event = mock(PatchSetCreatedEvent.class);
         when(event.getProjectNameKey()).thenReturn(PROJECT_NAME);
@@ -293,13 +301,6 @@ public class ChatGptReviewTest {
         when(event.getType()).thenReturn("patchset-created");
         event.patchSet = this::createPatchSetAttribute;
         EventListenerHandler eventListenerHandler = new EventListenerHandler(patchSetReviewer, gerritClient);
-
-        WireMock.stubFor(WireMock.post(WireMock.urlEqualTo(URI.create(config.getGptDomain()
-                        + UriResourceLocator.chatCompletionsUri()).getPath()))
-                .willReturn(WireMock.aResponse()
-                        .withStatus(HTTP_OK)
-                        .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .withBodyFile("chatGptResponseByPoints.json")));
 
         GerritListener gerritListener = new GerritListener(mockConfigCreator, eventListenerHandler);
         gerritListener.onEvent(event);
@@ -354,6 +355,12 @@ public class ChatGptReviewTest {
         ConfigCreator mockConfigCreator = mock(ConfigCreator.class);
         when(config.getGerritUserName()).thenReturn("gpt");
         when(mockConfigCreator.createConfig(ArgumentMatchers.any())).thenReturn(config);
+        WireMock.stubFor(WireMock.post(WireMock.urlEqualTo(URI.create(config.getGptDomain()
+                        + UriResourceLocator.chatCompletionsUri()).getPath()))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(HTTP_OK)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                        .withBodyFile("chatGptResponseCommentsByPoints.json")));
 
         CommentAddedEvent event = mock(CommentAddedEvent.class);
         when(event.getProjectNameKey()).thenReturn(PROJECT_NAME);

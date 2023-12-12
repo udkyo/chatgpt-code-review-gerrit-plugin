@@ -8,7 +8,7 @@ import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.client.OpenAiClient;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestion;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCommentRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +29,9 @@ public class PatchSetReviewer {
     private final OpenAiClient openAiClient;
 
     private List<HashMap<String, Object>> reviewBatches;
-    private String currentTag;
     private List<JsonObject> commentProperties;
     private HashMap<String, List<String>> filesNewContent;
-    private boolean isPatchSetEvent;
+    private boolean isCommentEvent;
 
     @Inject
     PatchSetReviewer(GerritClient gerritClient, OpenAiClient openAiClient) {
@@ -52,7 +51,7 @@ public class PatchSetReviewer {
 
         String reviewSuggestion = getReviewSuggestion(config, fullChangeId, patchSet);
         log.info("ChatGPT response: {}", reviewSuggestion);
-        if (isPatchSetEvent && config.getGptReviewByPoints()) {
+        if (isCommentEvent || config.getGptReviewByPoints()) {
             retrieveReviewFromJson(reviewSuggestion);
         }
         else {
@@ -62,11 +61,11 @@ public class PatchSetReviewer {
         gerritClient.postComments(fullChangeId, reviewBatches);
     }
 
-    public void setIsPatchSetEvent(boolean isPatchSetEvent) {
-        this.isPatchSetEvent = isPatchSetEvent;
+    public void setIsCommentEvent(boolean isCommentEvent) {
+        this.isCommentEvent = isCommentEvent;
     }
 
-    private Integer getBatchId() {
+    private Integer getBatchId(String currentTag) {
         try {
             return Integer.parseInt(currentTag);
         }
@@ -75,14 +74,9 @@ public class PatchSetReviewer {
         }
     }
 
-    private void addReviewBatch(StringBuilder batch) {
+    private void addReviewBatch(Integer batchID, String batch) {
         HashMap<String, Object> batchMap = new HashMap<>();
-        batchMap.put("content", batch.toString());
-        Integer batchID = getBatchId();
-        if (batchID == null) {
-            log.warn("Error retrieving batch ID from currentTag {}", currentTag);
-            return;
-        }
+        batchMap.put("content", batch);
         if (commentProperties != null && batchID < commentProperties.size()) {
             JsonObject commentProperty = commentProperties.get(batchID);
             if (commentProperty != null &&
@@ -102,7 +96,7 @@ public class PatchSetReviewer {
         reviewBatches.add(batchMap);
     }
 
-    private Optional<GerritCommentRange> getGerritCommentRange(ChatGptSuggestion suggestion) {
+    private Optional<GerritCommentRange> getGerritCommentRange(ChatGptSuggestionPoint suggestion) {
         Optional<GerritCommentRange> gerritCommentRange = Optional.empty();
         if (suggestion.getFilename() == null) {
             return gerritCommentRange;
@@ -125,40 +119,45 @@ public class PatchSetReviewer {
 
     private void retrieveReviewFromJson(String review) {
         review = review.replaceAll("^`*(?:json)?\\s*|\\s*`+$", "");
-        Type chatGptResponseListType = new TypeToken<List<ChatGptSuggestion>>(){}.getType();
-        List<ChatGptSuggestion> reviewJson = gson.fromJson(review, chatGptResponseListType);
+        Type chatGptResponseListType = new TypeToken<List<ChatGptSuggestionPoint>>(){}.getType();
+        List<ChatGptSuggestionPoint> reviewJson = gson.fromJson(review, chatGptResponseListType);
         filesNewContent = gerritClient.getFilesNewContent();
-        for (ChatGptSuggestion suggestion : reviewJson) {
+        for (ChatGptSuggestionPoint suggestion : reviewJson) {
             HashMap<String, Object> batchMap = new HashMap<>();
-            batchMap.put("content", suggestion.getSuggestion());
-            Optional<GerritCommentRange> optGerritCommentRange = getGerritCommentRange(suggestion);
-            if (optGerritCommentRange.isPresent()) {
-                GerritCommentRange gerritCommentRange = optGerritCommentRange.get();
-                batchMap.put("filename", suggestion.getFilename());
-                batchMap.put("line", gerritCommentRange.getStart_line());
-                batchMap.put("range", gerritCommentRange);
+            if (suggestion.getId() != null) {
+                addReviewBatch(suggestion.getId(), suggestion.getSuggestion());
             }
-            reviewBatches.add(batchMap);
+            else {
+                batchMap.put("content", suggestion.getSuggestion());
+                Optional<GerritCommentRange> optGerritCommentRange = getGerritCommentRange(suggestion);
+                if (optGerritCommentRange.isPresent()) {
+                    GerritCommentRange gerritCommentRange = optGerritCommentRange.get();
+                    batchMap.put("filename", suggestion.getFilename());
+                    batchMap.put("line", gerritCommentRange.getStart_line());
+                    batchMap.put("range", gerritCommentRange);
+                }
+                reviewBatches.add(batchMap);
+            }
         }
     }
 
     private void splitReviewIntoBatches(String review) {
         String[] lines = review.split("\n");
-        currentTag = "0";
+        Integer currentTag = 0;
         StringBuilder batch = new StringBuilder();
         for (int i = 0; i < lines.length; i++) {
             String[] extractResult = extractID(lines[i]);
             if (extractResult != null) {
                 log.debug("Captured '{}' from line '{}'", extractResult[0], lines[i]);
-                addReviewBatch(batch);
+                addReviewBatch(currentTag, batch.toString());
                 batch = new StringBuilder();
-                currentTag = extractResult[0];
+                currentTag = getBatchId(extractResult[0]);
                 lines[i] = extractResult[1];
             }
             batch.append(lines[i]).append("\n");
         }
         if (batch.length() > 0) {
-            addReviewBatch(batch);
+            addReviewBatch(currentTag, batch.toString());
         }
         log.info("Review batches created: {}", reviewBatches.size());
         log.debug("batches: {}", reviewBatches);
@@ -170,7 +169,7 @@ public class PatchSetReviewer {
             log.warn("Patch set too large. Skipping review. changeId: {}", changeId);
             return String.format(SPLIT_REVIEW_MSG, config.getMaxReviewLines());
         }
-        return openAiClient.ask(config, patchSet);
+        return openAiClient.ask(config, patchSet, isCommentEvent);
     }
 }
 

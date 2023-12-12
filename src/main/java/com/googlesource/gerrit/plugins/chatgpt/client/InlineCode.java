@@ -2,7 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestion;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCommentRange;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,7 +49,7 @@ public class InlineCode {
         return Math.abs((range.end_line - range.start_line) / 2 - fromLine);
     }
 
-    public Optional<GerritCommentRange> findCommentRange(ChatGptSuggestion suggestion) {
+    public Optional<GerritCommentRange> findCommentRange(ChatGptSuggestionPoint suggestion) {
         int commentedLine;
         try {
             commentedLine = suggestion.getLineNumber();
