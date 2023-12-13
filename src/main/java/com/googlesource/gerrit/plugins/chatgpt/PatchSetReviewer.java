@@ -42,7 +42,7 @@ public class PatchSetReviewer {
     public void review(Configuration config, String fullChangeId) throws Exception {
         reviewBatches = new ArrayList<>();
         commentProperties = gerritClient.getCommentProperties();
-        String patchSet = gerritClient.getPatchSet(fullChangeId);
+        String patchSet = gerritClient.getPatchSet(fullChangeId, isCommentEvent);
         if (patchSet.isEmpty()) {
             log.info("No file to review has been found in the PatchSet");
             return;

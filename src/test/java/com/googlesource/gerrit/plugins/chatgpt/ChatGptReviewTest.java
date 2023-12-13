@@ -146,6 +146,13 @@ public class ChatGptReviewTest {
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
                         .withBodyFile("gerritAccountGroups.json")));
 
+        // Mock the behavior of the gerritPatchSetRevisionsUri request
+        WireMock.stubFor(WireMock.get(gerritPatchSetRevisionsUri(fullChangeId))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(HTTP_OK)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                        .withBody("{\"revisions\":{\"aa5be5ebb80846475ec4dfe43e0799eb73c6415a\":{}}}")));
+
         // Mock the behavior of the gerritPatchSetFiles request
         WireMock.stubFor(WireMock.get(gerritPatchSetFilesUri(fullChangeId))
                 .willReturn(WireMock.aResponse()

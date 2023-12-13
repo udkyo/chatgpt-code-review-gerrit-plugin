@@ -22,7 +22,11 @@ public class GerritClient {
     }
 
     public String getPatchSet(String fullChangeId) throws Exception {
-        return gerritClientPatchSet.getPatchSet(fullChangeId);
+        return getPatchSet(fullChangeId, false);
+    }
+
+    public String getPatchSet(String fullChangeId, boolean isCommentEvent) throws Exception {
+        return gerritClientPatchSet.getPatchSet(fullChangeId, isCommentEvent);
     }
 
     public boolean isDisabledUser(String authorUsername) {

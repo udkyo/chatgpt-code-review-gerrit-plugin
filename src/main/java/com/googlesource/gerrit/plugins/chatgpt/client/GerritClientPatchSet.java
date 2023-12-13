@@ -37,9 +37,26 @@ public class GerritClientPatchSet extends GerritClientAccount {
         diffs = new ArrayList<>();
     }
 
-    private List<String> getAffectedFiles(String fullChangeId) throws Exception {
+    private int retrieveRevisionBase(String fullChangeId) throws Exception {
         URI uri = URI.create(config.getGerritAuthBaseUrl()
-                        + UriResourceLocator.gerritPatchSetFilesUri(fullChangeId));
+                + UriResourceLocator.gerritPatchSetRevisionsUri(fullChangeId));
+        log.debug("Retrieve Revision URI: '{}'", uri);
+        JsonObject reviews = forwardGetRequestReturnJsonObject(uri);
+        try {
+            Set<String> revisions = reviews.get("revisions").getAsJsonObject().keySet();
+            return revisions.size() -1;
+        }
+        catch (Exception e) {
+            log.error("Could not retrieve revisions for PatchSet with fullChangeId: {}", fullChangeId, e);
+            throw e;
+        }
+    }
+
+    private List<String> getAffectedFiles(String fullChangeId, int revisionBase) throws Exception {
+        URI uri = URI.create(config.getGerritAuthBaseUrl()
+                + UriResourceLocator.gerritPatchSetFilesUri(fullChangeId)
+                + UriResourceLocator.gerritRevisionBasePostfixUri(revisionBase));
+        log.debug("Affected Files URI: '{}'", uri);
         JsonObject affectedFileMap = forwardGetRequestReturnJsonObject(uri);
         List<String> files = new ArrayList<>();
         for (Map.Entry<String, JsonElement> file : affectedFileMap.entrySet()) {
@@ -115,7 +132,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
         diffs.add(gson.toJson(outputFileDiff));
     }
 
-    private String getFileDiffsJson(String fullChangeId, List<String> files) throws Exception {
+    private String getFileDiffsJson(String fullChangeId, List<String> files, int revisionBase) throws Exception {
         List<String> enabledFileExtensions = config.getEnabledFileExtensions();
         for (String filename : files) {
             isCommitMessage = filename.equals("/COMMIT_MSG");
@@ -125,18 +142,23 @@ public class GerritClientPatchSet extends GerritClientAccount {
             }
             URI uri = URI.create(config.getGerritAuthBaseUrl()
                     + UriResourceLocator.gerritPatchSetFilesUri(fullChangeId)
-                    + UriResourceLocator.gerritDiffPostfixUri(filename));
+                    + UriResourceLocator.gerritDiffPostfixUri(filename)
+                    + UriResourceLocator.gerritRevisionBasePostfixUri(revisionBase));
+            log.debug("getFileDiffsJson URI: '{}'", uri);
             String fileDiffJson = forwardGetRequest(uri).replaceAll("^[')\\]}]+", "");
             processFileDiff(filename, fileDiffJson);
         }
         return "[" + String.join(",", diffs) + "]\n";
     }
 
-    public String getPatchSet(String fullChangeId) throws Exception {
-        List<String> files = getAffectedFiles(fullChangeId);
+    public String getPatchSet(String fullChangeId, boolean isCommentEvent) throws Exception {
+        int revisionBase = isCommentEvent ? 0 : retrieveRevisionBase(fullChangeId);
+        log.debug("Revision base: {}", revisionBase);
+
+        List<String> files = getAffectedFiles(fullChangeId, revisionBase);
         log.debug("Patch files: {}", files);
 
-        String fileDiffsJson = getFileDiffsJson(fullChangeId, files);
+        String fileDiffsJson = getFileDiffsJson(fullChangeId, files, revisionBase);
         log.debug("File diffs: {}", fileDiffsJson);
 
         return fileDiffsJson;

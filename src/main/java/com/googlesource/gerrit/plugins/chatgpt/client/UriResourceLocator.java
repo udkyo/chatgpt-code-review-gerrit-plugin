@@ -11,8 +11,8 @@ public class UriResourceLocator {
         throw new IllegalStateException("Utility class");
     }
 
-    private static String gerritSetChangesUri(String fullChangeId, String resourcePath) {
-        return AUTH_PREFIX_URI + "/changes/" + fullChangeId + resourcePath;
+    private static String gerritSetChangesUri(String fullChangeId, String uriPostfix) {
+        return AUTH_PREFIX_URI + "/changes/" + fullChangeId + uriPostfix;
     }
 
     public static String gerritAccountsUri() {
@@ -27,8 +27,16 @@ public class UriResourceLocator {
         return "/" + accountId + "/groups";
     }
 
+    public static String gerritRevisionBasePostfixUri(int revisionBase) {
+        return revisionBase > 0 ? "/?base=" + revisionBase : "";
+    }
+
     public static String gerritDiffPostfixUri(String filename) {
         return "/" + URLEncoder.encode(filename, StandardCharsets.UTF_8) + "/diff";
+    }
+
+    public static String gerritPatchSetRevisionsUri(String fullChangeId) {
+        return gerritSetChangesUri(fullChangeId, "/?o=ALL_REVISIONS");
     }
 
     public static String gerritPatchSetFilesUri(String fullChangeId) {
