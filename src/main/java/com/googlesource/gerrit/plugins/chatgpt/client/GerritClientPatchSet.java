@@ -31,7 +31,6 @@ public class GerritClientPatchSet extends GerritClientAccount {
     private boolean isCommitMessage;
     private final List<String> diffs;
     private List<String> newFileContent;
-    private OutputFileDiff.Content outputContentItem;
 
     public GerritClientPatchSet(Configuration config) {
         super(config);
@@ -65,7 +64,8 @@ public class GerritClientPatchSet extends GerritClientAccount {
         return fieldValue;
     }
 
-    private void processFileDiffItem(InputFileDiff.Content contentItem, Field inputDiffField) {
+    private void processFileDiffItem(Field inputDiffField, InputFileDiff.Content contentItem,
+                                     OutputFileDiff.Content outputContentItem) {
         String fieldName = inputDiffField.getName();
         try {
             // Get the `a`, `b` or `ab` field's value from the input diff content
@@ -103,11 +103,11 @@ public class GerritClientPatchSet extends GerritClientAccount {
         List<OutputFileDiff.Content> outputDiffContent = new ArrayList<>();
         List<InputFileDiff.Content> inputDiffContent = inputFileDiff.getContent();
         // Iterate over the items of the diff content
-        for (InputFileDiff.Content contentItem : inputDiffContent) {
-            outputContentItem = new OutputFileDiff.Content();
+        for (InputFileDiff.Content inputContentItem : inputDiffContent) {
+            OutputFileDiff.Content outputContentItem = new OutputFileDiff.Content();
             // Iterate over the fields `a`, `b` and `ab` of each diff content
             for (Field inputDiffField : InputFileDiff.Content.class.getDeclaredFields()) {
-                processFileDiffItem(contentItem, inputDiffField);
+                processFileDiffItem(inputDiffField, inputContentItem, outputContentItem);
             }
             outputDiffContent.add(outputContentItem);
         }
@@ -117,7 +117,6 @@ public class GerritClientPatchSet extends GerritClientAccount {
     }
 
     private String getFileDiffsJson(String fullChangeId, List<String> files) throws Exception {
-
         List<String> enabledFileExtensions = config.getEnabledFileExtensions();
         for (String filename : files) {
             isCommitMessage = filename.equals("/COMMIT_MSG");
