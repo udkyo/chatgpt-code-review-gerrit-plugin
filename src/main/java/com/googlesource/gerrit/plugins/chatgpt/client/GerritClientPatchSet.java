@@ -58,10 +58,9 @@ public class GerritClientPatchSet extends GerritClientAccount {
         return files;
     }
 
-    private List<String> filterCommitMessageContent(List<String> fieldValue) {
+    private void filterCommitMessageContent(List<String> fieldValue) {
         fieldValue.removeIf(s ->
                 s.isEmpty() || Arrays.stream(COMMIT_MESSAGE_FILTER_OUT_PREFIXES).anyMatch(s::startsWith));
-        return fieldValue;
     }
 
     private void processFileDiffItem(Field inputDiffField, InputFileDiff.Content contentItem,
@@ -75,7 +74,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
                 return;
             }
             if (isCommitMessage) {
-                fieldValue = filterCommitMessageContent(fieldValue);
+                filterCommitMessageContent(fieldValue);
             }
             if (config.getGptFullFileReview() || !fieldName.equals("ab")) {
                 // Get the corresponding `a`, `b` or `ab` field from the output diff class
