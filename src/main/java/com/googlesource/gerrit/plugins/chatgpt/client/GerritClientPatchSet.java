@@ -87,7 +87,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
                 newFileContent.addAll(fieldValue);
             }
         } catch (IllegalAccessException | NoSuchFieldException e) {
-            e.printStackTrace();
+            log.error("Error while processing file difference (field name: {})", fieldName, e);
         }
     }
 
