@@ -27,7 +27,7 @@ public class Configuration {
             "make sense, any potential issues you foresee, and suggestions for improvements if necessary.";
     public static final String DEFAULT_GPT_USER_PROMPT_JSON = "Provide your response in a JSON format. Each " +
             "suggestion must be formatted as an individual object within an array. The object will always contain " +
-            "the key `suggestion`";
+            "the string field `suggestion`";
     public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON = " along with the key `id`, which corresponds to " +
             "the `id` value from the related request in the request JSON array";
     public static final String DEFAULT_GPT_USER_PROMPT_JSON_2 = ". For suggestions that are specific to a certain " +
