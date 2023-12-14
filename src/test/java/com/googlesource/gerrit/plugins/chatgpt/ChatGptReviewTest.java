@@ -77,6 +77,7 @@ public class ChatGptReviewTest {
 
     private final Gson gson = new Gson();
 
+    private String expectedSystemPrompt;
     private String reviewUserPrompt;
     private String reviewUserPromptByPoints;
     private String commentUserPrompt;
@@ -209,6 +210,8 @@ public class ChatGptReviewTest {
         String diffContent = new String(Files.readAllBytes(basePath.resolve("reducePatchSet/patchSetDiffOutput.json")));
         gerritPatchSetByPoints = new String(Files.readAllBytes(basePath.resolve(
                 "__files/gerritPatchSetByPoints.json")));
+        expectedSystemPrompt = Configuration.DEFAULT_GPT_SYSTEM_PROMPT
+                + Configuration.DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
         reviewUserPrompt = String.join("\n", Arrays.asList(
                 Configuration.DEFAULT_GPT_USER_PROMPT,
                 Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
@@ -276,7 +279,7 @@ public class ChatGptReviewTest {
         JsonObject gptRequestBody = gson.fromJson(openAiClient.getRequestBody(), JsonObject.class);
         JsonArray prompts = gptRequestBody.get("messages").getAsJsonArray();
         String systemPrompt = prompts.get(0).getAsJsonObject().get("content").getAsString();
-        Assert.assertEquals(Configuration.DEFAULT_GPT_SYSTEM_PROMPT, systemPrompt);
+        Assert.assertEquals(expectedSystemPrompt, systemPrompt);
         String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
         Assert.assertEquals(reviewUserPrompt, userPrompt);
         String requestBody = loggedRequests.get(0).getBodyAsString();
