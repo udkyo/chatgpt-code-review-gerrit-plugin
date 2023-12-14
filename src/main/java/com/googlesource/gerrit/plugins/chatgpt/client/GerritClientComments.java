@@ -28,6 +28,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 @Slf4j
 public class GerritClientComments extends GerritClientAccount {
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
+    private static final String BULLET_POINT = "* ";
 
     private final Gson gson = new Gson();
     private long commentsStartTimestamp;
@@ -112,15 +113,16 @@ public class GerritClientComments extends GerritClientAccount {
         }
     }
 
-    private void appendMessage(Map<String, Object> map, String message) {
-        if (map.containsKey("message") && map.get("message") != null) {
-            message = map.get("message") + "\n\n" + message;
+    private String joinMessages(List<String> messages) {
+        if (messages.size() == 1) {
+            return messages.get(0);
         }
-        map.put("message", message);
+        return BULLET_POINT + String.join("\n\n" + BULLET_POINT, messages);
     }
 
     private Map<String, Object> getContextProperties(List<HashMap<String, Object>> reviewBatches) {
         Map<String, Object> map = new HashMap<>();
+        List<String> messages = new ArrayList<>();
         Map<String, List<Map<String, Object>>> comments = new HashMap<>();
         for (HashMap<String, Object> reviewBatch : reviewBatches) {
             String message = (String) reviewBatch.get("content");
@@ -140,8 +142,11 @@ public class GerritClientComments extends GerritClientAccount {
                 comments.putIfAbsent(filename, filenameComments);
             }
             else {
-                appendMessage(map, message);
+                messages.add(message);
             }
+        }
+        if (!messages.isEmpty()) {
+            map.put("message", joinMessages(messages));
         }
         if (!comments.isEmpty()) {
             map.put("comments", comments);
