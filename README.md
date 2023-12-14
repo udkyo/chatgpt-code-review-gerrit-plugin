@@ -211,7 +211,7 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
   being submitted for review.
 - `gptReviewByPoints`: This setting, enabled by default, organizes the review of the PatchSets by distinct points. Where
   possible, these points are transformed into inline code comments.
-- `gptStreamOutput`: The default value is true. Whether the response is expected in stream output mode or not.
+- `gptStreamOutput`: The default value is false. Whether the response is expected in stream output mode or not.
 - `maxReviewLines`: The default value is 1000. This sets a limit on the number of lines of code included in the review.
 - `enabledUsers`: By default, every user is enabled to have their Patchsets and comments reviewed. To limit review
   capabilities to specific users, list their usernames in this setting, separated by commas.

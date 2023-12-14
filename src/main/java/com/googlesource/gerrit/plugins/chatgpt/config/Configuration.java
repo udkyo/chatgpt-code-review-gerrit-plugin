@@ -52,7 +52,7 @@ public class Configuration {
     private static final boolean DEFAULT_REVIEW_BY_POINTS = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
     private static final boolean DEFAULT_FULL_FILE_REVIEW = true;
-    private static final boolean DEFAULT_STREAM_OUTPUT = true;
+    private static final boolean DEFAULT_STREAM_OUTPUT = false;
     private static final boolean DEFAULT_GLOBAL_ENABLE = false;
     private static final String DEFAULT_DISABLED_USERS = "";
     private static final String DEFAULT_ENABLED_USERS = ENABLED_USERS_ALL;
