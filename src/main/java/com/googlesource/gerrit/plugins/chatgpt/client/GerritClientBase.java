@@ -4,6 +4,7 @@ import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,12 +22,12 @@ import static java.net.HttpURLConnection.HTTP_OK;
 public class GerritClientBase {
     protected final Gson gson = new Gson();
     protected final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
-    protected HashMap<String, List<String>> filesNewContent;
+    protected HashMap<String, FileDiffProcessed> fileDiffsProcessed;
     protected Configuration config;
 
     public GerritClientBase(Configuration config) {
         this.config = config;
-        filesNewContent = new HashMap<>();
+        fileDiffsProcessed = new HashMap<>();
         config.resetDynamicConfiguration();
     }
 
@@ -64,8 +65,8 @@ public class GerritClientBase {
         return gson.fromJson(responseBody, JsonObject.class);
     }
 
-    public HashMap<String, List<String>> getFilesNewContent() {
-        return filesNewContent;
+    public HashMap<String, FileDiffProcessed> getFileDiffsProcessed() {
+        return fileDiffsProcessed;
     }
 
 }

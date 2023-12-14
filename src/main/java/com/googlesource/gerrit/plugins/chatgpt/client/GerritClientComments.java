@@ -8,6 +8,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptRequestPoint;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
@@ -160,7 +161,7 @@ public class GerritClientComments extends GerritClientAccount {
         requestPoint.setId(i);
         if (commentProperty.has("line") || commentProperty.has("range")) {
             String filename = commentProperty.get("filename").getAsString();
-            InlineCode inlineCode = new InlineCode(filesNewContent.get(filename));
+            InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));
             requestPoint.setFilename(filename);
             requestPoint.setLineNumber(commentProperty.get("line").getAsInt());
             requestPoint.setCodeSnippet(inlineCode.getInlineCode(commentProperty));
@@ -219,8 +220,8 @@ public class GerritClientComments extends GerritClientAccount {
         }
     }
 
-    public String getUserPrompt(HashMap<String, List<String>> filesNewContent) {
-        this.filesNewContent = filesNewContent;
+    public String getUserPrompt(HashMap<String, FileDiffProcessed> fileDiffsProcessed) {
+        this.fileDiffsProcessed = fileDiffsProcessed;
         List<ChatGptRequestPoint> requestPoints = new ArrayList<>();
         for (int i = 0; i < commentProperties.size(); i++) {
             requestPoints.add(getRequestPoint(i));

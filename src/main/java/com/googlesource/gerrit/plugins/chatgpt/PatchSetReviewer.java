@@ -9,6 +9,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.client.OpenAiClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCommentRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ public class PatchSetReviewer {
 
     private List<HashMap<String, Object>> reviewBatches;
     private List<JsonObject> commentProperties;
-    private HashMap<String, List<String>> filesNewContent;
+    private HashMap<String, FileDiffProcessed> fileDiffsProcessed;
     private boolean isCommentEvent;
 
     @Inject
@@ -50,7 +51,7 @@ public class PatchSetReviewer {
         config.configureDynamically(Configuration.KEY_GPT_USER_PROMPT, gerritClient.getUserPrompt());
 
         String reviewSuggestion = getReviewSuggestion(config, fullChangeId, patchSet);
-        log.info("ChatGPT response: {}", reviewSuggestion);
+        log.debug("ChatGPT response: {}", reviewSuggestion);
         if (isCommentEvent || config.getGptReviewByPoints()) {
             retrieveReviewFromJson(reviewSuggestion);
         }
@@ -105,11 +106,11 @@ public class PatchSetReviewer {
         if (filename.equals("/COMMIT_MSG")) {
             return gerritCommentRange;
         }
-        if (!filesNewContent.containsKey(filename)) {
-            log.info("Suggestion filename {} not found in the patch", suggestion);
+        if (!fileDiffsProcessed.containsKey(filename)) {
+            log.info("Suggestion filename '{}' not found in the patch", suggestion);
             return gerritCommentRange;
         }
-        InlineCode inlineCode = new InlineCode(filesNewContent.get(filename));
+        InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));
         gerritCommentRange = inlineCode.findCommentRange(suggestion);
         if (gerritCommentRange.isEmpty()) {
             log.info("Inline code not found for suggestion {}", suggestion);
@@ -121,7 +122,7 @@ public class PatchSetReviewer {
         review = review.replaceAll("^`*(?:json)?\\s*|\\s*`+$", "");
         Type chatGptResponseListType = new TypeToken<List<ChatGptSuggestionPoint>>(){}.getType();
         List<ChatGptSuggestionPoint> reviewJson = gson.fromJson(review, chatGptResponseListType);
-        filesNewContent = gerritClient.getFilesNewContent();
+        fileDiffsProcessed = gerritClient.getFileDiffsProcessed();
         for (ChatGptSuggestionPoint suggestion : reviewJson) {
             HashMap<String, Object> batchMap = new HashMap<>();
             if (suggestion.getId() != null) {

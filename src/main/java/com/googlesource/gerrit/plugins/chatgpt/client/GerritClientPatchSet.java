@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.OutputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
@@ -82,29 +83,29 @@ public class GerritClientPatchSet extends GerritClientAccount {
 
     private void processFileDiffItem(Field inputDiffField, InputFileDiff.Content contentItem,
                                      OutputFileDiff.Content outputContentItem) {
-        String fieldName = inputDiffField.getName();
+        String diffType = inputDiffField.getName();
         try {
             // Get the `a`, `b` or `ab` field's value from the input diff content
             @SuppressWarnings("unchecked")
-            List<String> fieldValue = (List<String>) inputDiffField.get(contentItem);
-            if (fieldValue == null) {
+            List<String> diffLines = (List<String>) inputDiffField.get(contentItem);
+            if (diffLines == null) {
                 return;
             }
             if (isCommitMessage) {
-                filterCommitMessageContent(fieldValue);
+                filterCommitMessageContent(diffLines);
             }
-            if (config.getGptFullFileReview() || !fieldName.equals("ab")) {
+            if (config.getGptFullFileReview() || !diffType.equals("ab")) {
                 // Get the corresponding `a`, `b` or `ab` field from the output diff class
-                Field outputDiffField = OutputFileDiff.Content.class.getDeclaredField(fieldName);
+                Field outputDiffField = OutputFileDiff.Content.class.getDeclaredField(diffType);
                 // Store the new field's value in the output diff content `outputContentItem`
-                outputDiffField.set(outputContentItem, String.join("\n", fieldValue));
+                outputDiffField.set(outputContentItem, String.join("\n", diffLines));
             }
             // If the lines modified in the PatchSet are not deleted, they are utilized to populate newFileContent
-            if (fieldName.contains("b")) {
-                newFileContent.addAll(fieldValue);
+            if (diffType.contains("b")) {
+                newFileContent.addAll(diffLines);
             }
         } catch (IllegalAccessException | NoSuchFieldException e) {
-            log.error("Error while processing file difference (field name: {})", fieldName, e);
+            log.error("Error while processing file difference (diff type: {})", diffType, e);
         }
     }
 
@@ -127,7 +128,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
             }
             outputDiffContent.add(outputContentItem);
         }
-        filesNewContent.put(filename, newFileContent);
+        fileDiffsProcessed.put(filename, new FileDiffProcessed(inputDiffContent, newFileContent));
         outputFileDiff.setContent(outputDiffContent);
         diffs.add(gson.toJson(outputFileDiff));
     }
