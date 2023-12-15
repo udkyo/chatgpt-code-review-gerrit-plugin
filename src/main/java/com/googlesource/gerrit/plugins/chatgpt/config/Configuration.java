@@ -23,6 +23,8 @@ public class Configuration {
     public static final String ENABLED_USERS_ALL = "ALL";
     public static final String ENABLED_GROUPS_ALL = "ALL";
     public static final String ENABLED_TOPICS_ALL = "ALL";
+    public static final String SPACE = " ";
+    public static final String DOT_SPACE = ". ";
     public static String DEFAULT_GPT_SYSTEM_PROMPT;
     public static String DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
     public static String DEFAULT_GPT_USER_PROMPT;
@@ -136,6 +138,19 @@ public class Configuration {
         }
     }
 
+    public static String getDefaultSystemPrompt() {
+        return DEFAULT_GPT_SYSTEM_PROMPT + DOT_SPACE + DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
+    }
+
+    public static String getReviewUserPromptByPoints() {
+        return DEFAULT_GPT_USER_PROMPT_JSON + DOT_SPACE + DEFAULT_GPT_USER_PROMPT_JSON_2;
+    }
+
+    public static String getCommentUserPrompt() {
+        return DEFAULT_GPT_USER_PROMPT_JSON + SPACE + DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON + DOT_SPACE +
+                DEFAULT_GPT_USER_PROMPT_JSON_2;
+    }
+
     public void resetDynamicConfiguration() {
         configsDynamically.clear();
         log.debug("configsDynamically initialized: {}", configsDynamically);
@@ -170,7 +185,8 @@ public class Configuration {
     }
 
     public String getGptSystemPrompt() {
-        return getString(KEY_GPT_SYSTEM_PROMPT, DEFAULT_GPT_SYSTEM_PROMPT) + DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
+        return getString(KEY_GPT_SYSTEM_PROMPT, DEFAULT_GPT_SYSTEM_PROMPT) + DOT_SPACE +
+                DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
     }
 
     public String getGptUserPrompt(String patchSet) {
@@ -183,13 +199,13 @@ public class Configuration {
                     patchSet,
                     DEFAULT_GPT_CUSTOM_USER_PROMPT_2,
                     gptUserPrompt,
-                    DEFAULT_GPT_USER_PROMPT_JSON + DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON + DEFAULT_GPT_USER_PROMPT_JSON_2
+                    getCommentUserPrompt()
             ));
         }
         else {
             prompt.add(getString(KEY_GPT_USER_PROMPT, DEFAULT_GPT_USER_PROMPT));
             if (getGptReviewByPoints()) {
-                prompt.add(DEFAULT_GPT_USER_PROMPT_JSON + DEFAULT_GPT_USER_PROMPT_JSON_2);
+                prompt.add(getReviewUserPromptByPoints());
             }
             if (getGptReviewCommitMessages()) {
                 prompt.add(DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT);

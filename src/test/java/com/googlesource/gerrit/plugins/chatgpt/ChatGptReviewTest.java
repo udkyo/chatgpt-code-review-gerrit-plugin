@@ -210,8 +210,7 @@ public class ChatGptReviewTest {
         String diffContent = new String(Files.readAllBytes(basePath.resolve("reducePatchSet/patchSetDiffOutput.json")));
         gerritPatchSetByPoints = new String(Files.readAllBytes(basePath.resolve(
                 "__files/gerritPatchSetByPoints.json")));
-        expectedSystemPrompt = Configuration.DEFAULT_GPT_SYSTEM_PROMPT
-                + Configuration.DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
+        expectedSystemPrompt = Configuration.getDefaultSystemPrompt();
         reviewUserPrompt = String.join("\n", Arrays.asList(
                 Configuration.DEFAULT_GPT_USER_PROMPT,
                 Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
@@ -219,7 +218,7 @@ public class ChatGptReviewTest {
         ));
         reviewUserPromptByPoints = String.join("\n", Arrays.asList(
                 Configuration.DEFAULT_GPT_USER_PROMPT,
-                Configuration.DEFAULT_GPT_USER_PROMPT_JSON + Configuration.DEFAULT_GPT_USER_PROMPT_JSON_2,
+                Configuration.getReviewUserPromptByPoints(),
                 Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
                 diffContent
         ));
@@ -228,8 +227,7 @@ public class ChatGptReviewTest {
                 diffContent,
                 Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_2,
                 REVIEW_TAG_COMMENTS,
-                Configuration.DEFAULT_GPT_USER_PROMPT_JSON + Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON +
-                        Configuration.DEFAULT_GPT_USER_PROMPT_JSON_2
+                Configuration.getCommentUserPrompt()
         ));
     }
 
