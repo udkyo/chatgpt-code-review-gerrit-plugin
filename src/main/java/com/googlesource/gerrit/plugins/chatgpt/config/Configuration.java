@@ -2,52 +2,37 @@ package com.googlesource.gerrit.plugins.chatgpt.config;
 
 import com.google.common.collect.Maps;
 import com.google.gerrit.server.config.PluginConfig;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Slf4j
 public class Configuration {
-
     public static final String OPENAI_DOMAIN = "https://api.openai.com";
     public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
-    public static final String DEFAULT_GPT_SYSTEM_PROMPT = "Act as a PatchSet Reviewer.";
-    public static final String DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS = " I will provide you with PatchSet Diffs for " +
-            "various files in a JSON format. Each changed file's content will be detailed in the \"content\" field " +
-            "of the JSON object. In this \"content\", the \"a\" items are the lines removed, the \"b\" items are the " +
-            "lines added, and the \"ab\" items are the unchanged lines. In your response, avoid explicitly referring " +
-            "to the \"a\", \"b\", and other fields from the JSON object. Instead, use more intuitive terms like " +
-            "\"new lines\" for additions, \"removed lines\" for deletions, and \"unchanged lines\" for the parts " +
-            "that haven't been altered.";
-    public static final String DEFAULT_GPT_USER_PROMPT = "Focus your review on the \"a\" and \"b\" items, but use " +
-            "the \"ab\" items as context to understand the changes better. Provide insights on whether the changes " +
-            "make sense, any potential issues you foresee, and suggestions for improvements if necessary.";
-    public static final String DEFAULT_GPT_USER_PROMPT_JSON = "Provide your response in a JSON format. Each " +
-            "suggestion must be formatted as an individual object within an array. The object will always contain " +
-            "the string field `suggestion`";
-    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON = " along with the key `id`, which corresponds to " +
-            "the `id` value from the related request in the request JSON array";
-    public static final String DEFAULT_GPT_USER_PROMPT_JSON_2 = ". For suggestions that are specific to a certain " +
-            "part of the code, the object should additionally include the keys `filename`, `lineNumber`, and " +
-            "`codeSnippet` to precisely identify the relevant code section.";
-    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_1 = "I have some requests about the following PatchSet " +
-            "Diff:";
-    public static final String DEFAULT_GPT_CUSTOM_USER_PROMPT_2 = "My requests are given in an array and formatted " +
-            "in JSON :";
-    public static final String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT = "Also, perform a check on the commit " +
-            "message of the PatchSet. The commit message is provided in the \"content\" field of \"/COMMIT_MSG\" in " +
-            "the same way as the file changes. Ensure that the commit message accurately and succinctly describes " +
-            "the changes made, and verify if it matches the nature and scope of the changes in the PatchSet.";
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
     public static final String ENABLED_USERS_ALL = "ALL";
     public static final String ENABLED_GROUPS_ALL = "ALL";
     public static final String ENABLED_TOPICS_ALL = "ALL";
+    public static String DEFAULT_GPT_SYSTEM_PROMPT;
+    public static String DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
+    public static String DEFAULT_GPT_USER_PROMPT;
+    public static String DEFAULT_GPT_USER_PROMPT_JSON;
+    public static String DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON;
+    public static String DEFAULT_GPT_USER_PROMPT_JSON_2;
+    public static String DEFAULT_GPT_CUSTOM_USER_PROMPT_1;
+    public static String DEFAULT_GPT_CUSTOM_USER_PROMPT_2;
+    public static String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT;
+
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
     private static final boolean DEFAULT_REVIEW_PATCHSET = true;
     private static final boolean DEFAULT_REVIEW_BY_POINTS = true;
@@ -124,6 +109,31 @@ public class Configuration {
     public Configuration(PluginConfig globalConfig, PluginConfig projectConfig) {
         this.globalConfig = globalConfig;
         this.projectConfig = projectConfig;
+        loadPrompts();
+    }
+
+    private void loadPrompts() {
+        // Avoid repeated loading of prompt constants
+        if (DEFAULT_GPT_SYSTEM_PROMPT != null) return;
+        Gson gson = new Gson();
+        Class<? extends Configuration> me = this.getClass();
+        try (InputStreamReader reader = new InputStreamReader(Objects.requireNonNull(
+                me.getClassLoader().getResourceAsStream("Config/prompts.json")), StandardCharsets.UTF_8)) {
+
+            Map<String, String> values = gson.fromJson(reader, new TypeToken<Map<String, String>>(){}.getType());
+            for (Map.Entry<String, String> entry : values.entrySet()) {
+                try {
+                    Field field = me.getDeclaredField(entry.getKey());
+                    field.setAccessible(true);
+                    field.set(null, entry.getValue());
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    log.error("Error setting prompt '{}'", entry.getKey(), e);
+                    throw new IOException();
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load prompts", e);
+        }
     }
 
     public void resetDynamicConfiguration() {
