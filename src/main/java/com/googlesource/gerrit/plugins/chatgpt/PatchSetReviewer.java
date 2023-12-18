@@ -9,7 +9,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.client.OpenAiClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.FileDiffProcessed;
+import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCommentRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Setter;

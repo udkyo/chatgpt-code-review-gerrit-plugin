@@ -8,7 +8,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptRequestPoint;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
