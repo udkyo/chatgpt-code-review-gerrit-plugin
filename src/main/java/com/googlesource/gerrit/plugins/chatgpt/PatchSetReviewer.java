@@ -12,6 +12,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoi
 import com.googlesource.gerrit.plugins.chatgpt.client.model.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCommentRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Type;
@@ -32,6 +33,7 @@ public class PatchSetReviewer {
     private List<HashMap<String, Object>> reviewBatches;
     private List<JsonObject> commentProperties;
     private HashMap<String, FileDiffProcessed> fileDiffsProcessed;
+    @Setter
     private boolean isCommentEvent;
 
     @Inject
@@ -60,10 +62,6 @@ public class PatchSetReviewer {
         }
 
         gerritClient.postComments(fullChangeId, reviewBatches);
-    }
-
-    public void setIsCommentEvent(boolean isCommentEvent) {
-        this.isCommentEvent = isCommentEvent;
     }
 
     private Integer getBatchId(String currentTag) {

@@ -10,6 +10,7 @@ import com.google.gson.JsonObject;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptRequestPoint;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 
@@ -34,6 +35,7 @@ public class GerritClientComments extends GerritClientAccount {
     private final Gson gson = new Gson();
     private long commentsStartTimestamp;
     private String authorUsername;
+    @Getter
     protected List<JsonObject> commentProperties;
 
     public GerritClientComments(Configuration config) {
@@ -170,10 +172,6 @@ public class GerritClientComments extends GerritClientAccount {
         requestPoint.setRequest(removeMentionsFromComment(commentMessage).trim());
 
         return requestPoint;
-    }
-
-    public List<JsonObject> getCommentProperties() {
-        return commentProperties;
     }
 
     public boolean retrieveLastComments(Event event, String fullChangeId) {

@@ -8,6 +8,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionReques
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponse;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponseMessage;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 
@@ -23,16 +24,13 @@ import java.util.Optional;
 @Slf4j
 @Singleton
 public class OpenAiClient {
+    @Getter
     private String requestBody;
     private final Gson gson = new GsonBuilder()
             .disableHtmlEscaping()
             .create();
     private final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
     private boolean isCommentEvent = false;
-
-    public String getRequestBody() {
-        return requestBody;
-    }
 
     public String ask(Configuration config, String patchSet) throws Exception {
         HttpRequest request = createRequest(config, patchSet);

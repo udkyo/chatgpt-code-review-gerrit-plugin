@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.PatchSetReviewer;
 import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URLEncoder;
@@ -37,6 +38,7 @@ public class EventListenerHandler {
             1, 1, 0L, TimeUnit.MILLISECONDS, queue, threadFactory, handler);
     private final GerritClient gerritClient;
     private Configuration config;
+    @Getter
     private CompletableFuture<Void> latestFuture;
 
     @Inject
@@ -149,14 +151,14 @@ public class EventListenerHandler {
                 if (!isPatchSetReviewEnabled(patchSetEvent)) {
                     return;
                 }
-                reviewer.setIsCommentEvent(false);
+                reviewer.setCommentEvent(false);
                 break;
             case "comment-added":
                 if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
                     log.info("No comments found for review");
                     return;
                 }
-                reviewer.setIsCommentEvent(true);
+                reviewer.setCommentEvent(true);
                 break;
             default:
                 return;
@@ -175,10 +177,6 @@ public class EventListenerHandler {
                 }
             }
         }, executorService);
-    }
-
-    public CompletableFuture<Void> getLatestFuture() {
-        return latestFuture;
     }
 
 }
