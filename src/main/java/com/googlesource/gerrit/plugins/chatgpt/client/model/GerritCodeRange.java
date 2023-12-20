@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder(toBuilder = true)
-public class GerritCommentRange {
+public class GerritCodeRange {
 
     public int start_line;
     public int end_line;

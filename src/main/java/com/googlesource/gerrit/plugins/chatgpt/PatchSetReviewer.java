@@ -10,7 +10,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.client.OpenAiClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCommentRange;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -95,8 +95,8 @@ public class PatchSetReviewer {
         reviewBatches.add(batchMap);
     }
 
-    private Optional<GerritCommentRange> getGerritCommentRange(ChatGptSuggestionPoint suggestion) {
-        Optional<GerritCommentRange> gerritCommentRange = Optional.empty();
+    private Optional<GerritCodeRange> getGerritCommentCodeRange(ChatGptSuggestionPoint suggestion) {
+        Optional<GerritCodeRange> gerritCommentRange = Optional.empty();
         if (suggestion.getFilename() == null) {
             return gerritCommentRange;
         }
@@ -128,12 +128,12 @@ public class PatchSetReviewer {
             }
             else {
                 batchMap.put("content", suggestion.getSuggestion());
-                Optional<GerritCommentRange> optGerritCommentRange = getGerritCommentRange(suggestion);
+                Optional<GerritCodeRange> optGerritCommentRange = getGerritCommentCodeRange(suggestion);
                 if (optGerritCommentRange.isPresent()) {
-                    GerritCommentRange gerritCommentRange = optGerritCommentRange.get();
+                    GerritCodeRange gerritCodeRange = optGerritCommentRange.get();
                     batchMap.put("filename", suggestion.getFilename());
-                    batchMap.put("line", gerritCommentRange.getStart_line());
-                    batchMap.put("range", gerritCommentRange);
+                    batchMap.put("line", gerritCodeRange.getStart_line());
+                    batchMap.put("range", gerritCodeRange);
                 }
                 reviewBatches.add(batchMap);
             }

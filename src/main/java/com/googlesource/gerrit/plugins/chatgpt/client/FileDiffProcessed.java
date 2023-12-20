@@ -1,8 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
+import com.googlesource.gerrit.plugins.chatgpt.client.model.CodeFinderDiff;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.DiffContent;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff.Content;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.OutputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TreeMap;
 
 @Slf4j
 public class FileDiffProcessed {
@@ -24,13 +25,17 @@ public class FileDiffProcessed {
     };
 
     private final Configuration config;
+    private final boolean isCommitMessage;
     @Getter
-    private List<Content> diff;
+    private List<CodeFinderDiff> codeFinderDiffs;
     @Getter
     private List<String> newContent;
     @Getter
-    private List<OutputFileDiff.Content> outputDiffContent;
-    private final boolean isCommitMessage;
+    private List<DiffContent> outputDiffContent;
+    private int lineNum;
+    private DiffContent diffContentItem;
+    private DiffContent outputDiffContentItem;
+    private TreeMap<Integer, Integer> charToLineMapItem;
 
     public FileDiffProcessed(Configuration config, boolean isCommitMessage, InputFileDiff inputFileDiff) {
         this.config = config;
@@ -38,17 +43,21 @@ public class FileDiffProcessed {
         newContent = new ArrayList<>() {{
             add("DUMMY LINE #0");
         }};
-        diff = inputFileDiff.getContent();
+        lineNum = 1;
         outputDiffContent = new ArrayList<>();
-        List<Content> inputDiffContent = inputFileDiff.getContent();
+        codeFinderDiffs = new ArrayList<>();
+        List<InputFileDiff.Content> inputDiffContent = inputFileDiff.getContent();
         // Iterate over the items of the diff content
-        for (Content inputContentItem : inputDiffContent) {
-            OutputFileDiff.Content outputContentItem = new OutputFileDiff.Content();
+        for (InputFileDiff.Content inputContentItem : inputDiffContent) {
+            diffContentItem = new DiffContent();
+            outputDiffContentItem = new DiffContent();
+            charToLineMapItem = new TreeMap<>();
             // Iterate over the fields `a`, `b` and `ab` of each diff content
-            for (Field inputDiffField : Content.class.getDeclaredFields()) {
-                processFileDiffItem(inputDiffField, inputContentItem, outputContentItem);
+            for (Field inputDiffField : InputFileDiff.Content.class.getDeclaredFields()) {
+                processFileDiffItem(inputDiffField, inputContentItem);
             }
-            outputDiffContent.add(outputContentItem);
+            outputDiffContent.add(outputDiffContentItem);
+            codeFinderDiffs.add(new CodeFinderDiff(diffContentItem, charToLineMapItem));
         }
     }
 
@@ -57,9 +66,37 @@ public class FileDiffProcessed {
                 s.isEmpty() || Arrays.stream(COMMIT_MESSAGE_FILTER_OUT_PREFIXES).anyMatch(s::startsWith));
     }
 
-    private void processFileDiffItem(Field inputDiffField, Content contentItem,
-                                     OutputFileDiff.Content outputContentItem) {
-        String diffType = inputDiffField.getName();
+    private void updateCodeEntities(Field diffField, List<String> diffLines) throws IllegalAccessException {
+        String diffType = diffField.getName();
+        String content = String.join("\n", diffLines);
+        diffField.set(diffContentItem, content);
+        // If the lines modified in the PatchSet are not deleted, they are utilized to populate newContent and
+        // charToLineMapItem
+        if (diffType.contains("b")) {
+            int diffCharPointer = -1;
+            for (String diffLine : diffLines) {
+                // Increase of 1 to take into account of the newline character
+                diffCharPointer++;
+                charToLineMapItem.put(diffCharPointer, lineNum);
+                diffCharPointer += diffLine.length();
+                lineNum++;
+            }
+            // Add the last line to charToLineMapItem
+            charToLineMapItem.put(diffCharPointer +1, lineNum);
+            newContent.addAll(diffLines);
+        }
+        // If the lines modified in the PatchSet are deleted, they are mapped in charToLineMapItem to current lineNum
+        else {
+            charToLineMapItem.put(content.length(), lineNum);
+        }
+
+        if (config.getGptFullFileReview() || !diffType.equals("ab")) {
+            // Store the new field's value in the output diff content `outputContentItem`
+            diffField.set(outputDiffContentItem, content);
+        }
+    }
+
+    private void processFileDiffItem(Field inputDiffField, InputFileDiff.Content contentItem) {
         try {
             // Get the `a`, `b` or `ab` field's value from the input diff content
             @SuppressWarnings("unchecked")
@@ -70,18 +107,12 @@ public class FileDiffProcessed {
             if (isCommitMessage) {
                 filterCommitMessageContent(diffLines);
             }
-            if (config.getGptFullFileReview() || !diffType.equals("ab")) {
-                // Get the corresponding `a`, `b` or `ab` field from the output diff class
-                Field outputDiffField = OutputFileDiff.Content.class.getDeclaredField(diffType);
-                // Store the new field's value in the output diff content `outputContentItem`
-                outputDiffField.set(outputContentItem, String.join("\n", diffLines));
-            }
-            // If the lines modified in the PatchSet are not deleted, they are utilized to populate newContent
-            if (diffType.contains("b")) {
-                newContent.addAll(diffLines);
-            }
+            // Get the corresponding `a`, `b` or `ab` field from the output diff class
+            Field diffField = DiffContent.class.getDeclaredField(inputDiffField.getName());
+            updateCodeEntities(diffField, diffLines);
+
         } catch (IllegalAccessException | NoSuchFieldException e) {
-            log.error("Error while processing file difference (diff type: {})", diffType, e);
+            log.error("Error while processing file difference (diff type: {})", inputDiffField.getName(), e);
         }
     }
 

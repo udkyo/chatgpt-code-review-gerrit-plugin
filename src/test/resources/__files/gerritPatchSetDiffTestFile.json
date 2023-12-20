@@ -19,7 +19,7 @@
   "content": [
     {
       "ab": [
-        "from typing import Any, Callable, Type, Union",
+        "from types import Any, Callable, Type, Union",
         "",
         "__all__ = [\"importclass\", \"preprocess_classes\", \"TypeClassOrPath\"]",
         "",

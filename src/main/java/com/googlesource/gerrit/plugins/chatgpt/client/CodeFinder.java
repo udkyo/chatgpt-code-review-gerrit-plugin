@@ -1,35 +1,42 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCommentRange;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.CodeFinderDiff;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.DiffContent;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class CodeFinder {
-    private final List<InputFileDiff.Content> diff;
+    private final List<CodeFinderDiff> codeFinderDiffs;
     private int commentedLine;
-    private String[] commentedCode;
-    private int lastCommentedCodeLineNum ;
-    private GerritCommentRange currentCommentRange;
-    private GerritCommentRange closestCommentRange;
-    private int lineNum;
+    private Pattern commentedCodePattern;
+    private GerritCodeRange currentCodeRange;
+    private GerritCodeRange closestCodeRange;
 
-    public CodeFinder(List<InputFileDiff.Content> diff) {
-        this.diff = diff;
+    public CodeFinder(List<CodeFinderDiff> codeFinderDiffs) {
+        this.codeFinderDiffs = codeFinderDiffs;
     }
 
-    private double calcCodeDistance(GerritCommentRange range, int fromLine) {
+    private void updateCodePattern(ChatGptSuggestionPoint suggestion) {
+        String commentedCode = suggestion.getCodeSnippet().trim();
+        String commentedCodeRegex = Pattern.quote(commentedCode);
+        commentedCodePattern = Pattern.compile(commentedCodeRegex);
+    }
+
+    private double calcCodeDistance(GerritCodeRange range, int fromLine) {
         return Math.abs((range.end_line - range.start_line) / 2 - fromLine);
     }
 
-    @SuppressWarnings("unchecked")
-    private List<String> getDiffItem(Field diffField, InputFileDiff.Content diffItem) {
+    private String getDiffItem(Field diffField, DiffContent diffItem) {
         try {
-            return (List<String>) diffField.get(diffItem);
+            return (String) diffField.get(diffItem);
         }
         catch (IllegalAccessException e) {
             log.error("Error while processing file difference (diff type: {})", diffField.getName(), e);
@@ -37,63 +44,61 @@ public class CodeFinder {
         }
     }
 
-    private void findCodeLines(String diffType, List<String> diffLines) {
-        int codeLinePointer = 0;
-        for (String newContentLine : diffLines) {
-            String commentedCodeLine = commentedCode[codeLinePointer];
-            // Search for the commented code in the content
-            int codeCharacter = newContentLine.indexOf(commentedCodeLine);
-            if (codeCharacter != -1) {
-                // If the beginning of a commented code is found, currentCommentRange is initialized
-                if (codeLinePointer == 0) {
-                    currentCommentRange = GerritCommentRange.builder()
-                            .start_line(lineNum)
-                            .start_character(codeCharacter)
-                            .build();
-                }
-                // If the ending of a commented code is found, the currentCommentRange ending values are set
-                if (codeLinePointer >= lastCommentedCodeLineNum) {
-                    currentCommentRange.setEnd_line(lineNum);
-                    currentCommentRange.setEnd_character(codeCharacter + commentedCodeLine.length());
-                    // If multiple commented code portions are found and currentCommentRange is closer to the line
-                    // number suggested by ChatGPT than closestCommentRange, it becomes the new closestCommentRange
-                    if (closestCommentRange == null || calcCodeDistance(currentCommentRange, commentedLine) <
-                            calcCodeDistance(closestCommentRange, commentedLine)) {
-                        closestCommentRange = currentCommentRange.toBuilder().build();
-                    }
-                }
-                else {
-                    codeLinePointer++;
-                }
-            }
-            else {
-                codeLinePointer = 0;
-            }
-            if (diffType.contains("b")) {
-                lineNum++;
+    private int getLineNumber(TreeMap<Integer, Integer> charToLineMapItem, int position) {
+        Integer floorPosition = charToLineMapItem.floorKey(position);
+        if (floorPosition == null) {
+            throw new IllegalArgumentException("Position: " + position);
+        }
+        return charToLineMapItem.get(floorPosition);
+    }
+
+    private int getLineCharacter(String diffCode, int position) {
+        // Return the offset relative to the nearest preceding newline character if found, `position` otherwise
+        return position - diffCode.substring(0, position).lastIndexOf("\n") -1;
+    }
+
+    private void findCodeLines(String diffCode, TreeMap<Integer, Integer> charToLineMapItem)
+            throws IllegalArgumentException {
+        Matcher codeMatcher = commentedCodePattern.matcher(diffCode);
+        while (codeMatcher.find()) {
+            int startPosition = codeMatcher.start();
+            int endPosition = codeMatcher.end();
+            currentCodeRange = GerritCodeRange.builder()
+                    .start_line(getLineNumber(charToLineMapItem, startPosition))
+                    .end_line(getLineNumber(charToLineMapItem, endPosition))
+                    .start_character(getLineCharacter(diffCode, startPosition))
+                    .end_character(getLineCharacter(diffCode, endPosition))
+                    .build();
+            // If multiple commented code portions are found and currentCommentRange is closer to the line
+            // number suggested by ChatGPT than closestCommentRange, it becomes the new closestCommentRange
+            if (closestCodeRange == null || calcCodeDistance(currentCodeRange, commentedLine) <
+                    calcCodeDistance(closestCodeRange, commentedLine)) {
+                closestCodeRange = currentCodeRange.toBuilder().build();
             }
         }
     }
 
-    public GerritCommentRange findCode(ChatGptSuggestionPoint suggestion, int commentedLine) {
+    public GerritCodeRange findCommentedCode(ChatGptSuggestionPoint suggestion, int commentedLine) {
         this.commentedLine = commentedLine;
-        // Split the commented code into lines and remove the trailing spaces from each line
-        commentedCode = suggestion.getCodeSnippet().trim().split("\\s*\n\\s*");
-        lastCommentedCodeLineNum = commentedCode.length -1;
-        currentCommentRange = null;
-        closestCommentRange = null;
-        lineNum = 1;
-        for (InputFileDiff.Content diffItem : diff) {
-            for (Field diffField : InputFileDiff.Content.class.getDeclaredFields()) {
-                String diffType = diffField.getName();
-                List<String> diffLines = getDiffItem(diffField, diffItem);
-                if (diffLines != null) {
-                    findCodeLines(diffType, diffLines);
+        updateCodePattern(suggestion);
+        currentCodeRange = null;
+        closestCodeRange = null;
+        for (CodeFinderDiff codeFinderDiff : codeFinderDiffs) {
+            for (Field diffField : DiffContent.class.getDeclaredFields()) {
+                String diffCode = getDiffItem(diffField, codeFinderDiff.getContent());
+                if (diffCode != null) {
+                    TreeMap<Integer, Integer> charToLineMapItem = codeFinderDiff.getCharToLineMap();
+                    try {
+                        findCodeLines(diffCode, charToLineMapItem);
+                    }
+                    catch (IllegalArgumentException e) {
+                        log.warn("Could not retrieve line number from charToLineMap {}", charToLineMapItem, e);
+                    }
                 }
             }
         }
 
-        return closestCommentRange;
+        return closestCodeRange;
     }
 
 }

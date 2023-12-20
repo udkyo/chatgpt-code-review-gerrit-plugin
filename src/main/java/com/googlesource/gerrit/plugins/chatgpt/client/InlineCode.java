@@ -3,7 +3,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client;
 import com.google.gson.JsonObject;
 import com.google.gson.Gson;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCommentRange;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -15,10 +15,10 @@ public class InlineCode {
     private final Gson gson = new Gson();
     private final CodeFinder codeFinder;
     private final List<String> newContent;
-    private GerritCommentRange range;
+    private GerritCodeRange range;
 
     public InlineCode(FileDiffProcessed fileDiffProcessed) {
-        codeFinder = new CodeFinder(fileDiffProcessed.getDiff());
+        codeFinder = new CodeFinder(fileDiffProcessed.getCodeFinderDiffs());
         newContent = fileDiffProcessed.getNewContent();
     }
 
@@ -36,7 +36,7 @@ public class InlineCode {
     public String getInlineCode(JsonObject commentProperty) {
         if (commentProperty.has("range")) {
             List<String> codeByRange = new ArrayList<>();
-            range = gson.fromJson(commentProperty.get("range"), GerritCommentRange.class);
+            range = gson.fromJson(commentProperty.get("range"), GerritCodeRange.class);
             for (int line_num = range.start_line; line_num <= range.end_line; line_num++) {
                 codeByRange.add(getLineSlice(line_num));
             }
@@ -47,7 +47,7 @@ public class InlineCode {
         }
     }
 
-    public Optional<GerritCommentRange> findCommentRange(ChatGptSuggestionPoint suggestion) {
+    public Optional<GerritCodeRange> findCommentRange(ChatGptSuggestionPoint suggestion) {
         int commentedLine;
         try {
             commentedLine = suggestion.getLineNumber();
@@ -57,7 +57,7 @@ public class InlineCode {
             commentedLine = newContent.size() / 2;
         }
 
-        return Optional.ofNullable(codeFinder.findCode(suggestion, commentedLine));
+        return Optional.ofNullable(codeFinder.findCommentedCode(suggestion, commentedLine));
     }
 
 }
