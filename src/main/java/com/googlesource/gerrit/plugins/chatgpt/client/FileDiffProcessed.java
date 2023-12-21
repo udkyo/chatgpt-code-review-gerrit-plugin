@@ -6,6 +6,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.TreeMap;
 
 @Slf4j
 public class FileDiffProcessed {
+    private static final int MIN_RANDOM_PLACEHOLDER_VARIABLE_LENGTH = 1;
     private static final String[] COMMIT_MESSAGE_FILTER_OUT_PREFIXES = {
             "Parent:",
             "Author:",
@@ -32,6 +34,8 @@ public class FileDiffProcessed {
     private List<String> newContent;
     @Getter
     private List<DiffContent> outputDiffContent;
+    @Getter
+    private String randomPlaceholder;
     private int lineNum;
     private DiffContent diffContentItem;
     private DiffContent outputDiffContentItem;
@@ -40,6 +44,12 @@ public class FileDiffProcessed {
     public FileDiffProcessed(Configuration config, boolean isCommitMessage, InputFileDiff inputFileDiff) {
         this.config = config;
         this.isCommitMessage = isCommitMessage;
+
+        updateContent(inputFileDiff);
+        updateRandomPlaceholder(inputFileDiff);
+    }
+
+    private void updateContent(InputFileDiff inputFileDiff) {
         newContent = new ArrayList<>() {{
             add("DUMMY LINE #0");
         }};
@@ -59,6 +69,15 @@ public class FileDiffProcessed {
             outputDiffContent.add(outputDiffContentItem);
             codeFinderDiffs.add(new CodeFinderDiff(diffContentItem, charToLineMapItem));
         }
+    }
+
+    private void updateRandomPlaceholder(InputFileDiff inputFileDiff) {
+        int placeholderVariableLength = MIN_RANDOM_PLACEHOLDER_VARIABLE_LENGTH;
+        do {
+            randomPlaceholder = '#' + RandomStringUtils.random(placeholderVariableLength, true, false);
+            placeholderVariableLength++;
+        }
+        while (inputFileDiff.toString().contains(randomPlaceholder));
     }
 
     private void filterCommitMessageContent(List<String> fieldValue) {

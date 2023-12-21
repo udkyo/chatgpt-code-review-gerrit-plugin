@@ -18,7 +18,7 @@ public class InlineCode {
     private GerritCodeRange range;
 
     public InlineCode(FileDiffProcessed fileDiffProcessed) {
-        codeFinder = new CodeFinder(fileDiffProcessed.getCodeFinderDiffs());
+        codeFinder = new CodeFinder(fileDiffProcessed.getCodeFinderDiffs(), fileDiffProcessed.getRandomPlaceholder());
         newContent = fileDiffProcessed.getNewContent();
     }
 
