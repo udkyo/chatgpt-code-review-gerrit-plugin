@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.OutputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
@@ -13,16 +14,17 @@ import java.net.URI;
 import java.util.*;
 
 @Slf4j
+@Singleton
 public class GerritClientPatchSet extends GerritClientAccount {
     private final Gson gson = new GsonBuilder()
             .disableHtmlEscaping()
             .create();
 
     private boolean isCommitMessage;
-    private final List<String> diffs;
+    private List<String> diffs;
 
-    public GerritClientPatchSet(Configuration config) {
-        super(config);
+    public void initialize(Configuration config) {
+        super.initialize(config);
         diffs = new ArrayList<>();
     }
 

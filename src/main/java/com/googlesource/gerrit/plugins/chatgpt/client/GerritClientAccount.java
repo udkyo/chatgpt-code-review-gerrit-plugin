@@ -13,10 +13,6 @@ import java.util.stream.StreamSupport;
 @Slf4j
 public class GerritClientAccount extends GerritClientBase {
 
-    public GerritClientAccount(Configuration config) {
-        super(config);
-    }
-
     private Optional<Integer> getAccountId(String authorUsername) {
         URI uri = URI.create(config.getGerritAuthBaseUrl()
                 + UriResourceLocator.gerritAccountIdUri(authorUsername));

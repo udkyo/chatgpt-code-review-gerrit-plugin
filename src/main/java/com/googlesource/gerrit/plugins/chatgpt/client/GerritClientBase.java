@@ -23,12 +23,11 @@ public class GerritClientBase {
     protected final Gson gson = new Gson();
     protected final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
     @Getter
-    protected HashMap<String, FileDiffProcessed> fileDiffsProcessed;
+    protected HashMap<String, FileDiffProcessed> fileDiffsProcessed = new HashMap<>();
     protected Configuration config;
 
-    public GerritClientBase(Configuration config) {
+    public void initialize(Configuration config) {
         this.config = config;
-        fileDiffsProcessed = new HashMap<>();
         config.resetDynamicConfiguration();
     }
 

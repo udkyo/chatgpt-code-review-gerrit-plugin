@@ -105,7 +105,8 @@ public class PatchSetReviewer {
             return gerritCommentRange;
         }
         if (!fileDiffsProcessed.containsKey(filename)) {
-            log.info("Filename '{}' not found in suggestion '{}'", filename, suggestion);
+            log.info("Filename '{}' not found for suggestion '{}'.\nFileDiffsProcessed = {}", filename, suggestion,
+                    fileDiffsProcessed);
             return gerritCommentRange;
         }
         InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));

@@ -2,6 +2,9 @@ package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.google.gerrit.server.events.Event;
 import com.google.gson.JsonObject;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
@@ -9,16 +12,34 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.List;
 
+class GerritClientPatchSetInjector extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(GerritClientPatchSet.class).in(Singleton.class);
+    }
+}
+
+class GerritClientCommentsInjector extends AbstractModule {
+    @Override
+    protected void configure() {
+        bind(GerritClientComments.class).in(Singleton.class);
+    }
+}
+
 @Slf4j
 @Singleton
 public class GerritClient {
+    private static final Injector patchSetInjector = Guice.createInjector(new GerritClientPatchSetInjector());
+    private static final Injector commentsInjector = Guice.createInjector(new GerritClientCommentsInjector());
 
     private GerritClientPatchSet gerritClientPatchSet;
     private GerritClientComments gerritClientComments;
 
     public void initialize(Configuration config) {
-        gerritClientPatchSet = new GerritClientPatchSet(config);
-        gerritClientComments = new GerritClientComments(config);
+        gerritClientPatchSet = patchSetInjector.getInstance(GerritClientPatchSet.class);
+        gerritClientPatchSet.initialize(config);
+        gerritClientComments = commentsInjector.getInstance(GerritClientComments.class);
+        gerritClientComments.initialize(config);
     }
 
     public String getPatchSet(String fullChangeId) throws Exception {
