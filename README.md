@@ -33,7 +33,9 @@
 
 3. **Configure:** Set up the basic parameters in your `$gerrit_site/etc/gerrit.config`:
 - `gptToken`: OpenAI GPT token.
-- `gerritAuthBaseUrl`: The URL of your Gerrit instance. Similar to: https://gerrit.local.team/a
+- `gerritAuthBaseUrl`: The URL of your Gerrit instance, similar to `https://gerrit.local.team`.
+
+  **NOTE**: Do not append "/a" authentication sub-path.
 - `gerritUserName`: Gerrit username.
 - `gerritPassword`: Gerrit password.
 - `globalEnable`: Default value is false. The plugin will only review specified repositories. If set to true, the plugin
@@ -199,7 +201,8 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 ### Optional Parameters
 
 - `gptModel`: The default model is gpt-3.5-turbo. You can also configure it to gpt-3.5-turbo-16k, gpt-4 or gpt-4-32k.
-- `gptSystemPrompt`: You can modify the default system prompt to your preferred prompt.
+- `gptDomain`: The default ChatGPT domain is `https://api.openai.com`.
+- `gptSystemPrompt`: You can modify the default system prompt ("Act as a PatchSet Reviewer") to your preferred prompt.
 - `gptTemperature`: The default value is 1. What sampling temperature to use, between 0 and 2. Higher values like 0.8
   will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
 - `gptReviewPatchSet`: Set to true by default. When switched to false, it disables the automatic review of PatchSets as
@@ -213,16 +216,18 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
   possible, these points are transformed into inline code comments.
 - `gptStreamOutput`: The default value is false. Whether the response is expected in stream output mode or not.
 - `maxReviewLines`: The default value is 1000. This sets a limit on the number of lines of code included in the review.
-- `enabledUsers`: By default, every user is enabled to have their Patchsets and comments reviewed. To limit review
+- `maxReviewFileSize`: Set with a default value of 10000, this parameter establishes a cap on the file size that can be
+  included in reviews.
+- `enabledUsers`: By default, every user is enabled to have their PatchSets and comments reviewed. To limit review
   capabilities to specific users, list their usernames in this setting, separated by commas.
 - `disabledUsers`: Functions oppositely to enabledUsers.
-- `enabledGroups`: Initially, all groups are permitted to have their Patchsets and comments reviewed. To restrict review
-  access to certain groups, specify their names in this setting, separating them with commas.
+- `enabledGroups`: By default, all groups are permitted to have their PatchSets and comments reviewed. To restrict
+  review access to certain groups, specify their names in this setting, separating them with commas.
 - `disabledGroups`: Operates in reverse to `enabledGroups`, excluding specified groups from reviews.
-- `enabledTopicFilter`: Specifies a list of keywords that trigger ChatGPT reviews based on the topic of the Patchset.
-  When this setting is active, only Patchsets and their associated comments containing at least one of these keywords in
+- `enabledTopicFilter`: Specifies a list of keywords that trigger ChatGPT reviews based on the topic of the PatchSet.
+  When this setting is active, only PatchSets and their associated comments containing at least one of these keywords in
   the topic are reviewed.
-- `disabledTopicFilter`: Works in contrast to enabledTopicFilter, excluding Patchsets and comments from review if their
+- `disabledTopicFilter`: Works in contrast to enabledTopicFilter, excluding PatchSets and comments from review if their
   topics contain specified keywords.
 - `enabledFileExtensions`: This limits the reviewed files to the given types. Default file extensions are ".py, .java,
   .js, .ts, .html, .css, .cs, .cpp, .c, .h, .php, .rb, .swift, .kt, .r, .jl, .go, .scala, .pl, .pm, .rs, .dart, .lua,
