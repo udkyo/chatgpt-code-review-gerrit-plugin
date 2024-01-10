@@ -7,7 +7,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptRequestPoint;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
@@ -24,11 +23,10 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.googlesource.gerrit.plugins.chatgpt.client.ReviewUtils.getTimeStamp;
+import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.getTimeStamp;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 @Slf4j
-@Singleton
 public class GerritClientComments extends GerritClientAccount {
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
     private static final String BULLET_POINT = "* ";
@@ -39,8 +37,8 @@ public class GerritClientComments extends GerritClientAccount {
     @Getter
     protected List<JsonObject> commentProperties;
 
-    public void initialize(Configuration config) {
-        super.initialize(config);
+    public GerritClientComments(Configuration config) {
+        super(config);
         commentProperties  = new ArrayList<>();
     }
 

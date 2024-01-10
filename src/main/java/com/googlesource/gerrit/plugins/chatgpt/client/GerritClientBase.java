@@ -26,7 +26,7 @@ public class GerritClientBase {
     protected HashMap<String, FileDiffProcessed> fileDiffsProcessed = new HashMap<>();
     protected Configuration config;
 
-    public void initialize(Configuration config) {
+    public GerritClientBase(Configuration config) {
         this.config = config;
         config.resetDynamicConfiguration();
     }

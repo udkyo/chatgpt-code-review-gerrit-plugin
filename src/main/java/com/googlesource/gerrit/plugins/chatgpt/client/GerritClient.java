@@ -2,44 +2,30 @@ package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.google.gerrit.server.events.Event;
 import com.google.gson.JsonObject;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
 
-class GerritClientPatchSetInjector extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(GerritClientPatchSet.class).in(Singleton.class);
-    }
-}
-
-class GerritClientCommentsInjector extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(GerritClientComments.class).in(Singleton.class);
-    }
-}
-
 @Slf4j
 @Singleton
 public class GerritClient {
-    private static final Injector patchSetInjector = Guice.createInjector(new GerritClientPatchSetInjector());
-    private static final Injector commentsInjector = Guice.createInjector(new GerritClientCommentsInjector());
+    private static final String DEFAULT_CHANGE_ID = "DEFAULT_CHANGE_ID";
 
     private GerritClientPatchSet gerritClientPatchSet;
     private GerritClientComments gerritClientComments;
 
     public void initialize(Configuration config) {
-        gerritClientPatchSet = patchSetInjector.getInstance(GerritClientPatchSet.class);
-        gerritClientPatchSet.initialize(config);
-        gerritClientComments = commentsInjector.getInstance(GerritClientComments.class);
-        gerritClientComments.initialize(config);
+        initialize(config, DEFAULT_CHANGE_ID);
+    }
+
+    public void initialize(Configuration config, String fullChangeId) {
+        log.debug("Initializing client instances for change: {}", fullChangeId);
+        gerritClientPatchSet = SingletonManager.getInstance(GerritClientPatchSet.class, fullChangeId, config);
+        gerritClientComments = SingletonManager.getInstance(GerritClientComments.class, fullChangeId, config);
     }
 
     public String getPatchSet(String fullChangeId) throws Exception {
@@ -47,6 +33,7 @@ public class GerritClient {
     }
 
     public String getPatchSet(String fullChangeId, boolean isCommentEvent) throws Exception {
+        updateGerritClientPatchSet(fullChangeId);
         return gerritClientPatchSet.getPatchSet(fullChangeId, isCommentEvent);
     }
 
@@ -58,24 +45,43 @@ public class GerritClient {
         return gerritClientPatchSet.isDisabledTopic(topic);
     }
 
-    public HashMap<String, FileDiffProcessed> getFileDiffsProcessed() {
+    public HashMap<String, FileDiffProcessed> getFileDiffsProcessed(String fullChangeId) {
+        updateGerritClientPatchSet(fullChangeId);
         return gerritClientPatchSet.getFileDiffsProcessed();
     }
 
-    public List<JsonObject> getCommentProperties() {
+    public List<JsonObject> getCommentProperties(String fullChangeId) {
+        updateGerritClientComments(fullChangeId);
         return gerritClientComments.getCommentProperties();
     }
 
     public void postComments(String fullChangeId, List<HashMap<String, Object>> reviewBatches) throws Exception {
+        updateGerritClientComments(fullChangeId);
         gerritClientComments.postComments(fullChangeId, reviewBatches);
     }
 
     public boolean retrieveLastComments(Event event, String fullChangeId) {
+        updateGerritClientComments(fullChangeId);
         return gerritClientComments.retrieveLastComments(event, fullChangeId);
     }
 
     public String getUserPrompt() {
-        return gerritClientComments.getUserPrompt(getFileDiffsProcessed());
+        HashMap<String, FileDiffProcessed> fileDiffsProcessed = gerritClientPatchSet.getFileDiffsProcessed();
+        return gerritClientComments.getUserPrompt(fileDiffsProcessed);
+    }
+
+    public void destroy(String fullChangeId) {
+        log.debug("Destroying client instances for change: {}", fullChangeId);
+        SingletonManager.removeInstance(GerritClientPatchSet.class, fullChangeId);
+        SingletonManager.removeInstance(GerritClientComments.class, fullChangeId);
+    }
+
+    private void updateGerritClientPatchSet(String fullChangeId) {
+        gerritClientPatchSet = SingletonManager.getInstance(GerritClientPatchSet.class, fullChangeId);
+    }
+
+    private void updateGerritClientComments(String fullChangeId) {
+        gerritClientComments = SingletonManager.getInstance(GerritClientComments.class, fullChangeId);
     }
 
 }

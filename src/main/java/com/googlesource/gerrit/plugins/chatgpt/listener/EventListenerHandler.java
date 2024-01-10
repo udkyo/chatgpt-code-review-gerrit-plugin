@@ -131,37 +131,48 @@ public class EventListenerHandler {
         return true;
     }
 
-    public void handleEvent(Configuration config, Event event) {
-        this.config = config;
-        PatchSetEvent patchSetEvent = (PatchSetEvent) event;
+    private boolean preprocessEvent(Event event, String fullChangeId, Project.NameKey projectNameKey) {
         String eventType = Optional.ofNullable(event.getType()).orElse("");
         log.info("Event type {}", eventType);
-        Project.NameKey projectNameKey = patchSetEvent.getProjectNameKey();
-        BranchNameKey branchNameKey = patchSetEvent.getBranchNameKey();
-        Change.Key changeKey = patchSetEvent.getChangeKey();
-        String fullChangeId = buildFullChangeId(projectNameKey, branchNameKey, changeKey);
-
-        gerritClient.initialize(config);
+        PatchSetEvent patchSetEvent = (PatchSetEvent) event;
 
         if (!isReviewEnabled(patchSetEvent, projectNameKey)) {
-            return;
+            return false;
         }
         switch (eventType) {
             case "patchset-created":
                 if (!isPatchSetReviewEnabled(patchSetEvent)) {
-                    return;
+                    return false;
                 }
                 reviewer.setCommentEvent(false);
                 break;
             case "comment-added":
                 if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
                     log.info("No comments found for review");
-                    return;
+                    return false;
                 }
                 reviewer.setCommentEvent(true);
                 break;
             default:
-                return;
+                return false;
+        }
+
+        return true;
+    }
+
+    public void handleEvent(Configuration config, Event event) {
+        this.config = config;
+        PatchSetEvent patchSetEvent = (PatchSetEvent) event;
+        Project.NameKey projectNameKey = patchSetEvent.getProjectNameKey();
+        BranchNameKey branchNameKey = patchSetEvent.getBranchNameKey();
+        Change.Key changeKey = patchSetEvent.getChangeKey();
+        String fullChangeId = buildFullChangeId(projectNameKey, branchNameKey, changeKey);
+
+        gerritClient.initialize(config, fullChangeId);
+
+        if (!preprocessEvent(event, fullChangeId, projectNameKey)) {
+            gerritClient.destroy(fullChangeId);
+            return;
         }
 
         // Execute the potentially time-consuming operation asynchronously
@@ -175,6 +186,8 @@ public class EventListenerHandler {
                 if (e instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
                 }
+            } finally {
+                gerritClient.destroy(fullChangeId);
             }
         }, executorService);
     }

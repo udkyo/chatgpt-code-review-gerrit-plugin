@@ -11,6 +11,7 @@ public class ChatCompletionRequest {
     private String model;
     private boolean stream;
     private double temperature;
+    private int seed;
     private List<Message> messages;
 
     @Data

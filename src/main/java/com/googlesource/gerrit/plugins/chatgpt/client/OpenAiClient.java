@@ -20,6 +20,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Singleton
@@ -102,6 +103,9 @@ public class OpenAiClient {
                 .messages(messages)
                 .temperature(config.getGptTemperature())
                 .stream(config.getGptStreamOutput() && !isCommentEvent)
+                // Seed value is Utilized to prevent ChatGPT from mixing up separate API calls that occur in close
+                // temporal proximity.
+                .seed(ThreadLocalRandom.current().nextInt())
                 .build();
 
         return gson.toJson(chatCompletionRequest);

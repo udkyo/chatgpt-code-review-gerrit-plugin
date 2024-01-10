@@ -4,12 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
-import com.googlesource.gerrit.plugins.chatgpt.client.InlineCode;
-import com.googlesource.gerrit.plugins.chatgpt.client.OpenAiClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.*;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
-import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Setter;
@@ -18,10 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import static com.googlesource.gerrit.plugins.chatgpt.client.ReviewUtils.extractID;
+import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.extractID;
 
 @Slf4j
-@Singleton
 public class PatchSetReviewer {
     private static final String SPLIT_REVIEW_MSG = "Too many changes. Please consider splitting into patches smaller " +
             "than %s lines for review.";
@@ -44,7 +39,7 @@ public class PatchSetReviewer {
 
     public void review(Configuration config, String fullChangeId) throws Exception {
         reviewBatches = new ArrayList<>();
-        commentProperties = gerritClient.getCommentProperties();
+        commentProperties = gerritClient.getCommentProperties(fullChangeId);
         String patchSet = gerritClient.getPatchSet(fullChangeId, isCommentEvent);
         if (patchSet.isEmpty()) {
             log.info("No file to review has been found in the PatchSet");
@@ -55,7 +50,7 @@ public class PatchSetReviewer {
         String reviewSuggestion = getReviewSuggestion(config, fullChangeId, patchSet);
         log.debug("ChatGPT response: {}", reviewSuggestion);
         if (isCommentEvent || config.getGptReviewByPoints()) {
-            retrieveReviewFromJson(reviewSuggestion);
+            retrieveReviewFromJson(reviewSuggestion, fullChangeId);
         }
         else {
             splitReviewIntoBatches(reviewSuggestion);
@@ -117,11 +112,11 @@ public class PatchSetReviewer {
         return gerritCommentRange;
     }
 
-    private void retrieveReviewFromJson(String review) {
+    private void retrieveReviewFromJson(String review, String fullChangeId) {
         review = review.replaceAll("^`*(?:json)?\\s*|\\s*`+$", "");
         Type chatGptResponseListType = new TypeToken<List<ChatGptSuggestionPoint>>(){}.getType();
         List<ChatGptSuggestionPoint> reviewJson = gson.fromJson(review, chatGptResponseListType);
-        fileDiffsProcessed = gerritClient.getFileDiffsProcessed();
+        fileDiffsProcessed = gerritClient.getFileDiffsProcessed(fullChangeId);
         for (ChatGptSuggestionPoint suggestion : reviewJson) {
             HashMap<String, Object> batchMap = new HashMap<>();
             if (suggestion.getId() != null) {

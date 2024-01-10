@@ -1,4 +1,4 @@
-package com.googlesource.gerrit.plugins.chatgpt.client;
+package com.googlesource.gerrit.plugins.chatgpt.utils;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
