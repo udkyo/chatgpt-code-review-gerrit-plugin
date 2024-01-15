@@ -50,6 +50,18 @@
         "            return getattr(loaded_module, class_name)"
       ],
       "common": true
+    },
+    {
+      "ab": [
+        "def preprocess_classes(func: Callable) -> Callable:",
+        "    classes_processed = (",
+        "    class_id if isinstance(class_id, type)",
+        "    else importclass(class_id)",
+        "    for class_id in all_classes",
+        "    )",
+        "    return func(*classes_processed, kwargs)",
+        "    return __preprocess_classes_wrapper"
+      ]
     }
   ]
 }

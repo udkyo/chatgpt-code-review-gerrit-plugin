@@ -4,12 +4,12 @@ import com.google.common.collect.Maps;
 import com.google.gerrit.server.config.PluginConfig;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -37,7 +37,6 @@ public class Configuration {
 
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
     private static final boolean DEFAULT_REVIEW_PATCHSET = true;
-    private static final boolean DEFAULT_REVIEW_BY_POINTS = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
     private static final boolean DEFAULT_FULL_FILE_REVIEW = true;
     private static final boolean DEFAULT_STREAM_OUTPUT = false;
@@ -88,7 +87,6 @@ public class Configuration {
     private static final String KEY_GPT_MODEL = "gptModel";
     private static final String KEY_GPT_TEMPERATURE = "gptTemperature";
     private static final String KEY_STREAM_OUTPUT = "gptStreamOutput";
-    private static final String KEY_REVIEW_BY_POINTS = "gptReviewByPoints";
     private static final String KEY_REVIEW_COMMIT_MESSAGES = "gptReviewCommitMessages";
     private static final String KEY_REVIEW_PATCHSET = "gptReviewPatchSet";
     private static final String KEY_FULL_FILE_REVIEW = "gptFullFileReview";
@@ -119,9 +117,7 @@ public class Configuration {
         if (DEFAULT_GPT_SYSTEM_PROMPT != null) return;
         Gson gson = new Gson();
         Class<? extends Configuration> me = this.getClass();
-        try (InputStreamReader reader = new InputStreamReader(Objects.requireNonNull(
-                me.getClassLoader().getResourceAsStream("Config/prompts.json")), StandardCharsets.UTF_8)) {
-
+        try (InputStreamReader reader = FileUtils.getInputStreamReader("Config/prompts.json")) {
             Map<String, String> values = gson.fromJson(reader, new TypeToken<Map<String, String>>(){}.getType());
             for (Map.Entry<String, String> entry : values.entrySet()) {
                 try {
@@ -142,7 +138,7 @@ public class Configuration {
         return DEFAULT_GPT_SYSTEM_PROMPT + DOT_SPACE + DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
     }
 
-    public static String getReviewUserPromptByPoints() {
+    public static String getReviewUserPrompt() {
         return DEFAULT_GPT_USER_PROMPT_JSON + DOT_SPACE + DEFAULT_GPT_USER_PROMPT_JSON_2;
     }
 
@@ -204,9 +200,7 @@ public class Configuration {
         }
         else {
             prompt.add(getString(KEY_GPT_USER_PROMPT, DEFAULT_GPT_USER_PROMPT));
-            if (getGptReviewByPoints()) {
-                prompt.add(getReviewUserPromptByPoints());
-            }
+            prompt.add(getReviewUserPrompt());
             if (getGptReviewCommitMessages()) {
                 prompt.add(DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT);
             }
@@ -221,10 +215,6 @@ public class Configuration {
 
     public boolean getGptReviewPatchSet() {
         return getBoolean(KEY_REVIEW_PATCHSET, DEFAULT_REVIEW_PATCHSET);
-    }
-
-    public boolean getGptReviewByPoints() {
-        return getBoolean(KEY_REVIEW_BY_POINTS, DEFAULT_REVIEW_BY_POINTS);
     }
 
     public boolean getGptReviewCommitMessages() {

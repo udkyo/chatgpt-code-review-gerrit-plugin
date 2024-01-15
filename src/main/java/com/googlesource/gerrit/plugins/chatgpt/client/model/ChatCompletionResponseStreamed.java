@@ -5,7 +5,6 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class ChatCompletionResponse extends ChatCompletionBase {
-
-    private List<Choice> choices;
+public class ChatCompletionResponseStreamed {
+    private List<ChatCompletionBase.Choice> choices;
 }

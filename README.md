@@ -212,8 +212,6 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `gptFullFileReview`: Enabled by default. Activating this option sends both unchanged lines and changes to ChatGPT for
   review, offering additional context information. Deactivating it (set to false) results in only the changed lines
   being submitted for review.
-- `gptReviewByPoints`: This setting, enabled by default, organizes the review of the PatchSets by distinct points. Where
-  possible, these points are transformed into inline code comments.
 - `gptStreamOutput`: The default value is false. Whether the response is expected in stream output mode or not.
 - `maxReviewLines`: The default value is 1000. This sets a limit on the number of lines of code included in the review.
 - `maxReviewFileSize`: Set with a default value of 10000, this parameter establishes a cap on the file size that can be

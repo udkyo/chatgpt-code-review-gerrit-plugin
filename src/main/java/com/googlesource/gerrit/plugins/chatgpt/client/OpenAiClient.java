@@ -4,16 +4,19 @@ import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Singleton;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionBase;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionRequest;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponse;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponseMessage;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponseStreamed;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponseUnstreamed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.http.HttpRequest;
@@ -66,10 +69,14 @@ public class OpenAiClient {
             return finalContent.toString();
         }
         else {
-            ChatCompletionResponseMessage chatCompletionResponseMessage =
-                    gson.fromJson(body, ChatCompletionResponseMessage.class);
-            return chatCompletionResponseMessage.getChoices().get(0).getMessage().getContent();
+            ChatCompletionResponseUnstreamed chatCompletionResponseUnstreamed =
+                    gson.fromJson(body, ChatCompletionResponseUnstreamed.class);
+            return getResponseContent(chatCompletionResponseUnstreamed.getChoices().get(0).getMessage().getTool_calls());
         }
+    }
+
+    private String getResponseContent(List<ChatCompletionBase.ToolCall> toolCalls) {
+        return toolCalls.get(0).getFunction().getArguments();
     }
 
     private HttpRequest createRequest(Configuration config, String patchSet) {
@@ -98,6 +105,13 @@ public class OpenAiClient {
 
         List<ChatCompletionRequest.Message> messages = List.of(systemMessage, userMessage);
 
+        ChatCompletionRequest tools;
+        try (InputStreamReader reader = FileUtils.getInputStreamReader("Config/tools.json")) {
+            tools = gson.fromJson(reader, ChatCompletionRequest.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load ChatGPT request tools", e);
+        }
+
         ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
                 .model(config.getGptModel())
                 .messages(messages)
@@ -106,6 +120,8 @@ public class OpenAiClient {
                 // Seed value is Utilized to prevent ChatGPT from mixing up separate API calls that occur in close
                 // temporal proximity.
                 .seed(ThreadLocalRandom.current().nextInt())
+                .tools(tools.getTools())
+                .tool_choice(tools.getTool_choice())
                 .build();
 
         return gson.toJson(chatCompletionRequest);
@@ -117,9 +133,13 @@ public class OpenAiClient {
         if (!line.startsWith(dataPrefix)) {
             return Optional.empty();
         }
-        ChatCompletionResponse chatCompletionResponse =
-                gson.fromJson(line.substring("data: ".length()), ChatCompletionResponse.class);
-        String content = chatCompletionResponse.getChoices().get(0).getDelta().getContent();
+        ChatCompletionResponseStreamed chatCompletionResponseStreamed =
+                gson.fromJson(line.substring("data: ".length()), ChatCompletionResponseStreamed.class);
+        ChatCompletionBase.Delta delta = chatCompletionResponseStreamed.getChoices().get(0).getDelta();
+        if (delta == null || delta.getTool_calls() == null) {
+            return Optional.empty();
+        }
+        String content = getResponseContent(delta.getTool_calls());
         return Optional.ofNullable(content);
     }
 

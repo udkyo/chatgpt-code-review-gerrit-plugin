@@ -5,19 +5,18 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class ChatCompletionResponseMessage extends ChatCompletionBase {
-
+public class ChatCompletionResponseUnstreamed {
     private List<MessageChoice> choices;
 
 
     @Data
-    public static class MessageChoice extends ChatCompletionBase.Choice {
+    public static class MessageChoice {
         private Message message;
     }
 
     @Data
     public static class Message {
         private String role;
-        private String content;
+        private List<ChatCompletionBase.ToolCall> tool_calls;
     }
 }

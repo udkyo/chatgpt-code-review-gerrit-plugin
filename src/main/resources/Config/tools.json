@@ -1,0 +1,51 @@
+{
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "format_suggestions",
+        "description": "Provide the PatchSet review suggestions.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "suggestions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "suggestion": {
+                    "type": "string"
+                  },
+                  "filename": {
+                    "type": "string"
+                  },
+                  "lineNumber": {
+                    "type": "integer"
+                  },
+                  "codeSnippet": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "suggestion"
+                ]
+              }
+            }
+          },
+          "required": [
+            "suggestions"
+          ]
+        }
+      }
+    }
+  ],
+  "tool_choice": {
+    "type": "function",
+    "function": {
+      "name": "format_suggestions"
+    }
+  }
+}

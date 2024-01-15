@@ -3,9 +3,10 @@ package com.googlesource.gerrit.plugins.chatgpt.client.model;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class ChatCompletionBase {
-
     protected String id;
     protected String object;
     protected long created;
@@ -23,6 +24,19 @@ public class ChatCompletionBase {
     @Data
     public static class Delta {
         private String role;
-        private String content;
+        private List<ToolCall> tool_calls;
+    }
+
+    @Data
+    public static class ToolCall {
+        private String id;
+        private String type;
+        private Function function;
+
+        @Data
+        public static class Function {
+            private String name;
+            private String arguments;
+        }
     }
 }

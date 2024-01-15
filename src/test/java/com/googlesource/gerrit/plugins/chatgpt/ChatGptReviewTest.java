@@ -42,7 +42,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -77,11 +76,11 @@ public class ChatGptReviewTest {
 
     private final Gson gson = new Gson();
 
+    private String expectedResponseStreamed;
     private String expectedSystemPrompt;
     private String reviewUserPrompt;
-    private String reviewUserPromptByPoints;
     private String commentUserPrompt;
-    private String gerritPatchSetByPoints;
+    private String gerritPatchSetReview;
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(9527);
@@ -183,22 +182,12 @@ public class ChatGptReviewTest {
                         .withBodyFile("gerritPatchSetComments.json")));
 
         // Mock the behavior of the askGpt request
-        byte[] gptAnswer = Base64.getDecoder().decode("ZGF0YTogeyJpZCI6ImNoYXRjbXBsLTdSZDVOYVpEOGJNVTRkdnBVV2" +
-                "9hM3Q2RG83RkkzIiwib2JqZWN0IjoiY2hhdC5jb21wbGV0aW9uLmNodW5rIiwiY3JlYXRlZCI6MTY4NjgxOTQ1NywibW9kZWw" +
-                "iOiJncHQtMy41LXR1cmJvLTAzMDEiLCJjaG9pY2VzIjpbeyJkZWx0YSI6eyJyb2xlIjoiYXNzaXN0YW50In0sImluZGV4Ijow" +
-                "LCJmaW5pc2hfcmVhc29uIjpudWxsfV19CgpkYXRhOiB7ImlkIjoiY2hhdGNtcGwtN1JkNU5hWkQ4Yk1VNGR2cFVXb2EzdDZEb" +
-                "zdGSTMiLCJvYmplY3QiOiJjaGF0LmNvbXBsZXRpb24uY2h1bmsiLCJjcmVhdGVkIjoxNjg2ODE5NDU3LCJtb2RlbCI6ImdwdC0" +
-                "zLjUtdHVyYm8tMDMwMSIsImNob2ljZXMiOlt7ImRlbHRhIjp7ImNvbnRlbnQiOiJIZWxsbyJ9LCJpbmRleCI6MCwiZmluaXNo" +
-                "X3JlYXNvbiI6bnVsbH1dfQoKZGF0YTogeyJpZCI6ImNoYXRjbXBsLTdSZDVOYVpEOGJNVTRkdnBVV29hM3Q2RG83RkkzIiwib" +
-                "2JqZWN0IjoiY2hhdC5jb21wbGV0aW9uLmNodW5rIiwiY3JlYXRlZCI6MTY4NjgxOTQ1NywibW9kZWwiOiJncHQtMy41LXR1cm" +
-                "JvLTAzMDEiLCJjaG9pY2VzIjpbeyJkZWx0YSI6eyJjb250ZW50IjoiISJ9LCJpbmRleCI6MCwiZmluaXNoX3JlYXNvbiI" +
-                "6bnVsbH1dfQ==");
         WireMock.stubFor(WireMock.post(WireMock.urlEqualTo(URI.create(config.getGptDomain()
                         + UriResourceLocator.chatCompletionsUri()).getPath()))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .withBody(new String(gptAnswer))));
+                        .withBodyFile("chatGptResponseStreamed.txt")));
 
         // Mock the behavior of the postReview request
         WireMock.stubFor(WireMock.post(gerritCommentUri(fullChangeId))
@@ -207,18 +196,16 @@ public class ChatGptReviewTest {
     }
 
     private void initComparisonContent() throws IOException {
-        String diffContent = new String(Files.readAllBytes(basePath.resolve("reducePatchSet/patchSetDiffOutput.json")));
-        gerritPatchSetByPoints = new String(Files.readAllBytes(basePath.resolve(
-                "__files/gerritPatchSetByPoints.json")));
+        String diffContent = new String(Files.readAllBytes(basePath.resolve(
+                "reducePatchSet/patchSetDiffOutput.json")));
+        gerritPatchSetReview = new String(Files.readAllBytes(basePath.resolve(
+                "__files/gerritPatchSetReview.json")));
+        expectedResponseStreamed = new String(Files.readAllBytes(basePath.resolve(
+                "__files/chatGptExpectedResponseStreamed.json")));
         expectedSystemPrompt = Configuration.getDefaultSystemPrompt();
         reviewUserPrompt = String.join("\n", Arrays.asList(
                 Configuration.DEFAULT_GPT_USER_PROMPT,
-                Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
-                diffContent
-        ));
-        reviewUserPromptByPoints = String.join("\n", Arrays.asList(
-                Configuration.DEFAULT_GPT_USER_PROMPT,
-                Configuration.getReviewUserPromptByPoints(),
+                Configuration.getReviewUserPrompt(),
                 Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
                 diffContent
         ));
@@ -247,9 +234,7 @@ public class ChatGptReviewTest {
     }
 
     @Test
-    public void patchSetCreatedOrUpdated() throws InterruptedException, NoSuchProjectException, ExecutionException {
-        when(globalConfig.getBoolean(Mockito.eq("gptReviewByPoints"), Mockito.anyBoolean()))
-                .thenReturn(false);
+    public void patchSetCreatedOrUpdatedStreamed() throws InterruptedException, NoSuchProjectException, ExecutionException {
         Configuration config = new Configuration(globalConfig, projectConfig);
         GerritClient gerritClient = new GerritClient();
         OpenAiClient openAiClient = new OpenAiClient();
@@ -281,12 +266,12 @@ public class ChatGptReviewTest {
         String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
         Assert.assertEquals(reviewUserPrompt, userPrompt);
         String requestBody = loggedRequests.get(0).getBodyAsString();
-        Assert.assertEquals("{\"message\":\"Hello!\\n\"}", requestBody);
+        Assert.assertEquals(expectedResponseStreamed, requestBody);
 
     }
 
     @Test
-    public void patchSetCreatedOrUpdatedByPoints() throws InterruptedException, NoSuchProjectException, ExecutionException {
+    public void patchSetCreatedOrUpdatedUnstreamed() throws InterruptedException, NoSuchProjectException, ExecutionException {
         when(globalConfig.getBoolean(Mockito.eq("gptStreamOutput"), Mockito.anyBoolean()))
                 .thenReturn(false);
         Configuration config = new Configuration(globalConfig, projectConfig);
@@ -300,7 +285,7 @@ public class ChatGptReviewTest {
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .withBodyFile("chatGptResponseByPoints.json")));
+                        .withBodyFile("chatGptResponseReview.json")));
 
         PatchSetCreatedEvent event = mock(PatchSetCreatedEvent.class);
         when(event.getProjectNameKey()).thenReturn(PROJECT_NAME);
@@ -322,9 +307,9 @@ public class ChatGptReviewTest {
         JsonObject gptRequestBody = gson.fromJson(openAiClient.getRequestBody(), JsonObject.class);
         JsonArray prompts = gptRequestBody.get("messages").getAsJsonArray();
         String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
-        Assert.assertEquals(reviewUserPromptByPoints, userPrompt);
+        Assert.assertEquals(reviewUserPrompt, userPrompt);
         String requestBody = loggedRequests.get(0).getBodyAsString();
-        Assert.assertEquals(gerritPatchSetByPoints, requestBody);
+        Assert.assertEquals(gerritPatchSetReview, requestBody);
 
     }
 
@@ -368,7 +353,7 @@ public class ChatGptReviewTest {
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .withBodyFile("chatGptResponseCommentsByPoints.json")));
+                        .withBodyFile("chatGptResponseComments.json")));
 
         CommentAddedEvent event = mock(CommentAddedEvent.class);
         when(event.getProjectNameKey()).thenReturn(PROJECT_NAME);

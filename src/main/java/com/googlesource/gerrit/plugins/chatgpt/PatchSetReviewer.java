@@ -2,19 +2,16 @@ package com.googlesource.gerrit.plugins.chatgpt;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.client.*;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestions;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Type;
 import java.util.*;
-
-import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.extractID;
 
 @Slf4j
 public class PatchSetReviewer {
@@ -49,23 +46,9 @@ public class PatchSetReviewer {
 
         String reviewSuggestion = getReviewSuggestion(config, fullChangeId, patchSet);
         log.debug("ChatGPT response: {}", reviewSuggestion);
-        if (isCommentEvent || config.getGptReviewByPoints()) {
-            retrieveReviewFromJson(reviewSuggestion, fullChangeId);
-        }
-        else {
-            splitReviewIntoBatches(reviewSuggestion);
-        }
+        retrieveReviewFromJson(reviewSuggestion, fullChangeId);
 
         gerritClient.postComments(fullChangeId, reviewBatches);
-    }
-
-    private Integer getBatchId(String currentTag) {
-        try {
-            return Integer.parseInt(currentTag);
-        }
-        catch (NumberFormatException ex){
-            return null;
-        }
     }
 
     private void addReviewBatch(Integer batchID, String batch) {
@@ -113,13 +96,11 @@ public class PatchSetReviewer {
     }
 
     private void retrieveReviewFromJson(String review, String fullChangeId) {
-        review = review.replaceAll("^`*(?:json)?\\s*|\\s*`+$", "");
-        Type chatGptResponseListType = new TypeToken<List<ChatGptSuggestionPoint>>(){}.getType();
-        List<ChatGptSuggestionPoint> reviewJson = gson.fromJson(review, chatGptResponseListType);
+        ChatGptSuggestions reviewJson = gson.fromJson(review, ChatGptSuggestions.class);
         fileDiffsProcessed = gerritClient.getFileDiffsProcessed(fullChangeId);
-        for (ChatGptSuggestionPoint suggestion : reviewJson) {
+        for (ChatGptSuggestionPoint suggestion : reviewJson.getSuggestions()) {
             HashMap<String, Object> batchMap = new HashMap<>();
-            if (suggestion.getId() != null) {
+            if (isCommentEvent && suggestion.getId() != null) {
                 addReviewBatch(suggestion.getId(), suggestion.getSuggestion());
             }
             else {
@@ -134,28 +115,7 @@ public class PatchSetReviewer {
                 reviewBatches.add(batchMap);
             }
         }
-    }
-
-    private void splitReviewIntoBatches(String review) {
-        String[] lines = review.split("\n");
-        Integer currentTag = 0;
-        StringBuilder batch = new StringBuilder();
-        for (int i = 0; i < lines.length; i++) {
-            String[] extractResult = extractID(lines[i]);
-            if (extractResult != null) {
-                log.debug("Captured '{}' from line '{}'", extractResult[0], lines[i]);
-                addReviewBatch(currentTag, batch.toString());
-                batch = new StringBuilder();
-                currentTag = getBatchId(extractResult[0]);
-                lines[i] = extractResult[1];
-            }
-            batch.append(lines[i]).append("\n");
-        }
-        if (batch.length() > 0) {
-            addReviewBatch(currentTag, batch.toString());
-        }
-        log.info("Review batches created: {}", reviewBatches.size());
-        log.debug("batches: {}", reviewBatches);
+        log.debug("fileDiffsProcessed Keys: {}", fileDiffsProcessed.keySet());
     }
 
     private String getReviewSuggestion(Configuration config, String changeId, String patchSet) throws Exception {
