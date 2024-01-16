@@ -124,7 +124,7 @@ public class PatchSetReviewer {
             log.warn("Patch set too large. Skipping review. changeId: {}", changeId);
             return String.format(SPLIT_REVIEW_MSG, config.getMaxReviewLines());
         }
-        return openAiClient.ask(config, patchSet, isCommentEvent);
+        return openAiClient.ask(config, changeId, patchSet, isCommentEvent);
     }
 }
 

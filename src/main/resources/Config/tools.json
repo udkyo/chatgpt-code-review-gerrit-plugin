@@ -33,10 +33,14 @@
                   "suggestion"
                 ]
               }
+            },
+            "changeId": {
+              "type": "string"
             }
           },
           "required": [
-            "suggestions"
+            "suggestions",
+            "changeId"
           ]
         }
       }

@@ -7,4 +7,5 @@ import java.util.List;
 @Data
 public class ChatGptSuggestions extends ChatGptSuggestionPoint {
     private List<ChatGptSuggestionPoint> suggestions;
+    private String changeId;
 }

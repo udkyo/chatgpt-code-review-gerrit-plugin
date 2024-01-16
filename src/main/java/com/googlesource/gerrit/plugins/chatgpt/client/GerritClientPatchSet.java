@@ -90,6 +90,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
             String fileDiffJson = forwardGetRequest(uri).replaceAll("^[')\\]}]+", "");
             processFileDiff(filename, fileDiffJson);
         }
+        diffs.add(String.format("{\"changeId\": \"%s\"}", fullChangeId));
         return "[" + String.join(",", diffs) + "]\n";
     }
 

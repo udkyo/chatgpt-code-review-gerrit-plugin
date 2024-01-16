@@ -21,6 +21,8 @@ public class ChatCompletionRequest {
     public static class Message {
         private String role;
         private String content;
+        // PatchSet changeId passed in the request
+        private String changeId;
     }
 
     @Data
@@ -43,6 +45,8 @@ public class ChatCompletionRequest {
                 @Data
                 public static class Properties {
                     private Property suggestions;
+                    // Field `changeId` expected in the response to correspond with the PatchSet changeId in the request
+                    private Field changeId;
 
                     @Data
                     public static class Property {
@@ -62,13 +66,13 @@ public class ChatCompletionRequest {
                                 private Field filename;
                                 private Field lineNumber;
                                 private Field codeSnippet;
-
-                                @Data
-                                public static class Field {
-                                    private String type;
-                                }
                             }
                         }
+                    }
+
+                    @Data
+                    public static class Field {
+                        private String type;
                     }
                 }
             }

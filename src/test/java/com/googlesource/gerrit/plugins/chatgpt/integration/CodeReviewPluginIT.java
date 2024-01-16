@@ -39,7 +39,7 @@ public class CodeReviewPluginIT {
         when(config.getGptModel()).thenReturn(Configuration.DEFAULT_GPT_MODEL);
         when(config.getGptSystemPrompt()).thenReturn(Configuration.DEFAULT_GPT_SYSTEM_PROMPT);
 
-        String answer = openAiClient.ask(config, "hello");
+        String answer = openAiClient.ask(config, "", "hello");
         log.info("answer: {}", answer);
         assertNotNull(answer);
     }

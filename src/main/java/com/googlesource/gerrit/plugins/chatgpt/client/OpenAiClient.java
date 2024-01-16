@@ -8,6 +8,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionBase;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionRequest;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponseStreamed;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponseUnstreamed;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestions;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
 import lombok.Getter;
@@ -28,6 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 @Singleton
 public class OpenAiClient {
+    private static final int REVIEW_ATTEMPT_LIMIT = 3;
     @Getter
     private String requestBody;
     private final Gson gson = new GsonBuilder()
@@ -36,25 +38,31 @@ public class OpenAiClient {
     private final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
     private boolean isCommentEvent = false;
 
-    public String ask(Configuration config, String patchSet) throws Exception {
-        HttpRequest request = createRequest(config, patchSet);
-        log.debug("ChatGPT request: {}", request.toString());
+    public String ask(Configuration config, String changeId, String patchSet) throws Exception {
+        for (int attemptInd = 0; attemptInd < REVIEW_ATTEMPT_LIMIT; attemptInd++) {
+            HttpRequest request = createRequest(config, patchSet);
+            log.debug("ChatGPT request: {}", request.toString());
 
-        HttpResponse<String> response = httpClientWithRetry.execute(request);
+            HttpResponse<String> response = httpClientWithRetry.execute(request);
 
-        String body = response.body();
-        log.debug("body: {}", body);
-        if (body == null) {
-            throw new IOException("ChatGPT response body is null");
+            String body = response.body();
+            log.debug("body: {}", body);
+            if (body == null) {
+                throw new IOException("ChatGPT response body is null");
+            }
+
+            String contentExtracted = extractContent(config, body);
+            if (validateResponse(contentExtracted, changeId, attemptInd)) {
+                return contentExtracted;
+            }
         }
-
-        return extractContent(config, body);
+        throw new RuntimeException("Failed to receive valid ChatGPT response");
     }
 
-    public String ask(Configuration config, String patchSet, boolean isCommentEvent) throws Exception {
+    public String ask(Configuration config, String changeId, String patchSet, boolean isCommentEvent) throws Exception {
         this.isCommentEvent = isCommentEvent;
 
-        return this.ask(config, patchSet);
+        return this.ask(config, changeId, patchSet);
     }
 
     public String extractContent(Configuration config, String body) throws Exception {
@@ -73,6 +81,19 @@ public class OpenAiClient {
                     gson.fromJson(body, ChatCompletionResponseUnstreamed.class);
             return getResponseContent(chatCompletionResponseUnstreamed.getChoices().get(0).getMessage().getTool_calls());
         }
+    }
+
+    private boolean validateResponse(String contentExtracted, String changeId, int attemptInd) {
+        ChatGptSuggestions chatGptSuggestions = gson.fromJson(contentExtracted, ChatGptSuggestions.class);
+        String returnedChangeId = chatGptSuggestions.getChangeId();
+        // A response is considered valid if either no changeId is returned or the changeId returned matches the one
+        // provided in the request
+        boolean isValidated = returnedChangeId == null || changeId.equals(returnedChangeId);
+        if (!isValidated) {
+            log.error("ChangedId mismatch error (attempt #{}).\nExpected value: {}\nReturned value: {}", attemptInd,
+                    changeId, returnedChangeId);
+        }
+        return isValidated;
     }
 
     private String getResponseContent(List<ChatCompletionBase.ToolCall> toolCalls) {
