@@ -43,6 +43,7 @@ public class PatchSetReviewer {
             return;
         }
         config.configureDynamically(Configuration.KEY_GPT_USER_PROMPT, gerritClient.getUserPrompt());
+        config.configureDynamically(Configuration.KEY_COMMENT_PROPERTIES_SIZE, commentProperties.size());
 
         String reviewSuggestion = getReviewSuggestion(config, fullChangeId, patchSet);
         log.debug("ChatGPT response: {}", reviewSuggestion);

@@ -79,7 +79,7 @@ public class ChatGptReviewTest {
     private String expectedResponseStreamed;
     private String expectedSystemPrompt;
     private String reviewUserPrompt;
-    private String commentUserPrompt;
+    private String diffContent;
     private String gerritPatchSetReview;
 
     @Rule
@@ -196,7 +196,7 @@ public class ChatGptReviewTest {
     }
 
     private void initComparisonContent() throws IOException {
-        String diffContent = new String(Files.readAllBytes(basePath.resolve(
+        diffContent = new String(Files.readAllBytes(basePath.resolve(
                 "reducePatchSet/patchSetDiffOutput.json")));
         gerritPatchSetReview = new String(Files.readAllBytes(basePath.resolve(
                 "__files/gerritPatchSetReview.json")));
@@ -208,13 +208,6 @@ public class ChatGptReviewTest {
                 Configuration.getReviewUserPrompt(),
                 Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
                 diffContent
-        ));
-        commentUserPrompt = String.join("\n", Arrays.asList(
-                Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_1,
-                diffContent,
-                Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_2,
-                REVIEW_TAG_COMMENTS,
-                Configuration.getCommentUserPrompt()
         ));
     }
 
@@ -370,6 +363,13 @@ public class ChatGptReviewTest {
         CompletableFuture<Void> future = eventListenerHandler.getLatestFuture();
         future.get();
 
+        String commentUserPrompt = String.join("\n", Arrays.asList(
+                Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_1,
+                diffContent,
+                Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_2,
+                REVIEW_TAG_COMMENTS,
+                config.getCommentUserPrompt()
+        ));
         RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(
                 WireMock.urlEqualTo(gerritCommentUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
         List<LoggedRequest> loggedRequests = WireMock.findAll(requestPatternBuilder);

@@ -20,6 +20,7 @@ public class Configuration {
     public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
+    public static final String KEY_COMMENT_PROPERTIES_SIZE = "commentPropertiesSize";
     public static final String ENABLED_USERS_ALL = "ALL";
     public static final String ENABLED_GROUPS_ALL = "ALL";
     public static final String ENABLED_TOPICS_ALL = "ALL";
@@ -31,6 +32,7 @@ public class Configuration {
     public static String DEFAULT_GPT_USER_PROMPT_JSON;
     public static String DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON;
     public static String DEFAULT_GPT_USER_PROMPT_JSON_2;
+    public static String DEFAULT_GPT_USER_PROMPT_JSON_ENFORCE_RESPONSE_CHECK;
     public static String DEFAULT_GPT_CUSTOM_USER_PROMPT_1;
     public static String DEFAULT_GPT_CUSTOM_USER_PROMPT_2;
     public static String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT;
@@ -142,9 +144,12 @@ public class Configuration {
         return DEFAULT_GPT_USER_PROMPT_JSON + DOT_SPACE + DEFAULT_GPT_USER_PROMPT_JSON_2;
     }
 
-    public static String getCommentUserPrompt() {
-        return DEFAULT_GPT_USER_PROMPT_JSON + SPACE + DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON + DOT_SPACE +
-                DEFAULT_GPT_USER_PROMPT_JSON_2;
+    public String getCommentUserPrompt() {
+        return DEFAULT_GPT_USER_PROMPT_JSON + SPACE +
+                DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON + DOT_SPACE +
+                DEFAULT_GPT_USER_PROMPT_JSON_2 + SPACE +
+                String.format(DEFAULT_GPT_USER_PROMPT_JSON_ENFORCE_RESPONSE_CHECK,
+                    configsDynamically.get(KEY_COMMENT_PROPERTIES_SIZE));
     }
 
     public void resetDynamicConfiguration() {
