@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.getTimeStamp;
+import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.processGerritMessage;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 @Slf4j
@@ -127,7 +128,7 @@ public class GerritClientComments extends GerritClientAccount {
         List<String> messages = new ArrayList<>();
         Map<String, List<Map<String, Object>>> comments = new HashMap<>();
         for (HashMap<String, Object> reviewBatch : reviewBatches) {
-            String message = (String) reviewBatch.get("content");
+            String message = processGerritMessage((String) reviewBatch.get("content"));
             if (message.trim().isEmpty()) {
                 log.info("Empty message from post comment not submitted.");
                 continue;
