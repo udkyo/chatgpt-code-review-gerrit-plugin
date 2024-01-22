@@ -3,12 +3,12 @@
     {
       "type": "function",
       "function": {
-        "name": "format_suggestions",
-        "description": "Provide the PatchSet review suggestions.",
+        "name": "format_replies",
+        "description": "Provide the PatchSet review replies.",
         "parameters": {
           "type": "object",
           "properties": {
-            "suggestions": {
+            "replies": {
               "type": "array",
               "items": {
                 "type": "object",
@@ -16,7 +16,7 @@
                   "id": {
                     "type": "integer"
                   },
-                  "suggestion": {
+                  "reply": {
                     "type": "string"
                   },
                   "filename": {
@@ -30,7 +30,7 @@
                   }
                 },
                 "required": [
-                  "suggestion"
+                  "reply"
                 ]
               }
             },
@@ -39,7 +39,7 @@
             }
           },
           "required": [
-            "suggestions",
+            "replies",
             "changeId"
           ]
         }
@@ -49,7 +49,7 @@
   "tool_choice": {
     "type": "function",
     "function": {
-      "name": "format_suggestions"
+      "name": "format_replies"
     }
   }
 }

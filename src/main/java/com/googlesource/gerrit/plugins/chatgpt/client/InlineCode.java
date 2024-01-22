@@ -1,6 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptReplyPoint;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritComment;
 import lombok.extern.slf4j.Slf4j;
@@ -45,17 +45,17 @@ public class InlineCode {
         }
     }
 
-    public Optional<GerritCodeRange> findCommentRange(ChatGptSuggestionPoint suggestion) {
+    public Optional<GerritCodeRange> findCommentRange(ChatGptReplyPoint reply) {
         int commentedLine;
         try {
-            commentedLine = suggestion.getLineNumber();
+            commentedLine = reply.getLineNumber();
         }
         catch (NumberFormatException ex){
             // If the line number is not passed, a line in the middle of the code is used as best guess
             commentedLine = newContent.size() / 2;
         }
 
-        return Optional.ofNullable(codeFinder.findCommentedCode(suggestion, commentedLine));
+        return Optional.ofNullable(codeFinder.findCommentedCode(reply, commentedLine));
     }
 
 }

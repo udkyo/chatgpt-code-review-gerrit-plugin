@@ -1,6 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptReplyPoint;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.CodeFinderDiff;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.DiffContent;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
@@ -32,8 +32,8 @@ public class CodeFinder {
         PLACEHOLDER_REGEX = "(?:" + randomPlaceholder + ")+";
     }
 
-    private void updateCodePattern(ChatGptSuggestionPoint suggestion) {
-        String commentedCode = suggestion.getCodeSnippet().trim();
+    private void updateCodePattern(ChatGptReplyPoint reply) {
+        String commentedCode = reply.getCodeSnippet().trim();
         String commentedCodeRegex = Pattern.quote(commentedCode);
         // Generalize the regex to capture snippets where existing sequences of non-printing chars have been modified
         // from the original code
@@ -98,9 +98,9 @@ public class CodeFinder {
         }
     }
 
-    public GerritCodeRange findCommentedCode(ChatGptSuggestionPoint suggestion, int commentedLine) {
+    public GerritCodeRange findCommentedCode(ChatGptReplyPoint reply, int commentedLine) {
         this.commentedLine = commentedLine;
-        updateCodePattern(suggestion);
+        updateCodePattern(reply);
         currentCodeRange = null;
         closestCodeRange = null;
         for (CodeFinderDiff codeFinderDiff : codeFinderDiffs) {

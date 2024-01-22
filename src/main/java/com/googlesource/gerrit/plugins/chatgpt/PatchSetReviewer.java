@@ -42,9 +42,9 @@ public class PatchSetReviewer {
         config.configureDynamically(Configuration.KEY_GPT_USER_PROMPT, gerritClient.getUserPrompt());
         config.configureDynamically(Configuration.KEY_COMMENT_PROPERTIES_SIZE, commentProperties.size());
 
-        String reviewSuggestion = getReviewSuggestion(config, fullChangeId, patchSet);
-        log.debug("ChatGPT response: {}", reviewSuggestion);
-        retrieveReviewFromJson(reviewSuggestion, fullChangeId);
+        String reviewReply = getReviewReply(config, fullChangeId, patchSet);
+        log.debug("ChatGPT response: {}", reviewReply);
+        retrieveReviewFromJson(reviewReply, fullChangeId);
 
         gerritClient.postComments(fullChangeId, reviewBatches);
     }
@@ -71,42 +71,42 @@ public class PatchSetReviewer {
         reviewBatches.add(batchMap);
     }
 
-    private Optional<GerritCodeRange> getGerritCommentCodeRange(ChatGptSuggestionPoint suggestion) {
+    private Optional<GerritCodeRange> getGerritCommentCodeRange(ChatGptReplyPoint reply) {
         Optional<GerritCodeRange> gerritCommentRange = Optional.empty();
-        if (suggestion.getFilename() == null) {
+        if (reply.getFilename() == null) {
             return gerritCommentRange;
         }
-        String filename = suggestion.getFilename();
+        String filename = reply.getFilename();
         if (filename.equals("/COMMIT_MSG")) {
             return gerritCommentRange;
         }
         if (!fileDiffsProcessed.containsKey(filename)) {
-            log.info("Filename '{}' not found for suggestion '{}'.\nFileDiffsProcessed = {}", filename, suggestion,
+            log.info("Filename '{}' not found for reply '{}'.\nFileDiffsProcessed = {}", filename, reply,
                     fileDiffsProcessed);
             return gerritCommentRange;
         }
         InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));
-        gerritCommentRange = inlineCode.findCommentRange(suggestion);
+        gerritCommentRange = inlineCode.findCommentRange(reply);
         if (gerritCommentRange.isEmpty()) {
-            log.info("Inline code not found for suggestion {}", suggestion);
+            log.info("Inline code not found for reply {}", reply);
         }
         return gerritCommentRange;
     }
 
     private void retrieveReviewFromJson(String review, String fullChangeId) {
-        ChatGptSuggestions reviewJson = gson.fromJson(review, ChatGptSuggestions.class);
+        ChatGptReplies reviewJson = gson.fromJson(review, ChatGptReplies.class);
         fileDiffsProcessed = gerritClient.getFileDiffsProcessed(fullChangeId);
-        for (ChatGptSuggestionPoint suggestion : reviewJson.getSuggestions()) {
+        for (ChatGptReplyPoint reply : reviewJson.getReplies()) {
             ReviewBatch batchMap = new ReviewBatch();
-            if (isCommentEvent && suggestion.getId() != null) {
-                addReviewBatch(suggestion.getId(), suggestion.getSuggestion());
+            if (isCommentEvent && reply.getId() != null) {
+                addReviewBatch(reply.getId(), reply.getReply());
             }
             else {
-                batchMap.setContent(suggestion.getSuggestion());
-                Optional<GerritCodeRange> optGerritCommentRange = getGerritCommentCodeRange(suggestion);
+                batchMap.setContent(reply.getReply());
+                Optional<GerritCodeRange> optGerritCommentRange = getGerritCommentCodeRange(reply);
                 if (optGerritCommentRange.isPresent()) {
                     GerritCodeRange gerritCodeRange = optGerritCommentRange.get();
-                    batchMap.setFilename(suggestion.getFilename());
+                    batchMap.setFilename(reply.getFilename());
                     batchMap.setLine(gerritCodeRange.getStart_line());
                     batchMap.setRange(gerritCodeRange);
                 }
@@ -116,7 +116,7 @@ public class PatchSetReviewer {
         log.debug("fileDiffsProcessed Keys: {}", fileDiffsProcessed.keySet());
     }
 
-    private String getReviewSuggestion(Configuration config, String changeId, String patchSet) throws Exception {
+    private String getReviewReply(Configuration config, String changeId, String patchSet) throws Exception {
         List<String> patchLines = Arrays.asList(patchSet.split("\n"));
         if (patchLines.size() > config.getMaxReviewLines()) {
             log.warn("Patch set too large. Skipping review. changeId: {}", changeId);

@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class ChatGptSuggestions extends ChatGptSuggestionPoint {
-    private List<ChatGptSuggestionPoint> suggestions;
+public class ChatGptReplies extends ChatGptReplyPoint {
+    private List<ChatGptReplyPoint> replies;
     private String changeId;
 }

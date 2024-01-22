@@ -44,7 +44,7 @@ public class ChatCompletionRequest {
 
                 @Data
                 public static class Properties {
-                    private Property suggestions;
+                    private Property replies;
                     // Field `changeId` expected in the response to correspond with the PatchSet changeId in the request
                     private Field changeId;
 
@@ -62,7 +62,7 @@ public class ChatCompletionRequest {
                             @Data
                             public static class ObjectProperties {
                                 private Field id;
-                                private Field suggestion;
+                                private Field reply;
                                 private Field filename;
                                 private Field lineNumber;
                                 private Field codeSnippet;

@@ -8,7 +8,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionBase;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionRequest;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponseStreamed;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponseUnstreamed;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestions;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptReplies;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
 import lombok.Getter;
@@ -84,8 +84,8 @@ public class OpenAiClient {
     }
 
     private boolean validateResponse(String contentExtracted, String changeId, int attemptInd) {
-        ChatGptSuggestions chatGptSuggestions = gson.fromJson(contentExtracted, ChatGptSuggestions.class);
-        String returnedChangeId = chatGptSuggestions.getChangeId();
+        ChatGptReplies chatGptReplies = gson.fromJson(contentExtracted, ChatGptReplies.class);
+        String returnedChangeId = chatGptReplies.getChangeId();
         // A response is considered valid if either no changeId is returned or the changeId returned matches the one
         // provided in the request
         boolean isValidated = returnedChangeId == null || changeId.equals(returnedChangeId);
