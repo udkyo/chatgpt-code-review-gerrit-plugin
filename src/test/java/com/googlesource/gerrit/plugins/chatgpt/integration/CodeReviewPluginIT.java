@@ -2,6 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.integration;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.OpenAiClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
@@ -62,9 +63,9 @@ public class CodeReviewPluginIT {
         when(config.getGerritUserName()).thenReturn("Your Gerrit username");
         when(config.getGerritPassword()).thenReturn("Your Gerrit password");
 
-        List<HashMap<String, Object>> reviewBatches = new ArrayList<>();
-        reviewBatches.add(new HashMap<>());
-        reviewBatches.get(0).put("message", "message");
+        List<ReviewBatch> reviewBatches = new ArrayList<>();
+        reviewBatches.add(new ReviewBatch());
+        reviewBatches.get(0).setContent("message");
 
         gerritClient.initialize(config);
         gerritClient.postComments("Your changeId", reviewBatches);

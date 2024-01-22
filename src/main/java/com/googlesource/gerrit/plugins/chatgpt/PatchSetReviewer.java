@@ -1,12 +1,9 @@
 package com.googlesource.gerrit.plugins.chatgpt;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.client.*;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestions;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.*;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -22,8 +19,8 @@ public class PatchSetReviewer {
     private final GerritClient gerritClient;
     private final OpenAiClient openAiClient;
 
-    private List<HashMap<String, Object>> reviewBatches;
-    private List<JsonObject> commentProperties;
+    private List<ReviewBatch> reviewBatches;
+    private List<GerritComment> commentProperties;
     private HashMap<String, FileDiffProcessed> fileDiffsProcessed;
     @Setter
     private boolean isCommentEvent;
@@ -53,21 +50,21 @@ public class PatchSetReviewer {
     }
 
     private void addReviewBatch(Integer batchID, String batch) {
-        HashMap<String, Object> batchMap = new HashMap<>();
-        batchMap.put("content", batch);
+        ReviewBatch batchMap = new ReviewBatch();
+        batchMap.setContent(batch);
         if (commentProperties != null && batchID < commentProperties.size()) {
-            JsonObject commentProperty = commentProperties.get(batchID);
+            GerritComment commentProperty = commentProperties.get(batchID);
             if (commentProperty != null &&
-                    (commentProperty.has("line") || commentProperty.has("range"))) {
-                String id = commentProperty.get("id").getAsString();
-                String filename = commentProperty.get("filename").getAsString();
-                Integer line = commentProperty.get("line").getAsInt();
-                JsonObject range = commentProperty.getAsJsonObject("range");
+                    (commentProperty.getLine() != null || commentProperty.getRange() != null)) {
+                String id = commentProperty.getId();
+                String filename = commentProperty.getFilename();
+                Integer line = commentProperty.getLine();
+                GerritCodeRange range = commentProperty.getRange();
                 if (range != null) {
-                    batchMap.put("id", id);
-                    batchMap.put("filename", filename);
-                    batchMap.put("line", line);
-                    batchMap.put("range", range);
+                    batchMap.setId(id);
+                    batchMap.setFilename(filename);
+                    batchMap.setLine(line);
+                    batchMap.setRange(range);
                 }
             }
         }
@@ -100,18 +97,18 @@ public class PatchSetReviewer {
         ChatGptSuggestions reviewJson = gson.fromJson(review, ChatGptSuggestions.class);
         fileDiffsProcessed = gerritClient.getFileDiffsProcessed(fullChangeId);
         for (ChatGptSuggestionPoint suggestion : reviewJson.getSuggestions()) {
-            HashMap<String, Object> batchMap = new HashMap<>();
+            ReviewBatch batchMap = new ReviewBatch();
             if (isCommentEvent && suggestion.getId() != null) {
                 addReviewBatch(suggestion.getId(), suggestion.getSuggestion());
             }
             else {
-                batchMap.put("content", suggestion.getSuggestion());
+                batchMap.setContent(suggestion.getSuggestion());
                 Optional<GerritCodeRange> optGerritCommentRange = getGerritCommentCodeRange(suggestion);
                 if (optGerritCommentRange.isPresent()) {
                     GerritCodeRange gerritCodeRange = optGerritCommentRange.get();
-                    batchMap.put("filename", suggestion.getFilename());
-                    batchMap.put("line", gerritCodeRange.getStart_line());
-                    batchMap.put("range", gerritCodeRange);
+                    batchMap.setFilename(suggestion.getFilename());
+                    batchMap.setLine(gerritCodeRange.getStart_line());
+                    batchMap.setRange(gerritCodeRange);
                 }
                 reviewBatches.add(batchMap);
             }

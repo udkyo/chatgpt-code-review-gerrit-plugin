@@ -1,9 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
-import com.google.gson.JsonObject;
-import com.google.gson.Gson;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptSuggestionPoint;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritComment;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -12,7 +11,6 @@ import java.util.Optional;
 
 @Slf4j
 public class InlineCode {
-    private final Gson gson = new Gson();
     private final CodeFinder codeFinder;
     private final List<String> newContent;
     private GerritCodeRange range;
@@ -33,17 +31,17 @@ public class InlineCode {
         return line;
     }
 
-    public String getInlineCode(JsonObject commentProperty) {
-        if (commentProperty.has("range")) {
+    public String getInlineCode(GerritComment commentProperty) {
+        if (commentProperty.getRange() != null) {
             List<String> codeByRange = new ArrayList<>();
-            range = gson.fromJson(commentProperty.get("range"), GerritCodeRange.class);
+            range = commentProperty.getRange();
             for (int line_num = range.start_line; line_num <= range.end_line; line_num++) {
                 codeByRange.add(getLineSlice(line_num));
             }
             return String.join("\n", codeByRange);
         }
         else {
-            return newContent.get(commentProperty.get("line").getAsInt());
+            return newContent.get(commentProperty.getLine());
         }
     }
 

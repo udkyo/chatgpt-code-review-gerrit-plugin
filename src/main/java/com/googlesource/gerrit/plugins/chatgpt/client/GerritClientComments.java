@@ -4,15 +4,16 @@ import com.google.common.net.HttpHeaders;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.Event;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptRequestPoint;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritComment;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -36,34 +37,34 @@ public class GerritClientComments extends GerritClientAccount {
     private long commentsStartTimestamp;
     private String authorUsername;
     @Getter
-    protected List<JsonObject> commentProperties;
+    protected List<GerritComment> commentProperties;
 
     public GerritClientComments(Configuration config) {
         super(config);
         commentProperties  = new ArrayList<>();
     }
 
-    private List<JsonObject> getLastComments(String fullChangeId) throws Exception {
+    private List<GerritComment> getLastComments(String fullChangeId) throws Exception {
         URI uri = URI.create(config.getGerritAuthBaseUrl()
                 + UriResourceLocator.gerritGetAllPatchSetCommentsUri(fullChangeId));
-        JsonObject lastCommentMap = forwardGetRequestReturnJsonObject(uri);
+        String responseBody = forwardGetRequest(uri);
+        Type mapEntryType = new TypeToken<Map<String, List<GerritComment>>>(){}.getType();
+        Map<String, List<GerritComment>> lastCommentMap = gson.fromJson(responseBody, mapEntryType);
 
         String latestChangeMessageId = null;
-        HashMap<String, List<JsonObject>> latestComments = new HashMap<>();
-        for (Map.Entry<String, JsonElement> entry : lastCommentMap.entrySet()) {
+        HashMap<String, List<GerritComment>> latestComments = new HashMap<>();
+        for (Map.Entry<String, List<GerritComment>> entry : lastCommentMap.entrySet()) {
             String filename = entry.getKey();
             log.info("Commented filename: {}", filename);
 
-            JsonArray commentsArray = entry.getValue().getAsJsonArray();
+            List<GerritComment> commentsArray = entry.getValue();
 
-            for (JsonElement element : commentsArray) {
-                JsonObject commentObject = element.getAsJsonObject();
-                commentObject.addProperty("filename", filename);
-                String changeMessageId = commentObject.get("change_message_id").getAsString();
-                String commentAuthorUsername = commentObject.get("author").getAsJsonObject()
-                        .get("username").getAsString();
+            for (GerritComment commentObject : commentsArray) {
+                commentObject.setFilename(filename);
+                String changeMessageId = commentObject.getChange_message_id();
+                String commentAuthorUsername = commentObject.getAuthor().getUsername();
                 log.debug("Change Message Id: {} - Author: {}", latestChangeMessageId, commentAuthorUsername);
-                long updatedTimeStamp = getTimeStamp(commentObject.get("updated").getAsString());
+                long updatedTimeStamp = getTimeStamp(commentObject.getUpdated());
                 if (commentAuthorUsername.equals(authorUsername) &&
                         updatedTimeStamp >= commentsStartTimestamp - MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT) {
                     log.debug("Found comment with updatedTimeStamp : {}", updatedTimeStamp);
@@ -101,12 +102,12 @@ public class GerritClientComments extends GerritClientAccount {
 
     private void addAllComments(String fullChangeId) {
         try {
-            List<JsonObject> latestComments = getLastComments(fullChangeId);
+            List<GerritComment> latestComments = getLastComments(fullChangeId);
             if (latestComments == null) {
                 return;
             }
-            for (JsonObject latestComment : latestComments) {
-                String commentMessage = latestComment.get("message").getAsString();
+            for (GerritComment latestComment : latestComments) {
+                String commentMessage = latestComment.getMessage();
                 if (isBotAddressed(commentMessage)) {
                     commentProperties.add(latestComment);
                 }
@@ -123,24 +124,24 @@ public class GerritClientComments extends GerritClientAccount {
         return BULLET_POINT + String.join("\n\n" + BULLET_POINT, messages);
     }
 
-    private Map<String, Object> getContextProperties(List<HashMap<String, Object>> reviewBatches) {
+    private Map<String, Object> getContextProperties(List<ReviewBatch> reviewBatches) {
         Map<String, Object> map = new HashMap<>();
         List<String> messages = new ArrayList<>();
-        Map<String, List<Map<String, Object>>> comments = new HashMap<>();
-        for (HashMap<String, Object> reviewBatch : reviewBatches) {
-            String message = processGerritMessage((String) reviewBatch.get("content"));
+        Map<String, List<GerritComment>> comments = new HashMap<>();
+        for (ReviewBatch reviewBatch : reviewBatches) {
+            String message = processGerritMessage(reviewBatch.getContent());
             if (message.trim().isEmpty()) {
                 log.info("Empty message from post comment not submitted.");
                 continue;
             }
-            if (reviewBatch.containsKey("line") || reviewBatch.containsKey("range")) {
-                String filename = (String) reviewBatch.get("filename");
-                List<Map<String, Object>> filenameComments = comments.getOrDefault(filename, new ArrayList<>());
-                Map<String, Object> filenameComment = new HashMap<>();
-                filenameComment.put("message", message);
-                filenameComment.put("line", reviewBatch.get("line"));
-                filenameComment.put("range", reviewBatch.get("range"));
-                filenameComment.put("in_reply_to", reviewBatch.get("id"));
+            if (reviewBatch.getLine() != null || reviewBatch.getRange() != null ) {
+                String filename = reviewBatch.getFilename();
+                List<GerritComment> filenameComments = comments.getOrDefault(filename, new ArrayList<>());
+                GerritComment filenameComment = new GerritComment();
+                filenameComment.setMessage(message);
+                filenameComment.setLine(reviewBatch.getLine());
+                filenameComment.setRange(reviewBatch.getRange());
+                filenameComment.setIn_reply_to(reviewBatch.getId());
                 filenameComments.add(filenameComment);
                 comments.putIfAbsent(filename, filenameComments);
             }
@@ -159,16 +160,16 @@ public class GerritClientComments extends GerritClientAccount {
 
     protected ChatGptRequestPoint getRequestPoint(int i) {
         ChatGptRequestPoint requestPoint = new ChatGptRequestPoint();
-        JsonObject commentProperty = commentProperties.get(i);
+        GerritComment commentProperty = commentProperties.get(i);
         requestPoint.setId(i);
-        if (commentProperty.has("line") || commentProperty.has("range")) {
-            String filename = commentProperty.get("filename").getAsString();
+        if (commentProperty.getLine() != null || commentProperty.getRange() != null) {
+            String filename = commentProperty.getFilename();
             InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));
             requestPoint.setFilename(filename);
-            requestPoint.setLineNumber(commentProperty.get("line").getAsInt());
+            requestPoint.setLineNumber(commentProperty.getLine());
             requestPoint.setCodeSnippet(inlineCode.getInlineCode(commentProperty));
         }
-        String commentMessage = commentProperty.get("message").getAsString();
+        String commentMessage = commentProperty.getMessage();
         requestPoint.setRequest(removeMentionsFromComment(commentMessage).trim());
 
         return requestPoint;
@@ -192,7 +193,7 @@ public class GerritClientComments extends GerritClientAccount {
         return !commentProperties.isEmpty();
     }
 
-    public void postComments(String fullChangeId, List<HashMap<String, Object>> reviewBatches) throws Exception {
+    public void postComments(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
         Map<String, Object> map = getContextProperties(reviewBatches);
         if (map.isEmpty()) {
             return;

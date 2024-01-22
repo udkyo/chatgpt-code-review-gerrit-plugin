@@ -1,8 +1,9 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.google.gerrit.server.events.Event;
-import com.google.gson.JsonObject;
 import com.google.inject.Singleton;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritComment;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
@@ -50,12 +51,12 @@ public class GerritClient {
         return gerritClientPatchSet.getFileDiffsProcessed();
     }
 
-    public List<JsonObject> getCommentProperties(String fullChangeId) {
+    public List<GerritComment> getCommentProperties(String fullChangeId) {
         updateGerritClientComments(fullChangeId);
         return gerritClientComments.getCommentProperties();
     }
 
-    public void postComments(String fullChangeId, List<HashMap<String, Object>> reviewBatches) throws Exception {
+    public void postComments(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
         updateGerritClientComments(fullChangeId);
         gerritClientComments.postComments(fullChangeId, reviewBatches);
     }
