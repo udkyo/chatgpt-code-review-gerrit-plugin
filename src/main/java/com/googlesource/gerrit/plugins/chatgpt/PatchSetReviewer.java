@@ -43,7 +43,7 @@ public class PatchSetReviewer {
             log.info("No file to review has been found in the PatchSet");
             return;
         }
-        config.configureDynamically(Configuration.KEY_GPT_USER_PROMPT, gerritClient.getUserPrompt());
+        config.configureDynamically(Configuration.KEY_GPT_USER_PROMPT, gerritClient.getUserPrompt(fullChangeId));
         config.configureDynamically(Configuration.KEY_COMMENT_PROPERTIES_SIZE, commentProperties.size());
 
         String reviewReply = getReviewReply(config, fullChangeId, patchSet);
