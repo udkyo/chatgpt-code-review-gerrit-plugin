@@ -3,7 +3,11 @@ package com.googlesource.gerrit.plugins.chatgpt;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.client.*;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.*;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptReplyItem;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptResponseContent;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRange;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -71,42 +75,42 @@ public class PatchSetReviewer {
         reviewBatches.add(batchMap);
     }
 
-    private Optional<GerritCodeRange> getGerritCommentCodeRange(ChatGptReplyPoint reply) {
+    private Optional<GerritCodeRange> getGerritCommentCodeRange(ChatGptReplyItem replyItem) {
         Optional<GerritCodeRange> gerritCommentRange = Optional.empty();
-        if (reply.getFilename() == null) {
+        if (replyItem.getFilename() == null) {
             return gerritCommentRange;
         }
-        String filename = reply.getFilename();
+        String filename = replyItem.getFilename();
         if (filename.equals("/COMMIT_MSG")) {
             return gerritCommentRange;
         }
         if (!fileDiffsProcessed.containsKey(filename)) {
-            log.info("Filename '{}' not found for reply '{}'.\nFileDiffsProcessed = {}", filename, reply,
+            log.info("Filename '{}' not found for reply '{}'.\nFileDiffsProcessed = {}", filename, replyItem,
                     fileDiffsProcessed);
             return gerritCommentRange;
         }
         InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));
-        gerritCommentRange = inlineCode.findCommentRange(reply);
+        gerritCommentRange = inlineCode.findCommentRange(replyItem);
         if (gerritCommentRange.isEmpty()) {
-            log.info("Inline code not found for reply {}", reply);
+            log.info("Inline code not found for reply {}", replyItem);
         }
         return gerritCommentRange;
     }
 
-    private void retrieveReviewFromJson(String review, String fullChangeId) {
-        ChatGptReplies reviewJson = gson.fromJson(review, ChatGptReplies.class);
+    private void retrieveReviewFromJson(String reviewReply, String fullChangeId) {
+        ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
         fileDiffsProcessed = gerritClient.getFileDiffsProcessed(fullChangeId);
-        for (ChatGptReplyPoint reply : reviewJson.getReplies()) {
+        for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
             ReviewBatch batchMap = new ReviewBatch();
-            if (isCommentEvent && reply.getId() != null) {
-                addReviewBatch(reply.getId(), reply.getReply());
+            if (isCommentEvent && replyItem.getId() != null) {
+                addReviewBatch(replyItem.getId(), replyItem.getReply());
             }
             else {
-                batchMap.setContent(reply.getReply());
-                Optional<GerritCodeRange> optGerritCommentRange = getGerritCommentCodeRange(reply);
+                batchMap.setContent(replyItem.getReply());
+                Optional<GerritCodeRange> optGerritCommentRange = getGerritCommentCodeRange(replyItem);
                 if (optGerritCommentRange.isPresent()) {
                     GerritCodeRange gerritCodeRange = optGerritCommentRange.get();
-                    batchMap.setFilename(reply.getFilename());
+                    batchMap.setFilename(replyItem.getFilename());
                     batchMap.setLine(gerritCodeRange.getStart_line());
                     batchMap.setRange(gerritCodeRange);
                 }

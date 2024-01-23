@@ -4,7 +4,7 @@ import lombok.Data;
 
 
 @Data
-public class FileDiff {
+public abstract class FileDiff {
     protected Meta meta_a;
     protected Meta meta_b;
 

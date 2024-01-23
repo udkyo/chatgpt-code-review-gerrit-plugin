@@ -2,7 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.google.gerrit.server.events.Event;
 import com.google.inject.Singleton;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritComment;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;

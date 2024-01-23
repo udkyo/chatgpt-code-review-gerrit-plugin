@@ -1,9 +1,9 @@
-package com.googlesource.gerrit.plugins.chatgpt.client.model;
+package com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt;
 
 import lombok.Data;
 
 @Data
-public class ChatGptPointBase {
+public abstract class ChatGptDialogueItem {
     protected Integer id;
     protected String filename;
     protected Integer lineNumber;

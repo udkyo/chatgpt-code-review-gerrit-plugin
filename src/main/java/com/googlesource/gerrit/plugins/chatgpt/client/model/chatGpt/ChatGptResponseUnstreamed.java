@@ -1,11 +1,11 @@
-package com.googlesource.gerrit.plugins.chatgpt.client.model;
+package com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt;
 
 import lombok.Data;
 
 import java.util.List;
 
 @Data
-public class ChatCompletionResponseUnstreamed {
+public class ChatGptResponseUnstreamed {
     private List<MessageChoice> choices;
 
 
@@ -17,6 +17,6 @@ public class ChatCompletionResponseUnstreamed {
     @Data
     public static class Message {
         private String role;
-        private List<ChatCompletionBase.ToolCall> tool_calls;
+        private List<ChatGptToolCall> tool_calls;
     }
 }

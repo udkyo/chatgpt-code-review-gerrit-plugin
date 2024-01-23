@@ -1,8 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptReplyPoint;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritComment;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptReplyItem;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRange;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -45,17 +45,17 @@ public class InlineCode {
         }
     }
 
-    public Optional<GerritCodeRange> findCommentRange(ChatGptReplyPoint reply) {
+    public Optional<GerritCodeRange> findCommentRange(ChatGptReplyItem replyItem) {
         int commentedLine;
         try {
-            commentedLine = reply.getLineNumber();
+            commentedLine = replyItem.getLineNumber();
         }
         catch (NumberFormatException ex){
             // If the line number is not passed, a line in the middle of the code is used as best guess
             commentedLine = newContent.size() / 2;
         }
 
-        return Optional.ofNullable(codeFinder.findCommentedCode(reply, commentedLine));
+        return Optional.ofNullable(codeFinder.findCommentedCode(replyItem, commentedLine));
     }
 
 }

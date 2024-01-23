@@ -4,11 +4,7 @@ import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Singleton;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionBase;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionRequest;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponseStreamed;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatCompletionResponseUnstreamed;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptReplies;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.*;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
 import lombok.Getter;
@@ -77,15 +73,15 @@ public class OpenAiClient {
             return finalContent.toString();
         }
         else {
-            ChatCompletionResponseUnstreamed chatCompletionResponseUnstreamed =
-                    gson.fromJson(body, ChatCompletionResponseUnstreamed.class);
-            return getResponseContent(chatCompletionResponseUnstreamed.getChoices().get(0).getMessage().getTool_calls());
+            ChatGptResponseUnstreamed chatGptResponseUnstreamed =
+                    gson.fromJson(body, ChatGptResponseUnstreamed.class);
+            return getResponseContent(chatGptResponseUnstreamed.getChoices().get(0).getMessage().getTool_calls());
         }
     }
 
     private boolean validateResponse(String contentExtracted, String changeId, int attemptInd) {
-        ChatGptReplies chatGptReplies = gson.fromJson(contentExtracted, ChatGptReplies.class);
-        String returnedChangeId = chatGptReplies.getChangeId();
+        ChatGptResponseContent chatGptResponseContent = gson.fromJson(contentExtracted, ChatGptResponseContent.class);
+        String returnedChangeId = chatGptResponseContent.getChangeId();
         // A response is considered valid if either no changeId is returned or the changeId returned matches the one
         // provided in the request
         boolean isValidated = returnedChangeId == null || changeId.equals(returnedChangeId);
@@ -96,7 +92,7 @@ public class OpenAiClient {
         return isValidated;
     }
 
-    private String getResponseContent(List<ChatCompletionBase.ToolCall> toolCalls) {
+    private String getResponseContent(List<ChatGptToolCall> toolCalls) {
         return toolCalls.get(0).getFunction().getArguments();
     }
 
@@ -115,25 +111,25 @@ public class OpenAiClient {
     }
 
     private String createRequestBody(Configuration config, String patchSet) {
-        ChatCompletionRequest.Message systemMessage = ChatCompletionRequest.Message.builder()
+        ChatGptRequest.Message systemMessage = ChatGptRequest.Message.builder()
                 .role("system")
                 .content(config.getGptSystemPrompt())
                 .build();
-        ChatCompletionRequest.Message userMessage = ChatCompletionRequest.Message.builder()
+        ChatGptRequest.Message userMessage = ChatGptRequest.Message.builder()
                 .role("user")
                 .content(config.getGptUserPrompt(patchSet))
                 .build();
 
-        List<ChatCompletionRequest.Message> messages = List.of(systemMessage, userMessage);
+        List<ChatGptRequest.Message> messages = List.of(systemMessage, userMessage);
 
-        ChatCompletionRequest tools;
+        ChatGptRequest tools;
         try (InputStreamReader reader = FileUtils.getInputStreamReader("Config/tools.json")) {
-            tools = gson.fromJson(reader, ChatCompletionRequest.class);
+            tools = gson.fromJson(reader, ChatGptRequest.class);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load ChatGPT request tools", e);
         }
 
-        ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
+        ChatGptRequest chatGptRequest = ChatGptRequest.builder()
                 .model(config.getGptModel())
                 .messages(messages)
                 .temperature(config.getGptTemperature())
@@ -145,7 +141,7 @@ public class OpenAiClient {
                 .tool_choice(tools.getTool_choice())
                 .build();
 
-        return gson.toJson(chatCompletionRequest);
+        return gson.toJson(chatGptRequest);
     }
 
     private Optional<String> extractContentFromLine(String line) {
@@ -154,9 +150,9 @@ public class OpenAiClient {
         if (!line.startsWith(dataPrefix)) {
             return Optional.empty();
         }
-        ChatCompletionResponseStreamed chatCompletionResponseStreamed =
-                gson.fromJson(line.substring("data: ".length()), ChatCompletionResponseStreamed.class);
-        ChatCompletionBase.Delta delta = chatCompletionResponseStreamed.getChoices().get(0).getDelta();
+        ChatGptResponseStreamed chatGptResponseStreamed =
+                gson.fromJson(line.substring("data: ".length()), ChatGptResponseStreamed.class);
+        ChatGptResponseStreamed.Delta delta = chatGptResponseStreamed.getChoices().get(0).getDelta();
         if (delta == null || delta.getTool_calls() == null) {
             return Optional.empty();
         }

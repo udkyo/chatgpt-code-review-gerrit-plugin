@@ -5,8 +5,8 @@ import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.events.Event;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptRequestPoint;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritComment;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptRequestItem;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
@@ -158,21 +158,21 @@ public class GerritClientComments extends GerritClientAccount {
         return map;
     }
 
-    protected ChatGptRequestPoint getRequestPoint(int i) {
-        ChatGptRequestPoint requestPoint = new ChatGptRequestPoint();
+    protected ChatGptRequestItem getRequestItem(int i) {
+        ChatGptRequestItem requestItem = new ChatGptRequestItem();
         GerritComment commentProperty = commentProperties.get(i);
-        requestPoint.setId(i);
+        requestItem.setId(i);
         if (commentProperty.getLine() != null || commentProperty.getRange() != null) {
             String filename = commentProperty.getFilename();
             InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));
-            requestPoint.setFilename(filename);
-            requestPoint.setLineNumber(commentProperty.getLine());
-            requestPoint.setCodeSnippet(inlineCode.getInlineCode(commentProperty));
+            requestItem.setFilename(filename);
+            requestItem.setLineNumber(commentProperty.getLine());
+            requestItem.setCodeSnippet(inlineCode.getInlineCode(commentProperty));
         }
         String commentMessage = commentProperty.getMessage();
-        requestPoint.setRequest(removeMentionsFromComment(commentMessage).trim());
+        requestItem.setRequest(removeMentionsFromComment(commentMessage).trim());
 
-        return requestPoint;
+        return requestItem;
     }
 
     public boolean retrieveLastComments(Event event, String fullChangeId) {
@@ -221,11 +221,11 @@ public class GerritClientComments extends GerritClientAccount {
 
     public String getUserPrompt(HashMap<String, FileDiffProcessed> fileDiffsProcessed) {
         this.fileDiffsProcessed = fileDiffsProcessed;
-        List<ChatGptRequestPoint> requestPoints = new ArrayList<>();
+        List<ChatGptRequestItem> requestItems = new ArrayList<>();
         for (int i = 0; i < commentProperties.size(); i++) {
-            requestPoints.add(getRequestPoint(i));
+            requestItems.add(getRequestItem(i));
         }
-        return requestPoints.isEmpty() ? "" : gson.toJson(requestPoints);
+        return requestItems.isEmpty() ? "" : gson.toJson(requestItems);
     }
 
 }

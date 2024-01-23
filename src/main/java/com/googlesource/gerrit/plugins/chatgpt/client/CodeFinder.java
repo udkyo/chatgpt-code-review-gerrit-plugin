@@ -1,9 +1,9 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ChatGptReplyPoint;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptReplyItem;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.CodeFinderDiff;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.DiffContent;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.GerritCodeRange;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRange;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
@@ -32,8 +32,8 @@ public class CodeFinder {
         PLACEHOLDER_REGEX = "(?:" + randomPlaceholder + ")+";
     }
 
-    private void updateCodePattern(ChatGptReplyPoint reply) {
-        String commentedCode = reply.getCodeSnippet().trim();
+    private void updateCodePattern(ChatGptReplyItem replyItem) {
+        String commentedCode = replyItem.getCodeSnippet().trim();
         String commentedCodeRegex = Pattern.quote(commentedCode);
         // Generalize the regex to capture snippets where existing sequences of non-printing chars have been modified
         // from the original code
@@ -98,9 +98,9 @@ public class CodeFinder {
         }
     }
 
-    public GerritCodeRange findCommentedCode(ChatGptReplyPoint reply, int commentedLine) {
+    public GerritCodeRange findCommentedCode(ChatGptReplyItem replyItem, int commentedLine) {
         this.commentedLine = commentedLine;
-        updateCodePattern(reply);
+        updateCodePattern(replyItem);
         currentCodeRange = null;
         closestCodeRange = null;
         for (CodeFinderDiff codeFinderDiff : codeFinderDiffs) {

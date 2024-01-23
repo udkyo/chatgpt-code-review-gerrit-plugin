@@ -1,4 +1,4 @@
-package com.googlesource.gerrit.plugins.chatgpt.client.model;
+package com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt;
 
 import lombok.Builder;
 import lombok.Data;
@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class ChatCompletionRequest {
+public class ChatGptRequest {
     private String model;
     private boolean stream;
     private double temperature;
