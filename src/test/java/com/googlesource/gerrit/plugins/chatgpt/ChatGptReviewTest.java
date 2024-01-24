@@ -58,11 +58,13 @@ import static org.mockito.Mockito.when;
 public class ChatGptReviewTest {
     private static final Path basePath = Paths.get("src/test/resources");
     private static final String GERRIT_AUTH_BASE_URL = "http://localhost:9527";
-    private static final int GERRIT_ACCOUNT_ID = 1000000;
-    private static final String GERRIT_ACCOUNT_NAME = "Test";
-    private static final String GERRIT_ACCOUNT_EMAIL = "test@example.com";
-    private static final String GERRIT_USER_NAME = "test";
-    private static final String GERRIT_PASSWORD = "test";
+    private static final int GERRIT_GPT_ACCOUNT_ID = 1000000;
+    private static final String GERRIT_GPT_USERNAME = "gpt";
+    private static final int GERRIT_USER_ACCOUNT_ID = 1000001;
+    private static final String GERRIT_USER_ACCOUNT_NAME = "Test";
+    private static final String GERRIT_USER_ACCOUNT_EMAIL = "test@example.com";
+    private static final String GERRIT_USER_USERNAME = "test";
+    private static final String GERRIT_USER_PASSWORD = "test";
     private static final String GERRIT_USER_GROUP = "Test";
     private static final String GPT_TOKEN = "tk-test";
     private static final String GPT_DOMAIN = "http://localhost:9527";
@@ -72,7 +74,10 @@ public class ChatGptReviewTest {
     private static final boolean GPT_STREAM_OUTPUT = true;
     private static final long TEST_TIMESTAMP = 1699270812;
     private static final String REVIEW_TAG_COMMENTS = "[{\"request\":\"comment 2\",\"id\":0},{\"request\":" +
-            "\"message\",\"id\":1,\"filename\":\"test_file.py\",\"lineNumber\":5,\"codeSnippet\":\"TypeClassOrPath\"}]";
+            "\"message\",\"id\":1,\"filename\":\"test_file.py\",\"lineNumber\":5,\"codeSnippet\":\"TypeClassOrPath\"" +
+            "},{\"request\":\"[{\\\"role\\\":\\\"assistant\\\",\\\"content\\\":\\\"message from gpt\\\"},{" +
+            "\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"message 2\\\"}]\",\"id\":2,\"filename\":\"test_file.py\"," +
+            "\"lineNumber\":5,\"codeSnippet\":\"TypeClassOrPath\"}]";
 
     private final Gson gson = new Gson();
 
@@ -104,8 +109,8 @@ public class ChatGptReviewTest {
 
         // Mock the Global Config values not provided by Default
         when(globalConfig.getString("gerritAuthBaseUrl")).thenReturn(GERRIT_AUTH_BASE_URL);
-        when(globalConfig.getString("gerritUserName")).thenReturn(GERRIT_USER_NAME);
-        when(globalConfig.getString("gerritPassword")).thenReturn(GERRIT_PASSWORD);
+        when(globalConfig.getString("gerritUserName")).thenReturn(GERRIT_USER_USERNAME);
+        when(globalConfig.getString("gerritPassword")).thenReturn(GERRIT_USER_PASSWORD);
         when(globalConfig.getString("gptToken")).thenReturn(GPT_TOKEN);
 
         // Mock the Global Config values to the Defaults passed as second arguments of the `get*` methods.
@@ -132,15 +137,22 @@ public class ChatGptReviewTest {
         String fullChangeId = buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID);
 
         // Mock the behavior of the gerritAccountIdUri request
-        WireMock.stubFor(WireMock.get(gerritAccountIdUri(GERRIT_USER_NAME))
+        WireMock.stubFor(WireMock.get(gerritAccountIdUri(GERRIT_GPT_USERNAME))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .withBody("[{\"_account_id\": " + GERRIT_ACCOUNT_ID + "}]")));
+                        .withBody("[{\"_account_id\": " + GERRIT_GPT_ACCOUNT_ID + "}]")));
+
+        // Mock the behavior of the gerritAccountIdUri request
+        WireMock.stubFor(WireMock.get(gerritAccountIdUri(GERRIT_USER_USERNAME))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(HTTP_OK)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                        .withBody("[{\"_account_id\": " + GERRIT_USER_ACCOUNT_ID + "}]")));
 
         // Mock the behavior of the gerritAccountGroups request
         WireMock.stubFor(WireMock.get(UriResourceLocator.gerritAccountsUri() +
-                            gerritGroupPostfixUri(GERRIT_ACCOUNT_ID))
+                            gerritGroupPostfixUri(GERRIT_USER_ACCOUNT_ID))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
@@ -213,9 +225,9 @@ public class ChatGptReviewTest {
 
     private AccountAttribute createTestAccountAttribute() {
         AccountAttribute accountAttribute = new AccountAttribute();
-        accountAttribute.name = GERRIT_ACCOUNT_NAME;
-        accountAttribute.username = GERRIT_USER_NAME;
-        accountAttribute.email = GERRIT_ACCOUNT_EMAIL;
+        accountAttribute.name = GERRIT_USER_ACCOUNT_NAME;
+        accountAttribute.username = GERRIT_USER_USERNAME;
+        accountAttribute.email = GERRIT_USER_ACCOUNT_EMAIL;
         return accountAttribute;
     }
 
@@ -339,7 +351,7 @@ public class ChatGptReviewTest {
         OpenAiClient openAiClient = new OpenAiClient();
         PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, openAiClient);
         ConfigCreator mockConfigCreator = mock(ConfigCreator.class);
-        when(config.getGerritUserName()).thenReturn("gpt");
+        when(config.getGerritUserName()).thenReturn(GERRIT_GPT_USERNAME);
         when(mockConfigCreator.createConfig(ArgumentMatchers.any())).thenReturn(config);
         WireMock.stubFor(WireMock.post(WireMock.urlEqualTo(URI.create(config.getGptDomain()
                         + UriResourceLocator.chatCompletionsUri()).getPath()))

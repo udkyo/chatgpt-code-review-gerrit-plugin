@@ -2,7 +2,7 @@
   "/PATCHSET_LEVEL": [
     {
       "author": {
-        "_account_id": 1000000,
+        "_account_id": 1000001,
         "name": "Test",
         "display_name": "Test",
         "email": "test@example.com",
@@ -18,7 +18,7 @@
     },
     {
       "author": {
-        "_account_id": 1000000,
+        "_account_id": 1000001,
         "name": "Test",
         "display_name": "Test",
         "email": "test@example.com",
@@ -42,6 +42,29 @@
         "email": "test@example.com",
         "username": "test"
       },
+      "change_message_id": "40160b0488a4c3a284ac8817b279eeff6f603e7b",
+      "unresolved": true,
+      "patch_set": 1,
+      "id": "63208cea_7f611216",
+      "line": 5,
+      "range": {
+        "start_line": 5,
+        "start_character": 0,
+        "end_line": 5,
+        "end_character": 15
+      },
+      "updated": "2023-11-06 11:37:51.000000000",
+      "message": "message from gpt",
+      "commit_id": "f5433ac8b8650225de6d2912032689089e5d9f40"
+    },
+    {
+      "author": {
+        "_account_id": 1000001,
+        "name": "Test",
+        "display_name": "Test",
+        "email": "test@example.com",
+        "username": "test"
+      },
       "change_message_id": "daf5e2e0e4f404759c5af6aabe5b0a5250fe0da3",
       "unresolved": true,
       "patch_set": 1,
@@ -55,6 +78,30 @@
       },
       "updated": "2023-11-06 11:47:51.000000000",
       "message": "@gpt message",
+      "commit_id": "f5433ac8b8650225de6d2912032689089e5d9f40"
+    },
+    {
+      "author": {
+        "_account_id": 1000001,
+        "name": "Test",
+        "display_name": "Test",
+        "email": "test@example.com",
+        "username": "test"
+      },
+      "change_message_id": "daf5e2e0e4f404759c5af6aabe5b0a5250fe0da3",
+      "unresolved": true,
+      "patch_set": 1,
+      "id": "08141f77_56026b40",
+      "line": 5,
+      "range": {
+        "start_line": 5,
+        "start_character": 0,
+        "end_line": 5,
+        "end_character": 15
+      },
+      "in_reply_to": "63208cea_7f611216",
+      "updated": "2023-11-06 11:47:51.000000000",
+      "message": "@gpt message 2",
       "commit_id": "f5433ac8b8650225de6d2912032689089e5d9f40"
     }
   ]

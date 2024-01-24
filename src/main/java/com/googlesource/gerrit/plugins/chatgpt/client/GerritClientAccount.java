@@ -17,7 +17,7 @@ public class GerritClientAccount extends GerritClientBase {
         super(config);
     }
 
-    private Optional<Integer> getAccountId(String authorUsername) {
+    protected Optional<Integer> getAccountId(String authorUsername) {
         URI uri = URI.create(config.getGerritAuthBaseUrl()
                 + UriResourceLocator.gerritAccountIdUri(authorUsername));
         try {
