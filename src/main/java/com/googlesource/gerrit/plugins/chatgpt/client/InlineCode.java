@@ -22,11 +22,16 @@ public class InlineCode {
 
     private String getLineSlice(int line_num) {
         String line = newContent.get(line_num);
-        if (line_num == range.end_line) {
-            line = line.substring(0, range.end_character);
+        try {
+            if (line_num == range.end_line) {
+                line = line.substring(0, range.end_character);
+            }
+            if (line_num == range.start_line) {
+                line = line.substring(range.start_character);
+            }
         }
-        if (line_num == range.start_line) {
-            line = line.substring(range.start_character);
+        catch (StringIndexOutOfBoundsException e) {
+            log.info("Could not extract a slice from line \"{}\". The whole line is returned", line, e);
         }
         return line;
     }
