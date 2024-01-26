@@ -4,7 +4,7 @@
   "DEFAULT_GPT_USER_PROMPT": "Focus your review on the \"a\" and \"b\" items, but use the \"ab\" items as context to understand the changes better. Provide insights on any potential issues you foresee and suggestions for improvements if necessary, with an emphasis on identifying and addressing concerns rather than highlighting positive aspects.",
   "DEFAULT_GPT_USER_PROMPT_JSON": "Each reply must be formatted as an individual object within an array in the key `replies`. The object will always contain the string field `reply`",
   "DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON": "along with the key `id`, which corresponds to the `id` value from the related request in the request JSON array",
-  "DEFAULT_GPT_USER_PROMPT_JSON_2": "Also return back the field `changeId` provided in the corresponding request. For replies that are specific to a certain part of the code, the object should additionally include the keys `filename`, `lineNumber`, and `codeSnippet` to precisely identify the relevant code section.",
+  "DEFAULT_GPT_USER_PROMPT_JSON_2": "Also return back the field `changeId` provided in the corresponding request. For replies that are specific to a certain part of the code, the object must additionally include the keys `filename`, `lineNumber`, and `codeSnippet` to precisely identify the relevant code section.",
   "DEFAULT_GPT_USER_PROMPT_JSON_ENFORCE_RESPONSE_CHECK": "Make sure that the array in `replies` contains exactly %d element(s), one for each request.",
   "DEFAULT_GPT_CUSTOM_USER_PROMPT_1": "I have some requests about the following PatchSet Diff:",
   "DEFAULT_GPT_CUSTOM_USER_PROMPT_2": "My requests are given in a JSON-formatted array:",
