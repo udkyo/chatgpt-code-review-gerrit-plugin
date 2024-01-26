@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static junit.framework.TestCase.assertNotNull;
