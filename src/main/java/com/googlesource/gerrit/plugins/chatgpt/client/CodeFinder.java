@@ -112,7 +112,7 @@ public class CodeFinder {
                         findCodeLines(diffCode, charToLineMapItem);
                     }
                     catch (IllegalArgumentException e) {
-                        log.warn("Could not retrieve line number from charToLineMap {}", charToLineMapItem, e);
+                        log.warn("Could not retrieve line number from charToLineMap.\nDiff Code = {}", diffCode, e);
                     }
                 }
             }
