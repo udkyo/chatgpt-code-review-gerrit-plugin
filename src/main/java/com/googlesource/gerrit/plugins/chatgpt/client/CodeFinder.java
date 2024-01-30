@@ -32,6 +32,29 @@ public class CodeFinder {
         PLACEHOLDER_REGEX = "(?:" + randomPlaceholder + ")+";
     }
 
+    public GerritCodeRange findCommentedCode(ChatGptReplyItem replyItem, int commentedLine) {
+        this.commentedLine = commentedLine;
+        updateCodePattern(replyItem);
+        currentCodeRange = null;
+        closestCodeRange = null;
+        for (CodeFinderDiff codeFinderDiff : codeFinderDiffs) {
+            for (Field diffField : DiffContent.class.getDeclaredFields()) {
+                String diffCode = getDiffItem(diffField, codeFinderDiff.getContent());
+                if (diffCode != null) {
+                    TreeMap<Integer, Integer> charToLineMapItem = codeFinderDiff.getCharToLineMap();
+                    try {
+                        findCodeLines(diffCode, charToLineMapItem);
+                    }
+                    catch (IllegalArgumentException e) {
+                        log.warn("Could not retrieve line number from charToLineMap.\nDiff Code = {}", diffCode, e);
+                    }
+                }
+            }
+        }
+
+        return closestCodeRange;
+    }
+
     private void updateCodePattern(ChatGptReplyItem replyItem) {
         String commentedCode = replyItem.getCodeSnippet().trim();
         String commentedCodeRegex = Pattern.quote(commentedCode);
@@ -96,29 +119,6 @@ public class CodeFinder {
                 closestCodeRange = currentCodeRange.toBuilder().build();
             }
         }
-    }
-
-    public GerritCodeRange findCommentedCode(ChatGptReplyItem replyItem, int commentedLine) {
-        this.commentedLine = commentedLine;
-        updateCodePattern(replyItem);
-        currentCodeRange = null;
-        closestCodeRange = null;
-        for (CodeFinderDiff codeFinderDiff : codeFinderDiffs) {
-            for (Field diffField : DiffContent.class.getDeclaredFields()) {
-                String diffCode = getDiffItem(diffField, codeFinderDiff.getContent());
-                if (diffCode != null) {
-                    TreeMap<Integer, Integer> charToLineMapItem = codeFinderDiff.getCharToLineMap();
-                    try {
-                        findCodeLines(diffCode, charToLineMapItem);
-                    }
-                    catch (IllegalArgumentException e) {
-                        log.warn("Could not retrieve line number from charToLineMap.\nDiff Code = {}", diffCode, e);
-                    }
-                }
-            }
-        }
-
-        return closestCodeRange;
     }
 
 }

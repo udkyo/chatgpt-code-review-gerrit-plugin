@@ -114,28 +114,6 @@ public class Configuration {
         loadPrompts();
     }
 
-    private void loadPrompts() {
-        // Avoid repeated loading of prompt constants
-        if (DEFAULT_GPT_SYSTEM_PROMPT != null) return;
-        Gson gson = new Gson();
-        Class<? extends Configuration> me = this.getClass();
-        try (InputStreamReader reader = FileUtils.getInputStreamReader("Config/prompts.json")) {
-            Map<String, String> values = gson.fromJson(reader, new TypeToken<Map<String, String>>(){}.getType());
-            for (Map.Entry<String, String> entry : values.entrySet()) {
-                try {
-                    Field field = me.getDeclaredField(entry.getKey());
-                    field.setAccessible(true);
-                    field.set(null, entry.getValue());
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    log.error("Error setting prompt '{}'", entry.getKey(), e);
-                    throw new IOException();
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load prompts", e);
-        }
-    }
-
     public static String getDefaultSystemPrompt() {
         return DEFAULT_GPT_SYSTEM_PROMPT + DOT_SPACE + DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
     }
@@ -280,6 +258,28 @@ public class Configuration {
 
     public List<String> getEnabledFileExtensions() {
         return splitConfig(globalConfig.getString(KEY_ENABLED_FILE_EXTENSIONS, DEFAULT_ENABLED_FILE_EXTENSIONS));
+    }
+
+    private void loadPrompts() {
+        // Avoid repeated loading of prompt constants
+        if (DEFAULT_GPT_SYSTEM_PROMPT != null) return;
+        Gson gson = new Gson();
+        Class<? extends Configuration> me = this.getClass();
+        try (InputStreamReader reader = FileUtils.getInputStreamReader("Config/prompts.json")) {
+            Map<String, String> values = gson.fromJson(reader, new TypeToken<Map<String, String>>(){}.getType());
+            for (Map.Entry<String, String> entry : values.entrySet()) {
+                try {
+                    Field field = me.getDeclaredField(entry.getKey());
+                    field.setAccessible(true);
+                    field.set(null, entry.getValue());
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    log.error("Error setting prompt '{}'", entry.getKey(), e);
+                    throw new IOException();
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load prompts", e);
+        }
     }
 
     private String getValidatedOrThrow(String key) {

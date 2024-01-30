@@ -32,6 +32,32 @@ public class GerritClientPostComments extends GerritClientAccount {
         super(config);
     }
 
+    public void postComments(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
+        Map<String, Object> map = getContextProperties(reviewBatches);
+        if (map.isEmpty()) {
+            return;
+        }
+        URI uri = URI.create(config.getGerritAuthBaseUrl()
+                + UriResourceLocator.gerritPostCommentsUri(fullChangeId));
+        log.debug("Post-Comment uri: {}", uri);
+        String auth = generateBasicAuth(config.getGerritUserName(),
+                config.getGerritPassword());
+        String json = gson.toJson(map);
+        log.debug("Post-Comment JSON: {}", json);
+        HttpRequest request = HttpRequest.newBuilder()
+                .header(HttpHeaders.AUTHORIZATION, auth)
+                .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                .uri(uri)
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        HttpResponse<String> response = httpClientWithRetry.execute(request);
+
+        if (response.statusCode() != HTTP_OK) {
+            log.error("Comment posting failed with status code: {}", response.statusCode());
+        }
+    }
+
     private String joinMessages(List<String> messages) {
         if (messages.size() == 1) {
             return messages.get(0);
@@ -71,33 +97,6 @@ public class GerritClientPostComments extends GerritClientAccount {
             map.put("comments", comments);
         }
         return map;
-    }
-
-
-    public void postComments(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
-        Map<String, Object> map = getContextProperties(reviewBatches);
-        if (map.isEmpty()) {
-            return;
-        }
-        URI uri = URI.create(config.getGerritAuthBaseUrl()
-                + UriResourceLocator.gerritPostCommentsUri(fullChangeId));
-        log.debug("Post-Comment uri: {}", uri);
-        String auth = generateBasicAuth(config.getGerritUserName(),
-                config.getGerritPassword());
-        String json = gson.toJson(map);
-        log.debug("Post-Comment JSON: {}", json);
-        HttpRequest request = HttpRequest.newBuilder()
-                .header(HttpHeaders.AUTHORIZATION, auth)
-                .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                .uri(uri)
-                .POST(HttpRequest.BodyPublishers.ofString(json))
-                .build();
-
-        HttpResponse<String> response = httpClientWithRetry.execute(request);
-
-        if (response.statusCode() != HTTP_OK) {
-            log.error("Comment posting failed with status code: {}", response.statusCode());
-        }
     }
 
 }

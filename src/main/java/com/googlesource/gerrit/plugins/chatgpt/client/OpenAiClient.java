@@ -61,7 +61,7 @@ public class OpenAiClient {
         return this.ask(config, changeId, patchSet);
     }
 
-    public String extractContent(Configuration config, String body) throws Exception {
+    private String extractContent(Configuration config, String body) throws Exception {
         if (config.getGptStreamOutput() && !isCommentEvent) {
             StringBuilder finalContent = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new StringReader(body))) {

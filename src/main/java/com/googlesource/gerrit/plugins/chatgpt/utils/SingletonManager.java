@@ -6,10 +6,6 @@ import java.util.Map;
 public class SingletonManager {
     private static final Map<String, Object> instances = new HashMap<>();
 
-    private static String getInstanceKey(Class<?> clazz, String id) {
-        return clazz.getName() + ":" + id;
-    }
-
     public static synchronized <T> T getInstance(Class<T> clazz, String id, Object... constructorArgs) {
         String key = getInstanceKey(clazz, id);
         if (!instances.containsKey(key)) {
@@ -36,6 +32,10 @@ public class SingletonManager {
 
     public static synchronized void removeInstance(Class<?> clazz, String id) {
         instances.remove(getInstanceKey(clazz, id));
+    }
+
+    private static String getInstanceKey(Class<?> clazz, String id) {
+        return clazz.getName() + ":" + id;
     }
 
 }

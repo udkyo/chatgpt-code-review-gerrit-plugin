@@ -25,6 +25,19 @@ public class GerritClientPatchSet extends GerritClientAccount {
         diffs = new ArrayList<>();
     }
 
+    public String getPatchSet(String fullChangeId, boolean isCommentEvent) throws Exception {
+        int revisionBase = isCommentEvent ? 0 : retrieveRevisionBase(fullChangeId);
+        log.debug("Revision base: {}", revisionBase);
+
+        List<String> files = getAffectedFiles(fullChangeId, revisionBase);
+        log.debug("Patch files: {}", files);
+
+        String fileDiffsJson = getFileDiffsJson(fullChangeId, files, revisionBase);
+        log.debug("File diffs: {}", fileDiffsJson);
+
+        return fileDiffsJson;
+    }
+
     private int retrieveRevisionBase(String fullChangeId) throws Exception {
         URI uri = URI.create(config.getGerritAuthBaseUrl()
                 + UriResourceLocator.gerritPatchSetRevisionsUri(fullChangeId));
@@ -92,19 +105,6 @@ public class GerritClientPatchSet extends GerritClientAccount {
         }
         diffs.add(String.format("{\"changeId\": \"%s\"}", fullChangeId));
         return "[" + String.join(",", diffs) + "]\n";
-    }
-
-    public String getPatchSet(String fullChangeId, boolean isCommentEvent) throws Exception {
-        int revisionBase = isCommentEvent ? 0 : retrieveRevisionBase(fullChangeId);
-        log.debug("Revision base: {}", revisionBase);
-
-        List<String> files = getAffectedFiles(fullChangeId, revisionBase);
-        log.debug("Patch files: {}", files);
-
-        String fileDiffsJson = getFileDiffsJson(fullChangeId, files, revisionBase);
-        log.debug("File diffs: {}", fileDiffsJson);
-
-        return fileDiffsJson;
     }
 
 }

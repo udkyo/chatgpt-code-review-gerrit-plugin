@@ -17,6 +17,23 @@ public class GerritClientAccount extends GerritClientBase {
         super(config);
     }
 
+    public boolean isDisabledUser(String authorUsername) {
+        List<String> enabledUsers = config.getEnabledUsers();
+        List<String> disabledUsers = config.getDisabledUsers();
+        return !enabledUsers.contains(Configuration.ENABLED_USERS_ALL)
+                && !enabledUsers.contains(authorUsername)
+                || disabledUsers.contains(authorUsername)
+                || isDisabledUserGroup(authorUsername);
+    }
+
+    public boolean isDisabledTopic(String topic) {
+        List<String> enabledTopicFilter = config.getEnabledTopicFilter();
+        List<String> disabledTopicFilter = config.getDisabledTopicFilter();
+        return !enabledTopicFilter.contains(Configuration.ENABLED_TOPICS_ALL)
+                && enabledTopicFilter.stream().noneMatch(topic::contains)
+                || !topic.isEmpty() && disabledTopicFilter.stream().anyMatch(topic::contains);
+    }
+
     protected Optional<Integer> getAccountId(String authorUsername) {
         URI uri = URI.create(config.getGerritAuthBaseUrl()
                 + UriResourceLocator.gerritAccountIdUri(authorUsername));
@@ -63,23 +80,6 @@ public class GerritClientAccount extends GerritClientBase {
         return !enabledGroups.contains(Configuration.ENABLED_GROUPS_ALL)
                 && enabledGroups.stream().noneMatch(accountGroups::contains)
                 || disabledGroups.stream().anyMatch(accountGroups::contains);
-    }
-
-    public boolean isDisabledUser(String authorUsername) {
-        List<String> enabledUsers = config.getEnabledUsers();
-        List<String> disabledUsers = config.getDisabledUsers();
-        return !enabledUsers.contains(Configuration.ENABLED_USERS_ALL)
-                && !enabledUsers.contains(authorUsername)
-                || disabledUsers.contains(authorUsername)
-                || isDisabledUserGroup(authorUsername);
-    }
-
-    public boolean isDisabledTopic(String topic) {
-        List<String> enabledTopicFilter = config.getEnabledTopicFilter();
-        List<String> disabledTopicFilter = config.getDisabledTopicFilter();
-        return !enabledTopicFilter.contains(Configuration.ENABLED_TOPICS_ALL)
-                && enabledTopicFilter.stream().noneMatch(topic::contains)
-                || !topic.isEmpty() && disabledTopicFilter.stream().anyMatch(topic::contains);
     }
 
 }

@@ -41,6 +41,34 @@ public class GerritClientGetComments extends GerritClientAccount {
                 "Error retrieving ChatGPT account ID in Gerrit"));
     }
 
+    public boolean retrieveLastComments(Event event, String fullChangeId) {
+        commentsStartTimestamp = event.eventCreatedOn;
+        CommentAddedEvent commentAddedEvent = (CommentAddedEvent) event;
+        authorUsername = commentAddedEvent.author.get().username;
+        log.debug("Found comments by '{}' on {}", authorUsername, commentsStartTimestamp);
+        if (authorUsername.equals(config.getGerritUserName())) {
+            log.debug("These are the Bot's own comments, do not process them.");
+            return false;
+        }
+        if (isDisabledUser(authorUsername)) {
+            log.info("Review of comments from user '{}' is disabled.", authorUsername);
+            return false;
+        }
+        addAllComments(fullChangeId);
+
+        return !commentProperties.isEmpty();
+    }
+
+
+    public String getUserPrompt(HashMap<String, FileDiffProcessed> fileDiffsProcessed) {
+        this.fileDiffsProcessed = fileDiffsProcessed;
+        List<ChatGptRequestItem> requestItems = new ArrayList<>();
+        for (int i = 0; i < commentProperties.size(); i++) {
+            requestItems.add(getRequestItem(i));
+        }
+        return requestItems.isEmpty() ? "" : gson.toJson(requestItems);
+    }
+
     private List<GerritComment> getLastComments(String fullChangeId) throws Exception {
         URI uri = URI.create(config.getGerritAuthBaseUrl()
                 + UriResourceLocator.gerritGetAllPatchSetCommentsUri(fullChangeId));
@@ -160,34 +188,6 @@ public class GerritClientGetComments extends GerritClientAccount {
         requestItem.setRequest(retrieveCommentMessage(commentProperty));
 
         return requestItem;
-    }
-
-    public boolean retrieveLastComments(Event event, String fullChangeId) {
-        commentsStartTimestamp = event.eventCreatedOn;
-        CommentAddedEvent commentAddedEvent = (CommentAddedEvent) event;
-        authorUsername = commentAddedEvent.author.get().username;
-        log.debug("Found comments by '{}' on {}", authorUsername, commentsStartTimestamp);
-        if (authorUsername.equals(config.getGerritUserName())) {
-            log.debug("These are the Bot's own comments, do not process them.");
-            return false;
-        }
-        if (isDisabledUser(authorUsername)) {
-            log.info("Review of comments from user '{}' is disabled.", authorUsername);
-            return false;
-        }
-        addAllComments(fullChangeId);
-
-        return !commentProperties.isEmpty();
-    }
-
-
-    public String getUserPrompt(HashMap<String, FileDiffProcessed> fileDiffsProcessed) {
-        this.fileDiffsProcessed = fileDiffsProcessed;
-        List<ChatGptRequestItem> requestItems = new ArrayList<>();
-        for (int i = 0; i < commentProperties.size(); i++) {
-            requestItems.add(getRequestItem(i));
-        }
-        return requestItems.isEmpty() ? "" : gson.toJson(requestItems);
     }
 
 }

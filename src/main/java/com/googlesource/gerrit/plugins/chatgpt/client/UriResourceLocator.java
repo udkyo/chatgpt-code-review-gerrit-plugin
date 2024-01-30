@@ -11,10 +11,6 @@ public class UriResourceLocator {
         throw new IllegalStateException("Utility class");
     }
 
-    private static String gerritSetChangesUri(String fullChangeId, String uriPostfix) {
-        return AUTH_PREFIX_URI + "/changes/" + fullChangeId + uriPostfix;
-    }
-
     public static String gerritAccountsUri() {
         return AUTH_PREFIX_URI + "/accounts";
     }
@@ -53,6 +49,10 @@ public class UriResourceLocator {
 
     public static String chatCompletionsUri() {
         return "/v1/chat/completions";
+    }
+
+    private static String gerritSetChangesUri(String fullChangeId, String uriPostfix) {
+        return AUTH_PREFIX_URI + "/changes/" + fullChangeId + uriPostfix;
     }
 
 }

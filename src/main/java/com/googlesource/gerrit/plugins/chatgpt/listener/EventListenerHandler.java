@@ -54,6 +54,38 @@ public class EventListenerHandler {
                 branchName.shortName(), changeKey.get());
     }
 
+    public void handleEvent(Configuration config, Event event) {
+        this.config = config;
+        PatchSetEvent patchSetEvent = (PatchSetEvent) event;
+        Project.NameKey projectNameKey = patchSetEvent.getProjectNameKey();
+        BranchNameKey branchNameKey = patchSetEvent.getBranchNameKey();
+        Change.Key changeKey = patchSetEvent.getChangeKey();
+        String fullChangeId = buildFullChangeId(projectNameKey, branchNameKey, changeKey);
+
+        gerritClient.initialize(config, fullChangeId);
+
+        if (!preprocessEvent(event, fullChangeId, projectNameKey)) {
+            gerritClient.destroy(fullChangeId);
+            return;
+        }
+
+        // Execute the potentially time-consuming operation asynchronously
+        latestFuture = CompletableFuture.runAsync(() -> {
+            try {
+                log.info("Processing change: {}", fullChangeId);
+                reviewer.review(config, fullChangeId);
+                log.info("Finished processing change: {}", fullChangeId);
+            } catch (Exception e) {
+                log.error("Error while processing change: {}", fullChangeId, e);
+                if (e instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+            } finally {
+                gerritClient.destroy(fullChangeId);
+            }
+        }, executorService);
+    }
+
     private void addShutdownHoot() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             executorService.shutdown();
@@ -158,38 +190,6 @@ public class EventListenerHandler {
         }
 
         return true;
-    }
-
-    public void handleEvent(Configuration config, Event event) {
-        this.config = config;
-        PatchSetEvent patchSetEvent = (PatchSetEvent) event;
-        Project.NameKey projectNameKey = patchSetEvent.getProjectNameKey();
-        BranchNameKey branchNameKey = patchSetEvent.getBranchNameKey();
-        Change.Key changeKey = patchSetEvent.getChangeKey();
-        String fullChangeId = buildFullChangeId(projectNameKey, branchNameKey, changeKey);
-
-        gerritClient.initialize(config, fullChangeId);
-
-        if (!preprocessEvent(event, fullChangeId, projectNameKey)) {
-            gerritClient.destroy(fullChangeId);
-            return;
-        }
-
-        // Execute the potentially time-consuming operation asynchronously
-        latestFuture = CompletableFuture.runAsync(() -> {
-            try {
-                log.info("Processing change: {}", fullChangeId);
-                reviewer.review(config, fullChangeId);
-                log.info("Finished processing change: {}", fullChangeId);
-            } catch (Exception e) {
-                log.error("Error while processing change: {}", fullChangeId, e);
-                if (e instanceof InterruptedException) {
-                    Thread.currentThread().interrupt();
-                }
-            } finally {
-                gerritClient.destroy(fullChangeId);
-            }
-        }, executorService);
     }
 
 }
