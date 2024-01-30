@@ -23,12 +23,12 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Gerrit-PluginName>chatgpt-code-review-gerrit-plugin</Gerrit-PluginName>
+                            <Gerrit-PluginName>ChatGPT Code Review</Gerrit-PluginName>
                             <Gerrit-Module>com.googlesource.gerrit.plugins.chatgpt.Module</Gerrit-Module>
 
-                            <Implementation-Vendor>Xie Long</Implementation-Vendor>
+                            <Implementation-Vendor>Amarula</Implementation-Vendor>
                             <Implementation-URL>
-                                https://github.com/xielong/chatgpt-code-review-gerrit-plugin
+                                https://github.com/amarula/chatgpt-code-review-gerrit-plugin
                             </Implementation-URL>
 
                             <Implementation-Title>ChatGPT Code Review Gerrit Plugin</Implementation-Title>
