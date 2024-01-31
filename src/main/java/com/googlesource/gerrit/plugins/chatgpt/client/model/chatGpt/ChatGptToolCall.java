@@ -4,7 +4,6 @@ import lombok.Data;
 
 @Data
 public class ChatGptToolCall {
-
     private String id;
     private String type;
     private Function function;
@@ -14,4 +13,5 @@ public class ChatGptToolCall {
         private String name;
         private String arguments;
     }
+
 }

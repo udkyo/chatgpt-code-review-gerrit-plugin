@@ -10,5 +10,4 @@ public class ReviewBatch {
     private String filename;
     private Integer line;
     private GerritCodeRange range;
-
 }

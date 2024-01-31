@@ -9,7 +9,6 @@ import java.util.List;
 public class ChatGptResponseStreamed {
     private List<Choice> choices;
 
-
     @Data
     public static class Choice {
         protected Delta delta;

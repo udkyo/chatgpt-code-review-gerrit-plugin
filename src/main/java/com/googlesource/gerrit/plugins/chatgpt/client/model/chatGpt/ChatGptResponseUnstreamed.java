@@ -8,7 +8,6 @@ import java.util.List;
 public class ChatGptResponseUnstreamed {
     private List<MessageChoice> choices;
 
-
     @Data
     public static class MessageChoice {
         private Message message;
@@ -19,4 +18,5 @@ public class ChatGptResponseUnstreamed {
         private String role;
         private List<ChatGptToolCall> tool_calls;
     }
+
 }

@@ -10,11 +10,11 @@ import java.util.List;
 public class InputFileDiff extends FileDiff {
     private List<Content> content;
 
-
     @Data
     public static class Content {
         public List<String> a;
         public List<String> b;
         public List<String> ab;
     }
+
 }
