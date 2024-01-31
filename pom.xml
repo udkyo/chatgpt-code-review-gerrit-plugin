@@ -13,7 +13,13 @@
         <Gerrit-ApiVersion>3.7.4</Gerrit-ApiVersion>
         <maven.test.skip>false</maven.test.skip>
     </properties>
-
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Amarula Maven Packages</name>
+            <url>https://maven.pkg.github.com/amarula/chatgpt-code-review-gerrit-plugin</url>
+        </repository>
+    </distributionManagement>
     <build>
         <plugins>
             <plugin>
