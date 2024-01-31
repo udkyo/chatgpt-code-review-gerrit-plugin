@@ -17,20 +17,20 @@ import java.util.Map;
 public class GerritClient {
     private enum GerritClientType {
         PATCH_SET,
-        GET_COMMENTS,
-        POST_COMMENTS
+        COMMENTS,
+        REVIEW
     }
 
     private static final Map<GerritClientType, Class<?>> clientMap = Map.of(
         GerritClientType.PATCH_SET, GerritClientPatchSet.class,
-        GerritClientType.GET_COMMENTS, GerritClientGetComments.class,
-        GerritClientType.POST_COMMENTS, GerritClientPostComments.class
+        GerritClientType.COMMENTS, GerritClientComments.class,
+        GerritClientType.REVIEW, GerritClientReview.class
     );
     private static final String DEFAULT_CHANGE_ID = "DEFAULT_CHANGE_ID";
 
     private GerritClientPatchSet gerritClientPatchSet;
-    private GerritClientGetComments gerritClientGetComments;
-    private GerritClientPostComments gerritClientPostComments;
+    private GerritClientComments gerritClientComments;
+    private GerritClientReview gerritClientReview;
 
     public void initialize(Configuration config) {
         initialize(config, DEFAULT_CHANGE_ID);
@@ -66,25 +66,25 @@ public class GerritClient {
     }
 
     public List<GerritComment> getCommentProperties(String fullChangeId) {
-        updateGerritClient(GerritClientType.GET_COMMENTS, fullChangeId);
-        return gerritClientGetComments.getCommentProperties();
+        updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
+        return gerritClientComments.getCommentProperties();
     }
 
-    public void postComments(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
-        updateGerritClient(GerritClientType.POST_COMMENTS, fullChangeId);
-        gerritClientPostComments.postComments(fullChangeId, reviewBatches);
+    public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
+        updateGerritClient(GerritClientType.REVIEW, fullChangeId);
+        gerritClientReview.setReview(fullChangeId, reviewBatches);
     }
 
     public boolean retrieveLastComments(Event event, String fullChangeId) {
-        updateGerritClient(GerritClientType.GET_COMMENTS, fullChangeId);
-        return gerritClientGetComments.retrieveLastComments(event, fullChangeId);
+        updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
+        return gerritClientComments.retrieveLastComments(event, fullChangeId);
     }
 
-    public String getUserPrompt(String fullChangeId) {
-        updateGerritClient(GerritClientType.GET_COMMENTS, fullChangeId);
+    public String getUserRequests(String fullChangeId) {
+        updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
         updateGerritClient(GerritClientType.PATCH_SET, fullChangeId);
         HashMap<String, FileDiffProcessed> fileDiffsProcessed = gerritClientPatchSet.getFileDiffsProcessed();
-        return gerritClientGetComments.getUserPrompt(fileDiffsProcessed);
+        return gerritClientComments.getUserRequests(fileDiffsProcessed);
     }
 
     public void destroy(String fullChangeId) {
@@ -100,11 +100,11 @@ public class GerritClient {
             case PATCH_SET:
                 gerritClientPatchSet = (GerritClientPatchSet) clientInstance;
                 break;
-            case GET_COMMENTS:
-                gerritClientGetComments = (GerritClientGetComments) clientInstance;
+            case COMMENTS:
+                gerritClientComments = (GerritClientComments) clientInstance;
                 break;
-            case POST_COMMENTS:
-                gerritClientPostComments = (GerritClientPostComments) clientInstance;
+            case REVIEW:
+                gerritClientReview = (GerritClientReview) clientInstance;
                 break;
         }
     }

@@ -57,7 +57,7 @@ public class CodeReviewPluginIT {
     }
 
     @Test
-    public void postComment() throws Exception {
+    public void setReview() throws Exception {
         when(config.getGerritAuthBaseUrl()).thenReturn("Your Gerrit URL");
         when(config.getGerritUserName()).thenReturn("Your Gerrit username");
         when(config.getGerritPassword()).thenReturn("Your Gerrit password");
@@ -67,6 +67,6 @@ public class CodeReviewPluginIT {
         reviewBatches.get(0).setContent("message");
 
         gerritClient.initialize(config);
-        gerritClient.postComments("Your changeId", reviewBatches);
+        gerritClient.setReview("Your changeId", reviewBatches);
     }
 }

@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.getTimeStamp;
 
 @Slf4j
-public class GerritClientGetComments extends GerritClientAccount {
+public class GerritClientComments extends GerritClientAccount {
     private static final String ROLE_USER = "user";
     private static final String ROLE_ASSISTANT = "assistant";
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
@@ -33,7 +33,7 @@ public class GerritClientGetComments extends GerritClientAccount {
     @Getter
     private List<GerritComment> commentProperties;
 
-    public GerritClientGetComments(Configuration config) {
+    public GerritClientComments(Configuration config) {
         super(config);
         commentProperties = new ArrayList<>();
         commentMap = new HashMap<>();
@@ -60,7 +60,7 @@ public class GerritClientGetComments extends GerritClientAccount {
     }
 
 
-    public String getUserPrompt(HashMap<String, FileDiffProcessed> fileDiffsProcessed) {
+    public String getUserRequests(HashMap<String, FileDiffProcessed> fileDiffsProcessed) {
         this.fileDiffsProcessed = fileDiffsProcessed;
         List<ChatGptRequestItem> requestItems = new ArrayList<>();
         for (int i = 0; i < commentProperties.size(); i++) {

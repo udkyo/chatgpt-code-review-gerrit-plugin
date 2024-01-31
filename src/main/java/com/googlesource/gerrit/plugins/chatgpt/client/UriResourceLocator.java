@@ -43,7 +43,7 @@ public class UriResourceLocator {
         return gerritSetChangesUri(fullChangeId, "/comments");
     }
 
-    public static String gerritPostCommentsUri(String fullChangeId) {
+    public static String gerritSetReviewUri(String fullChangeId) {
         return gerritSetChangesUri(fullChangeId, "/revisions/current/review");
     }
 

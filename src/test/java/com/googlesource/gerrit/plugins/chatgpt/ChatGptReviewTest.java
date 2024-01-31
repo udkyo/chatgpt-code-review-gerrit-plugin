@@ -202,7 +202,7 @@ public class ChatGptReviewTest {
                         .withBodyFile("chatGptResponseStreamed.txt")));
 
         // Mock the behavior of the postReview request
-        WireMock.stubFor(WireMock.post(gerritPostCommentsUri(fullChangeId))
+        WireMock.stubFor(WireMock.post(gerritSetReviewUri(fullChangeId))
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)));
     }
@@ -261,7 +261,7 @@ public class ChatGptReviewTest {
         future.get();
 
         RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(
-                WireMock.urlEqualTo(gerritPostCommentsUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
+                WireMock.urlEqualTo(gerritSetReviewUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
         List<LoggedRequest> loggedRequests = WireMock.findAll(requestPatternBuilder);
         Assert.assertEquals(1, loggedRequests.size());
         JsonObject gptRequestBody = gson.fromJson(openAiClient.getRequestBody(), JsonObject.class);
@@ -306,7 +306,7 @@ public class ChatGptReviewTest {
         future.get();
 
         RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(
-                WireMock.urlEqualTo(gerritPostCommentsUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
+                WireMock.urlEqualTo(gerritSetReviewUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
         List<LoggedRequest> loggedRequests = WireMock.findAll(requestPatternBuilder);
         Assert.assertEquals(1, loggedRequests.size());
         JsonObject gptRequestBody = gson.fromJson(openAiClient.getRequestBody(), JsonObject.class);
@@ -383,7 +383,7 @@ public class ChatGptReviewTest {
                 config.getCommentUserPrompt()
         ));
         RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(
-                WireMock.urlEqualTo(gerritPostCommentsUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
+                WireMock.urlEqualTo(gerritSetReviewUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
         List<LoggedRequest> loggedRequests = WireMock.findAll(requestPatternBuilder);
         Assert.assertEquals(1, loggedRequests.size());
         JsonObject gptRequestBody = gson.fromJson(openAiClient.getRequestBody(), JsonObject.class);
