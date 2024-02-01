@@ -15,30 +15,18 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class Configuration {
-    public static final String OPENAI_DOMAIN = "https://api.openai.com";
-    public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
-    public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
-    public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
-    public static final String KEY_GPT_USER_PROMPT = "gptUserPrompt";
-    public static final String KEY_COMMENT_PROPERTIES_SIZE = "commentPropertiesSize";
     public static final String ENABLED_USERS_ALL = "ALL";
     public static final String ENABLED_GROUPS_ALL = "ALL";
     public static final String ENABLED_TOPICS_ALL = "ALL";
     public static final String SPACE = " ";
     public static final String DOT_SPACE = ". ";
-    public static String DEFAULT_GPT_SYSTEM_PROMPT;
-    public static String DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
-    public static String DEFAULT_GPT_USER_PROMPT;
-    public static String DEFAULT_GPT_USER_PROMPT_JSON;
-    public static String DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON;
-    public static String DEFAULT_GPT_USER_PROMPT_JSON_2;
-    public static String DEFAULT_GPT_USER_PROMPT_JSON_ENFORCE_RESPONSE_CHECK;
-    public static String DEFAULT_GPT_CUSTOM_USER_PROMPT_1;
-    public static String DEFAULT_GPT_CUSTOM_USER_PROMPT_2;
-    public static String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT;
+    public static final String NOT_CONFIGURED_ERROR_MSG = "%s is not configured";
 
+    // Default Config values
+    public static final String OPENAI_DOMAIN = "https://api.openai.com";
+    public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
     private static final String DEFAULT_GPT_TEMPERATURE = "1";
-    private static final boolean DEFAULT_REVIEW_PATCHSET = true;
+    private static final boolean DEFAULT_REVIEW_PATCH_SET = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
     private static final boolean DEFAULT_FULL_FILE_REVIEW = true;
     private static final boolean DEFAULT_STREAM_OUTPUT = false;
@@ -81,6 +69,11 @@ public class Configuration {
     private static final boolean DEFAULT_PROJECT_ENABLE = false;
     private static final int DEFAULT_MAX_REVIEW_LINES = 1000;
     private static final int DEFAULT_MAX_REVIEW_FILE_SIZE = 10000;
+
+    // Config setting keys
+    public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
+    public static final String KEY_GPT_REQUEST_USER_PROMPT = "gptRequestUserPrompt";
+    public static final String KEY_COMMENT_PROPERTIES_SIZE = "commentPropertiesSize";
     private static final String KEY_GPT_TOKEN = "gptToken";
     private static final String KEY_GERRIT_AUTH_BASE_URL = "gerritAuthBaseUrl";
     private static final String KEY_GERRIT_USERNAME = "gerritUserName";
@@ -90,7 +83,7 @@ public class Configuration {
     private static final String KEY_GPT_TEMPERATURE = "gptTemperature";
     private static final String KEY_STREAM_OUTPUT = "gptStreamOutput";
     private static final String KEY_REVIEW_COMMIT_MESSAGES = "gptReviewCommitMessages";
-    private static final String KEY_REVIEW_PATCHSET = "gptReviewPatchSet";
+    private static final String KEY_REVIEW_PATCH_SET = "gptReviewPatchSet";
     private static final String KEY_FULL_FILE_REVIEW = "gptFullFileReview";
     private static final String KEY_PROJECT_ENABLE = "isEnabled";
     private static final String KEY_GLOBAL_ENABLE = "globalEnable";
@@ -104,6 +97,19 @@ public class Configuration {
     private static final String KEY_MAX_REVIEW_LINES = "maxReviewLines";
     private static final String KEY_MAX_REVIEW_FILE_SIZE = "maxReviewFileSize";
     private static final String KEY_ENABLED_FILE_EXTENSIONS = "enabledFileExtensions";
+
+    // Prompt constants loaded from JSON file
+    public static String DEFAULT_GPT_SYSTEM_PROMPT;
+    public static String DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
+    public static String DEFAULT_GPT_REVIEW_USER_PROMPT;
+    public static String DEFAULT_GPT_JSON_USER_PROMPT;
+    public static String DEFAULT_GPT_REQUEST_JSON_USER_PROMPT;
+    public static String DEFAULT_GPT_JSON_USER_PROMPT_2;
+    public static String DEFAULT_GPT_JSON_USER_PROMPT_ENFORCE_RESPONSE_CHECK;
+    public static String DEFAULT_GPT_REQUEST_USER_PROMPT_1;
+    public static String DEFAULT_GPT_REQUEST_USER_PROMPT_2;
+    public static String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT;
+
     private final Map<String, Object> configsDynamically = Maps.newHashMap();
     private final PluginConfig globalConfig;
     private final PluginConfig projectConfig;
@@ -118,15 +124,15 @@ public class Configuration {
         return DEFAULT_GPT_SYSTEM_PROMPT + DOT_SPACE + DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
     }
 
-    public static String getReviewUserPrompt() {
-        return DEFAULT_GPT_USER_PROMPT_JSON + DOT_SPACE + DEFAULT_GPT_USER_PROMPT_JSON_2;
+    public static String getPatchSetReviewUserPrompt() {
+        return DEFAULT_GPT_JSON_USER_PROMPT + DOT_SPACE + DEFAULT_GPT_JSON_USER_PROMPT_2;
     }
 
-    public String getCommentUserPrompt() {
-        return DEFAULT_GPT_USER_PROMPT_JSON + SPACE +
-                DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON + DOT_SPACE +
-                DEFAULT_GPT_USER_PROMPT_JSON_2 + SPACE +
-                String.format(DEFAULT_GPT_USER_PROMPT_JSON_ENFORCE_RESPONSE_CHECK,
+    public String getCommentRequestUserPrompt() {
+        return DEFAULT_GPT_JSON_USER_PROMPT + SPACE +
+                DEFAULT_GPT_REQUEST_JSON_USER_PROMPT + DOT_SPACE +
+                DEFAULT_GPT_JSON_USER_PROMPT_2 + SPACE +
+                String.format(DEFAULT_GPT_JSON_USER_PROMPT_ENFORCE_RESPONSE_CHECK,
                     configsDynamically.get(KEY_COMMENT_PROPERTIES_SIZE));
     }
 
@@ -170,20 +176,20 @@ public class Configuration {
 
     public String getGptUserPrompt(String patchSet) {
         List<String> prompt = new ArrayList<>();
-        String gptUserPrompt = configsDynamically.get(KEY_GPT_USER_PROMPT).toString();
-        if (gptUserPrompt != null && !gptUserPrompt.isEmpty()) {
-            log.debug("ConfigsDynamically value found: {}", gptUserPrompt);
+        String gptRequestUserPrompt = configsDynamically.get(KEY_GPT_REQUEST_USER_PROMPT).toString();
+        if (gptRequestUserPrompt != null && !gptRequestUserPrompt.isEmpty()) {
+            log.debug("ConfigsDynamically value found: {}", gptRequestUserPrompt);
             prompt.addAll(Arrays.asList(
-                    DEFAULT_GPT_CUSTOM_USER_PROMPT_1,
+                    DEFAULT_GPT_REQUEST_USER_PROMPT_1,
                     patchSet,
-                    DEFAULT_GPT_CUSTOM_USER_PROMPT_2,
-                    gptUserPrompt,
-                    getCommentUserPrompt()
+                    DEFAULT_GPT_REQUEST_USER_PROMPT_2,
+                    gptRequestUserPrompt,
+                    getCommentRequestUserPrompt()
             ));
         }
         else {
-            prompt.add(getString(KEY_GPT_USER_PROMPT, DEFAULT_GPT_USER_PROMPT));
-            prompt.add(getReviewUserPrompt());
+            prompt.add(DEFAULT_GPT_REVIEW_USER_PROMPT);
+            prompt.add(getPatchSetReviewUserPrompt());
             if (getGptReviewCommitMessages()) {
                 prompt.add(DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT);
             }
@@ -197,7 +203,7 @@ public class Configuration {
     }
 
     public boolean getGptReviewPatchSet() {
-        return getBoolean(KEY_REVIEW_PATCHSET, DEFAULT_REVIEW_PATCHSET);
+        return getBoolean(KEY_REVIEW_PATCH_SET, DEFAULT_REVIEW_PATCH_SET);
     }
 
     public boolean getGptReviewCommitMessages() {

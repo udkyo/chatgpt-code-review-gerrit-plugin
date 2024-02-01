@@ -1,12 +1,12 @@
 {
   "DEFAULT_GPT_SYSTEM_PROMPT": "Act as a PatchSet Reviewer",
   "DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS": "I will provide you with PatchSet Diffs for various files in a JSON format. Each changed file's content will be detailed in the \"content\" field of the JSON object. In this \"content\", the \"a\" items are the lines removed, the \"b\" items are the lines added, and the \"ab\" items are the unchanged lines. In your response, avoid explicitly referring to the \"a\", \"b\", and other fields from the JSON object. Instead, use more intuitive terms like \"new lines\" for additions, \"removed lines\" for deletions, and \"unchanged lines\" for the parts that haven't been altered.",
-  "DEFAULT_GPT_USER_PROMPT": "Focus your review on the \"a\" and \"b\" items, but use the \"ab\" items as context to understand the changes better. Provide insights on any potential issues you foresee and suggestions for improvements if necessary, with an emphasis on identifying and addressing concerns rather than highlighting positive aspects.",
-  "DEFAULT_GPT_USER_PROMPT_JSON": "Each reply must be formatted as an individual object within an array in the key `replies`. The object will always contain the string field `reply`",
-  "DEFAULT_GPT_CUSTOM_USER_PROMPT_JSON": "along with the key `id`, which corresponds to the `id` value from the related request in the request JSON array",
-  "DEFAULT_GPT_USER_PROMPT_JSON_2": "Also return back the field `changeId` provided in the corresponding request. For replies that are specific to a certain part of the code, the object must additionally include the keys `filename`, `lineNumber`, and `codeSnippet` to precisely identify the relevant code section.",
-  "DEFAULT_GPT_USER_PROMPT_JSON_ENFORCE_RESPONSE_CHECK": "Make sure that the array in `replies` contains exactly %d element(s), one for each request.",
-  "DEFAULT_GPT_CUSTOM_USER_PROMPT_1": "I have some requests about the following PatchSet Diff:",
-  "DEFAULT_GPT_CUSTOM_USER_PROMPT_2": "My requests are given in a JSON-formatted array:",
+  "DEFAULT_GPT_REVIEW_USER_PROMPT": "Focus your review on the \"a\" and \"b\" items, but use the \"ab\" items as context to understand the changes better. Provide insights on any potential issues you foresee and suggestions for improvements if necessary, with an emphasis on identifying and addressing concerns rather than highlighting positive aspects.",
+  "DEFAULT_GPT_JSON_USER_PROMPT": "Each reply must be formatted as an individual object within an array in the key `replies`. The object will always contain the string field `reply`",
+  "DEFAULT_GPT_REQUEST_JSON_USER_PROMPT": "along with the key `id`, which corresponds to the `id` value from the related request in the request JSON array",
+  "DEFAULT_GPT_JSON_USER_PROMPT_2": "Also return back the field `changeId` provided in the corresponding request. For replies that are specific to a certain part of the code, the object must additionally include the keys `filename`, `lineNumber`, and `codeSnippet` to precisely identify the relevant code section.",
+  "DEFAULT_GPT_JSON_USER_PROMPT_ENFORCE_RESPONSE_CHECK": "Make sure that the array in `replies` contains exactly %d element(s), one for each request.",
+  "DEFAULT_GPT_REQUEST_USER_PROMPT_1": "I have some requests about the following PatchSet Diff:",
+  "DEFAULT_GPT_REQUEST_USER_PROMPT_2": "My requests are given in a JSON-formatted array:",
   "DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT": "Also, perform a check on the commit message of the PatchSet. The commit message is provided in the \"content\" field of \"/COMMIT_MSG\" in the same way as the file changes. Ensure that the commit message accurately and succinctly describes the changes made, and verify if it matches the nature and scope of the changes in the PatchSet."
 }

@@ -216,8 +216,8 @@ public class ChatGptReviewTest {
                 "__files/chatGptExpectedResponseStreamed.json")));
         expectedSystemPrompt = Configuration.getDefaultSystemPrompt();
         reviewUserPrompt = String.join("\n", Arrays.asList(
-                Configuration.DEFAULT_GPT_USER_PROMPT,
-                Configuration.getReviewUserPrompt(),
+                Configuration.DEFAULT_GPT_REVIEW_USER_PROMPT,
+                Configuration.getPatchSetReviewUserPrompt(),
                 Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
                 diffContent
         ));
@@ -376,11 +376,11 @@ public class ChatGptReviewTest {
         future.get();
 
         String commentUserPrompt = String.join("\n", Arrays.asList(
-                Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_1,
+                Configuration.DEFAULT_GPT_REQUEST_USER_PROMPT_1,
                 diffContent,
-                Configuration.DEFAULT_GPT_CUSTOM_USER_PROMPT_2,
+                Configuration.DEFAULT_GPT_REQUEST_USER_PROMPT_2,
                 REVIEW_TAG_COMMENTS,
-                config.getCommentUserPrompt()
+                config.getCommentRequestUserPrompt()
         ));
         RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(
                 WireMock.urlEqualTo(gerritSetReviewUri(buildFullChangeId(PROJECT_NAME, BRANCH_NAME, CHANGE_ID))));
