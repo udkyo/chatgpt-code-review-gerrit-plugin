@@ -74,7 +74,7 @@ public class CodeFinder {
     }
 
     private double calcCodeDistance(GerritCodeRange range, int fromLine) {
-        return Math.abs((range.end_line - range.start_line) / 2 - fromLine);
+        return Math.abs((range.endLine - range.startLine) / 2 - fromLine);
     }
 
     private String getDiffItem(Field diffField, DiffContent diffItem) {
@@ -107,10 +107,10 @@ public class CodeFinder {
             int startPosition = codeMatcher.start();
             int endPosition = codeMatcher.end();
             currentCodeRange = GerritCodeRange.builder()
-                    .start_line(getLineNumber(charToLineMapItem, startPosition))
-                    .end_line(getLineNumber(charToLineMapItem, endPosition))
-                    .start_character(getLineCharacter(diffCode, startPosition))
-                    .end_character(getLineCharacter(diffCode, endPosition))
+                    .startLine(getLineNumber(charToLineMapItem, startPosition))
+                    .endLine(getLineNumber(charToLineMapItem, endPosition))
+                    .startCharacter(getLineCharacter(diffCode, startPosition))
+                    .endCharacter(getLineCharacter(diffCode, endPosition))
                     .build();
             // If multiple commented code portions are found and currentCommentRange is closer to the line
             // number suggested by ChatGPT than closestCommentRange, it becomes the new closestCommentRange

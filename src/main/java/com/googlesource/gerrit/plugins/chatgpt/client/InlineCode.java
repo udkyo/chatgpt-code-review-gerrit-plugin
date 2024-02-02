@@ -24,7 +24,7 @@ public class InlineCode {
         if (commentProperty.getRange() != null) {
             List<String> codeByRange = new ArrayList<>();
             range = commentProperty.getRange();
-            for (int line_num = range.start_line; line_num <= range.end_line; line_num++) {
+            for (int line_num = range.startLine; line_num <= range.endLine; line_num++) {
                 codeByRange.add(getLineSlice(line_num));
             }
             return String.join("\n", codeByRange);
@@ -50,11 +50,11 @@ public class InlineCode {
     private String getLineSlice(int line_num) {
         String line = newContent.get(line_num);
         try {
-            if (line_num == range.end_line) {
-                line = line.substring(0, range.end_character);
+            if (line_num == range.endLine) {
+                line = line.substring(0, range.endCharacter);
             }
-            if (line_num == range.start_line) {
-                line = line.substring(range.start_character);
+            if (line_num == range.startLine) {
+                line = line.substring(range.startCharacter);
             }
         }
         catch (StringIndexOutOfBoundsException e) {

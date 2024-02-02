@@ -75,7 +75,7 @@ public class OpenAiClient {
         else {
             ChatGptResponseUnstreamed chatGptResponseUnstreamed =
                     gson.fromJson(body, ChatGptResponseUnstreamed.class);
-            return getResponseContent(chatGptResponseUnstreamed.getChoices().get(0).getMessage().getTool_calls());
+            return getResponseContent(chatGptResponseUnstreamed.getChoices().get(0).getMessage().getToolCalls());
         }
     }
 
@@ -138,7 +138,7 @@ public class OpenAiClient {
                 // temporal proximity.
                 .seed(ThreadLocalRandom.current().nextInt())
                 .tools(tools.getTools())
-                .tool_choice(tools.getTool_choice())
+                .toolChoice(tools.getToolChoice())
                 .build();
 
         return gson.toJson(chatGptRequest);
@@ -152,11 +152,11 @@ public class OpenAiClient {
         }
         ChatGptResponseStreamed chatGptResponseStreamed =
                 gson.fromJson(line.substring("data: ".length()), ChatGptResponseStreamed.class);
-        ChatGptResponseStreamed.Delta delta = chatGptResponseStreamed.getChoices().get(0).getDelta();
-        if (delta == null || delta.getTool_calls() == null) {
+        ChatGptResponseMessage delta = chatGptResponseStreamed.getChoices().get(0).getDelta();
+        if (delta == null || delta.getToolCalls() == null) {
             return Optional.empty();
         }
-        String content = getResponseContent(delta.getTool_calls());
+        String content = getResponseContent(delta.getToolCalls());
         return Optional.ofNullable(content);
     }
 

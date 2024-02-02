@@ -80,7 +80,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
         log.debug("FileDiff Json processed: {}", fileDiffJson);
         InputFileDiff inputFileDiff = gson.fromJson(fileDiffJson, InputFileDiff.class);
         // Initialize the reduced output file diff with fields `meta_a` and `meta_b`
-        OutputFileDiff outputFileDiff = new OutputFileDiff(inputFileDiff.getMeta_a(), inputFileDiff.getMeta_b());
+        OutputFileDiff outputFileDiff = new OutputFileDiff(inputFileDiff.getMetaA(), inputFileDiff.getMetaB());
         FileDiffProcessed fileDiffProcessed = new FileDiffProcessed(config, isCommitMessage, inputFileDiff);
         fileDiffsProcessed.put(filename, fileDiffProcessed);
         outputFileDiff.setContent(fileDiffProcessed.getOutputDiffContent());

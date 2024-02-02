@@ -1,5 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt;
 
+import com.google.gson.annotations.SerializedName;
 import lombok.Builder;
 import lombok.Data;
 
@@ -14,7 +15,8 @@ public class ChatGptRequest {
     private int seed;
     private List<Message> messages;
     private List<Tool> tools;
-    private ToolChoice tool_choice;
+    @SerializedName("tool_choice")
+    private ToolChoice toolChoice;
 
     @Data
     @Builder

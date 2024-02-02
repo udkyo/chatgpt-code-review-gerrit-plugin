@@ -112,7 +112,7 @@ public class PatchSetReviewer {
                 if (optGerritCommentRange.isPresent()) {
                     GerritCodeRange gerritCodeRange = optGerritCommentRange.get();
                     batchMap.setFilename(replyItem.getFilename());
-                    batchMap.setLine(gerritCodeRange.getStart_line());
+                    batchMap.setLine(gerritCodeRange.getStartLine());
                     batchMap.setRange(gerritCodeRange);
                 }
                 reviewBatches.add(batchMap);

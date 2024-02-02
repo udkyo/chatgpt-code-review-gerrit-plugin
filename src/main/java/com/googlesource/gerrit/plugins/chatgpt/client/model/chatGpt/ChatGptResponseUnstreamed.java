@@ -10,13 +10,7 @@ public class ChatGptResponseUnstreamed {
 
     @Data
     public static class MessageChoice {
-        private Message message;
-    }
-
-    @Data
-    public static class Message {
-        private String role;
-        private List<ChatGptToolCall> tool_calls;
+        private ChatGptResponseMessage message;
     }
 
 }

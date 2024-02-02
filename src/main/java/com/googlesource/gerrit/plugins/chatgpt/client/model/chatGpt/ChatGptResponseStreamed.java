@@ -11,16 +11,10 @@ public class ChatGptResponseStreamed {
 
     @Data
     public static class Choice {
-        protected Delta delta;
+        protected ChatGptResponseMessage delta;
         protected int index;
         @SerializedName("finish_reason")
         protected String finishReason;
-    }
-
-    @Data
-    public static class Delta {
-        private String role;
-        private List<ChatGptToolCall> tool_calls;
     }
 
 }

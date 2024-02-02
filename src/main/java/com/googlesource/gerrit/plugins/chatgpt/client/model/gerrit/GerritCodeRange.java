@@ -1,13 +1,18 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit;
 
+import com.google.gson.annotations.SerializedName;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder(toBuilder = true)
 public class GerritCodeRange {
-    public int start_line;
-    public int end_line;
-    public int start_character;
-    public int end_character;
+    @SerializedName("start_line")
+    public int startLine;
+    @SerializedName("end_line")
+    public int endLine;
+    @SerializedName("start_character")
+    public int startCharacter;
+    @SerializedName("end_character")
+    public int endCharacter;
 }

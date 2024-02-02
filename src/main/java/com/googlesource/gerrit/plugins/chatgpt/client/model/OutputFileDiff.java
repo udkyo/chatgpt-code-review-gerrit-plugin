@@ -10,8 +10,8 @@ import java.util.List;
 public class OutputFileDiff extends FileDiff {
     private List<DiffContent> content;
 
-    public OutputFileDiff(Meta meta_a, Meta meta_b) {
-        this.meta_a = meta_a;
-        this.meta_b = meta_b;
+    public OutputFileDiff(Meta metaA, Meta metaB) {
+        this.metaA = metaA;
+        this.metaB = metaB;
     }
 }

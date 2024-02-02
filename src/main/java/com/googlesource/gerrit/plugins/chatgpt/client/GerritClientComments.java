@@ -87,7 +87,7 @@ public class GerritClientComments extends GerritClientAccount {
             for (GerritComment commentObject : commentsArray) {
                 commentObject.setFilename(filename);
                 String commentId = commentObject.getId();
-                String changeMessageId = commentObject.getChange_message_id();
+                String changeMessageId = commentObject.getChangeMessageId();
                 String commentAuthorUsername = commentObject.getAuthor().getUsername();
                 log.debug("Change Message Id: {} - Author: {}", latestChangeMessageId, commentAuthorUsername);
                 long updatedTimeStamp = getTimeStamp(commentObject.getUpdated());
@@ -146,7 +146,7 @@ public class GerritClientComments extends GerritClientAccount {
     }
 
     private String getRoleFromComment(GerritComment currentComment) {
-        return currentComment.getAuthor().get_account_id() == gptAccountId ? ROLE_ASSISTANT : ROLE_USER;
+        return currentComment.getAuthor().getAccountId() == gptAccountId ? ROLE_ASSISTANT : ROLE_USER;
     }
 
     private String retrieveMessageHistory(GerritComment currentComment) {
@@ -157,7 +157,7 @@ public class GerritClientComments extends GerritClientAccount {
                     .content(getMessageWithoutMentions(currentComment))
                     .build();
             messageHistory.add(message);
-            currentComment = commentMap.get(currentComment.getIn_reply_to());
+            currentComment = commentMap.get(currentComment.getInReplyTo());
         }
         // Reverse the history sequence so that the oldest message appears first and the newest message is last
         Collections.reverse(messageHistory);
@@ -166,7 +166,7 @@ public class GerritClientComments extends GerritClientAccount {
     }
 
     private String retrieveCommentMessage(GerritComment commentProperty) {
-        if (commentProperty.getIn_reply_to() != null) {
+        if (commentProperty.getInReplyTo() != null) {
             return retrieveMessageHistory(commentProperty);
         }
         else {

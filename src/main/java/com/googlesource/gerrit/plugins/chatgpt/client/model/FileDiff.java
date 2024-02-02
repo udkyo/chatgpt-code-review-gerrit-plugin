@@ -1,16 +1,20 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.model;
 
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
 @Data
 public abstract class FileDiff {
-    protected Meta meta_a;
-    protected Meta meta_b;
+    @SerializedName("meta_a")
+    protected Meta metaA;
+    @SerializedName("meta_b")
+    protected Meta metaB;
 
     @Data
     public static class Meta {
         String name;
-        String content_type;
+        @SerializedName("content_type")
+        String contentType;
     }
 
 }
