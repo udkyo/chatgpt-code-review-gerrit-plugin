@@ -3,6 +3,8 @@ package com.googlesource.gerrit.plugins.chatgpt;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.client.*;
+import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptReplyItem;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptResponseContent;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRange;
@@ -21,7 +23,7 @@ public class PatchSetReviewer {
 
     private final Gson gson = new Gson();
     private final GerritClient gerritClient;
-    private final OpenAiClient openAiClient;
+    private final ChatGptClient chatGptClient;
 
     private List<ReviewBatch> reviewBatches;
     private List<GerritComment> commentProperties;
@@ -30,9 +32,9 @@ public class PatchSetReviewer {
     private boolean isCommentEvent;
 
     @Inject
-    PatchSetReviewer(GerritClient gerritClient, OpenAiClient openAiClient) {
+    PatchSetReviewer(GerritClient gerritClient, ChatGptClient chatGptClient) {
         this.gerritClient = gerritClient;
-        this.openAiClient = openAiClient;
+        this.chatGptClient = chatGptClient;
     }
 
     public void review(Configuration config, String fullChangeId) throws Exception {
@@ -127,7 +129,7 @@ public class PatchSetReviewer {
             log.warn("Patch set too large. Skipping review. changeId: {}", changeId);
             return String.format(SPLIT_REVIEW_MSG, config.getMaxReviewLines());
         }
-        return openAiClient.ask(config, changeId, patchSet, isCommentEvent);
+        return chatGptClient.ask(config, changeId, patchSet, isCommentEvent);
     }
 }
 

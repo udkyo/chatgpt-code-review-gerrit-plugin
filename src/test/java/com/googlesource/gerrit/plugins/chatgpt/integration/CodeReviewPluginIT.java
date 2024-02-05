@@ -1,7 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.integration;
 
-import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
-import com.googlesource.gerrit.plugins.chatgpt.client.OpenAiClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ public class CodeReviewPluginIT {
     private GerritClient gerritClient;
 
     @InjectMocks
-    private OpenAiClient openAiClient;
+    private ChatGptClient chatGptClient;
 
     @Test
     public void sayHelloToGPT() throws Exception {
@@ -39,7 +39,7 @@ public class CodeReviewPluginIT {
         when(config.getGptModel()).thenReturn(Configuration.DEFAULT_GPT_MODEL);
         when(config.getGptSystemPrompt()).thenReturn(Configuration.DEFAULT_GPT_SYSTEM_PROMPT);
 
-        String answer = openAiClient.ask(config, "", "hello");
+        String answer = chatGptClient.ask(config, "", "hello");
         log.info("answer: {}", answer);
         assertNotNull(answer);
     }

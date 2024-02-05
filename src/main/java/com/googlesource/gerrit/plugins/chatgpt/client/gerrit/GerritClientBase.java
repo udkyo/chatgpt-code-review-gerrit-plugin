@@ -1,9 +1,11 @@
-package com.googlesource.gerrit.plugins.chatgpt.client;
+package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
+import com.googlesource.gerrit.plugins.chatgpt.client.HttpClientWithRetry;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

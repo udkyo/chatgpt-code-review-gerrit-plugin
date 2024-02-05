@@ -12,7 +12,7 @@ import com.google.gerrit.server.events.Event;
 import com.google.gerrit.server.events.PatchSetEvent;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.PatchSetReviewer;
-import com.googlesource.gerrit.plugins.chatgpt.client.GerritClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

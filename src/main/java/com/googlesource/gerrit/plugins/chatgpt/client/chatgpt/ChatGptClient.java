@@ -1,9 +1,11 @@
-package com.googlesource.gerrit.plugins.chatgpt.client;
+package com.googlesource.gerrit.plugins.chatgpt.client.chatgpt;
 
 import com.google.common.net.HttpHeaders;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Singleton;
+import com.googlesource.gerrit.plugins.chatgpt.client.HttpClientWithRetry;
+import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.*;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
@@ -24,7 +26,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Singleton
-public class OpenAiClient {
+public class ChatGptClient {
     private static final int REVIEW_ATTEMPT_LIMIT = 3;
     @Getter
     private String requestBody;
