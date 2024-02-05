@@ -144,6 +144,10 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `enabledFileExtensions`: This limits the reviewed files to the given types. Default file extensions are ".py, .java,
   .js, .ts, .html, .css, .cs, .cpp, .c, .h, .php, .rb, .swift, .kt, .r, .jl, .go, .scala, .pl, .pm, .rs, .dart, .lua,
   .sh, .vb, .bat".
+- `enabledVoting`: Initially disabled (false). If set to true, allows ChatGPT to cast a vote on each reviewed Patch Set
+  by assigning a score.
+- `votingMinScore`: The lowest possible score that can be given to a Patch Set (Default value: -1).
+- `votingMaxScore`: The highest possible score that can be given to a Patch Set (Default value: +1).
 
 #### Optional Parameters for Global Configuration only
 

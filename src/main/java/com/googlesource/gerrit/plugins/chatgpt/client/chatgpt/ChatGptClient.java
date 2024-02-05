@@ -8,14 +8,12 @@ import com.googlesource.gerrit.plugins.chatgpt.client.HttpClientWithRetry;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.*;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.URI;
 import java.net.http.HttpRequest;
@@ -34,6 +32,7 @@ public class ChatGptClient {
             .disableHtmlEscaping()
             .create();
     private final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
+    private ChatGptTools chatGptTools;
     private boolean isCommentEvent = false;
 
     public String ask(Configuration config, String changeId, String patchSet) throws Exception {
@@ -59,6 +58,7 @@ public class ChatGptClient {
 
     public String ask(Configuration config, String changeId, String patchSet, boolean isCommentEvent) throws Exception {
         this.isCommentEvent = isCommentEvent;
+        chatGptTools = new ChatGptTools(isCommentEvent);
 
         return this.ask(config, changeId, patchSet);
     }
@@ -123,14 +123,7 @@ public class ChatGptClient {
                 .build();
 
         List<ChatGptRequest.Message> messages = List.of(systemMessage, userMessage);
-
-        ChatGptRequest tools;
-        try (InputStreamReader reader = FileUtils.getInputStreamReader("Config/tools.json")) {
-            tools = gson.fromJson(reader, ChatGptRequest.class);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load ChatGPT request tools", e);
-        }
-
+        ChatGptRequest tools = chatGptTools.retrieveTools(config);
         ChatGptRequest chatGptRequest = ChatGptRequest.builder()
                 .model(config.getGptModel())
                 .messages(messages)

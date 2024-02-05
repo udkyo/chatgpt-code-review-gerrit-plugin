@@ -69,6 +69,9 @@ public class Configuration {
     private static final boolean DEFAULT_PROJECT_ENABLE = false;
     private static final int DEFAULT_MAX_REVIEW_LINES = 1000;
     private static final int DEFAULT_MAX_REVIEW_FILE_SIZE = 10000;
+    private static final boolean DEFAULT_ENABLED_VOTING = false;
+    private static final int DEFAULT_VOTING_MIN_SCORE = -1;
+    private static final int DEFAULT_VOTING_MAX_SCORE = 1;
 
     // Config setting keys
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
@@ -97,6 +100,9 @@ public class Configuration {
     private static final String KEY_MAX_REVIEW_LINES = "maxReviewLines";
     private static final String KEY_MAX_REVIEW_FILE_SIZE = "maxReviewFileSize";
     private static final String KEY_ENABLED_FILE_EXTENSIONS = "enabledFileExtensions";
+    private static final String KEY_ENABLED_VOTING = "enabledVoting";
+    private static final String KEY_VOTING_MIN_SCORE = "votingMinScore";
+    private static final String KEY_VOTING_MAX_SCORE = "votingMaxScore";
 
     // Prompt constants loaded from JSON file
     public static String DEFAULT_GPT_SYSTEM_PROMPT;
@@ -109,6 +115,7 @@ public class Configuration {
     public static String DEFAULT_GPT_REQUEST_USER_PROMPT_1;
     public static String DEFAULT_GPT_REQUEST_USER_PROMPT_2;
     public static String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT;
+    public static String DEFAULT_GPT_VOTING_REVIEW_USER_PROMPT;
 
     private final Map<String, Object> configsDynamically = Maps.newHashMap();
     private final PluginConfig globalConfig;
@@ -193,6 +200,10 @@ public class Configuration {
             if (getGptReviewCommitMessages()) {
                 prompt.add(DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT);
             }
+            if (isVotingEnabled()) {
+                prompt.add(String.format(DEFAULT_GPT_VOTING_REVIEW_USER_PROMPT, getVotingMinScore(),
+                        getVotingMaxScore()));
+            }
             prompt.add(patchSet);
         }
         return String.join("\n", prompt);
@@ -265,6 +276,19 @@ public class Configuration {
     public List<String> getEnabledFileExtensions() {
         return splitConfig(globalConfig.getString(KEY_ENABLED_FILE_EXTENSIONS, DEFAULT_ENABLED_FILE_EXTENSIONS));
     }
+
+    public boolean isVotingEnabled() {
+        return globalConfig.getBoolean(KEY_ENABLED_VOTING, DEFAULT_ENABLED_VOTING);
+    }
+
+    public int getVotingMinScore() {
+        return getInt(KEY_VOTING_MIN_SCORE, DEFAULT_VOTING_MIN_SCORE);
+    }
+
+    public int getVotingMaxScore() {
+        return getInt(KEY_VOTING_MAX_SCORE, DEFAULT_VOTING_MAX_SCORE);
+    }
+
 
     private void loadPrompts() {
         // Avoid repeated loading of prompt constants

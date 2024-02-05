@@ -34,8 +34,8 @@ public class GerritClientReview extends GerritClientAccount {
         super(config);
     }
 
-    public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
-        GerritReview reviewMap = buildReview(reviewBatches);
+    public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches, Integer reviewScore) throws Exception {
+        GerritReview reviewMap = buildReview(reviewBatches, reviewScore);
         if (reviewMap.getComments() == null && reviewMap.getMessage() == null) {
             return;
         }
@@ -67,7 +67,7 @@ public class GerritClientReview extends GerritClientAccount {
         return BULLET_POINT + String.join("\n\n" + BULLET_POINT, messages);
     }
 
-    private GerritReview buildReview(List<ReviewBatch> reviewBatches) {
+    private GerritReview buildReview(List<ReviewBatch> reviewBatches, Integer reviewScore) {
         GerritReview reviewMap = new GerritReview();
         List<String> messages = new ArrayList<>();
         Map<String, List<GerritComment>> comments = new HashMap<>();
@@ -97,6 +97,9 @@ public class GerritClientReview extends GerritClientAccount {
         }
         if (!comments.isEmpty()) {
             reviewMap.setComments(comments);
+        }
+        if (reviewScore != null) {
+            reviewMap.setLabels(new GerritReview.Labels(reviewScore));
         }
         return reviewMap;
     }

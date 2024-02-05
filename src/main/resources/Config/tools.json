@@ -34,12 +34,16 @@
                 ]
               }
             },
+            "score": {
+              "type": "integer"
+            },
             "changeId": {
               "type": "string"
             }
           },
           "required": [
             "replies",
+            "score",
             "changeId"
           ]
         }

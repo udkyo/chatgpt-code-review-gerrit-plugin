@@ -71,9 +71,13 @@ public class GerritClient {
         return gerritClientComments.getCommentProperties();
     }
 
-    public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
+    public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches, Integer reviewScore) throws Exception {
         updateGerritClient(GerritClientType.REVIEW, fullChangeId);
-        gerritClientReview.setReview(fullChangeId, reviewBatches);
+        gerritClientReview.setReview(fullChangeId, reviewBatches, reviewScore);
+    }
+
+    public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
+        setReview(fullChangeId, reviewBatches, null);
     }
 
     public boolean retrieveLastComments(Event event, String fullChangeId) {

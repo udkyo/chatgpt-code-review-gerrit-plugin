@@ -51,9 +51,10 @@ public class PatchSetReviewer {
 
         String reviewReply = getReviewReply(config, fullChangeId, patchSet);
         log.debug("ChatGPT response: {}", reviewReply);
-        retrieveReviewFromJson(reviewReply, fullChangeId);
+        ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
+        retrieveReviewFromJson(reviewJson, fullChangeId);
 
-        gerritClient.setReview(fullChangeId, reviewBatches);
+        gerritClient.setReview(fullChangeId, reviewBatches, reviewJson.getScore());
     }
 
     private void addReviewBatch(Integer batchID, String batch) {
@@ -100,8 +101,7 @@ public class PatchSetReviewer {
         return gerritCommentRange;
     }
 
-    private void retrieveReviewFromJson(String reviewReply, String fullChangeId) {
-        ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
+    private void retrieveReviewFromJson(ChatGptResponseContent reviewJson, String fullChangeId) {
         fileDiffsProcessed = gerritClient.getFileDiffsProcessed(fullChangeId);
         for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
             ReviewBatch batchMap = new ReviewBatch();

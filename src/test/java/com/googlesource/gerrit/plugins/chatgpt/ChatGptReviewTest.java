@@ -73,6 +73,8 @@ public class ChatGptReviewTest {
     private static final BranchNameKey BRANCH_NAME = BranchNameKey.create(PROJECT_NAME, "myBranchName");
     private static final boolean GPT_STREAM_OUTPUT = true;
     private static final long TEST_TIMESTAMP = 1699270812;
+    private static final int VOTING_MIN_SCORE = -1;
+    private static final int VOTING_MAX_SCORE = 1;
     private static final String REVIEW_TAG_COMMENTS = "[{\"request\":\"comment 2\",\"id\":0},{\"request\":" +
             "\"message\",\"id\":1,\"filename\":\"test_file.py\",\"lineNumber\":5,\"codeSnippet\":\"TypeClassOrPath\"" +
             "},{\"request\":\"[{\\\"role\\\":\\\"assistant\\\",\\\"content\\\":\\\"message from gpt\\\"},{" +
@@ -84,6 +86,7 @@ public class ChatGptReviewTest {
     private String expectedResponseStreamed;
     private String expectedSystemPrompt;
     private String reviewUserPrompt;
+    private String reviewVoteUserPrompt;
     private String diffContent;
     private String gerritPatchSetReview;
 
@@ -221,6 +224,13 @@ public class ChatGptReviewTest {
                 Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
                 diffContent
         ));
+        reviewVoteUserPrompt = String.join("\n", Arrays.asList(
+                Configuration.DEFAULT_GPT_REVIEW_USER_PROMPT,
+                Configuration.getPatchSetReviewUserPrompt(),
+                Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
+                String.format(Configuration.DEFAULT_GPT_VOTING_REVIEW_USER_PROMPT, VOTING_MIN_SCORE, VOTING_MAX_SCORE),
+                diffContent
+        ));
     }
 
     private AccountAttribute createTestAccountAttribute() {
@@ -279,6 +289,8 @@ public class ChatGptReviewTest {
     public void patchSetCreatedOrUpdatedUnstreamed() throws InterruptedException, NoSuchProjectException, ExecutionException {
         when(globalConfig.getBoolean(Mockito.eq("gptStreamOutput"), Mockito.anyBoolean()))
                 .thenReturn(false);
+        when(globalConfig.getBoolean(Mockito.eq("enabledVoting"), Mockito.anyBoolean()))
+                .thenReturn(true);
         Configuration config = new Configuration(globalConfig, projectConfig);
         GerritClient gerritClient = new GerritClient();
         ChatGptClient chatGptClient = new ChatGptClient();
@@ -312,7 +324,7 @@ public class ChatGptReviewTest {
         JsonObject gptRequestBody = gson.fromJson(chatGptClient.getRequestBody(), JsonObject.class);
         JsonArray prompts = gptRequestBody.get("messages").getAsJsonArray();
         String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
-        Assert.assertEquals(reviewUserPrompt, userPrompt);
+        Assert.assertEquals(reviewVoteUserPrompt, userPrompt);
         String requestBody = loggedRequests.get(0).getBodyAsString();
         Assert.assertEquals(gerritPatchSetReview, requestBody);
 
