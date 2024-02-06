@@ -67,6 +67,11 @@ public class GerritClient {
         return gerritClientPatchSet.getFileDiffsProcessed();
     }
 
+    public Integer getGptAccountId(String fullChangeId) {
+        updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
+        return gerritClientComments.getGptAccountId();
+    }
+
     public List<GerritComment> getCommentProperties(String fullChangeId) {
         updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
         return gerritClientComments.getCommentProperties();

@@ -29,7 +29,8 @@ public class GerritClientComments extends GerritClientAccount {
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
 
     private final Gson gson = new Gson();
-    private final int gptAccountId;
+    @Getter
+    private final Integer gptAccountId;
     private final HashMap<String, GerritComment> commentMap;
     private long commentsStartTimestamp;
     private String authorUsername;

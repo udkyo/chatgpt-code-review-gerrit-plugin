@@ -5,8 +5,10 @@ import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.client.*;
 import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClientDetail;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptReplyItem;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptResponseContent;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPatchSetDetail;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRange;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
@@ -45,9 +47,7 @@ public class PatchSetReviewer {
             log.info("No file to review has been found in the PatchSet");
             return;
         }
-        config.configureDynamically(Configuration.KEY_GPT_REQUEST_USER_PROMPT,
-                gerritClient.getUserRequests(fullChangeId));
-        config.configureDynamically(Configuration.KEY_COMMENT_PROPERTIES_SIZE, commentProperties.size());
+        updateDynamicConfiguration(config, fullChangeId);
 
         String reviewReply = getReviewReply(config, fullChangeId, patchSet);
         log.debug("ChatGPT response: {}", reviewReply);
@@ -55,6 +55,28 @@ public class PatchSetReviewer {
         retrieveReviewFromJson(reviewJson, fullChangeId);
 
         gerritClient.setReview(fullChangeId, reviewBatches, reviewJson.getScore());
+    }
+
+    private void updateDynamicConfiguration(Configuration config, String fullChangeId) {
+        config.configureDynamically(Configuration.KEY_GPT_REQUEST_USER_PROMPT,
+                gerritClient.getUserRequests(fullChangeId));
+        config.configureDynamically(Configuration.KEY_COMMENT_PROPERTIES_SIZE, commentProperties.size());
+        if (config.isVotingEnabled() && !isCommentEvent) {
+            GerritClientDetail gerritClientDetail = new GerritClientDetail(config,
+                    gerritClient.getGptAccountId(fullChangeId));
+            GerritPatchSetDetail.PermittedVotingRange permittedVotingRange = gerritClientDetail.getPermittedVotingRange(
+                    fullChangeId);
+            if (permittedVotingRange != null) {
+                if (permittedVotingRange.getMin() > config.getVotingMinScore()) {
+                    log.debug("Minimum ChatGPT voting score set to {}", permittedVotingRange.getMin());
+                    config.configureDynamically(Configuration.KEY_VOTING_MIN_SCORE, permittedVotingRange.getMin());
+                }
+                if (permittedVotingRange.getMax() < config.getVotingMaxScore()) {
+                    log.debug("Maximum ChatGPT voting score set to {}", permittedVotingRange.getMax());
+                    config.configureDynamically(Configuration.KEY_VOTING_MAX_SCORE, permittedVotingRange.getMax());
+                }
+            }
+        }
     }
 
     private void addReviewBatch(Integer batchID, String batch) {

@@ -47,6 +47,10 @@ public class UriResourceLocator {
         return gerritSetChangesUri(fullChangeId, "/revisions/current/review");
     }
 
+    public static String gerritGetPatchSetDetailUri(String fullChangeId) {
+        return gerritSetChangesUri(fullChangeId, "/detail");
+    }
+
     public static String chatCompletionsUri() {
         return "/v1/chat/completions";
     }

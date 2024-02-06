@@ -1,0 +1,39 @@
+{
+  "labels": {
+    "Code-Review": {
+      "all": [
+        {
+          "value": 1,
+          "date": "2024-02-06 07:38:58.000000000",
+          "permitted_voting_range": {
+            "min": -1,
+            "max": 1
+          },
+          "_account_id": 1000001,
+          "name": "ChatGPT",
+          "display_name": "ChatGPT",
+          "username": "gpt"
+        }
+      ],
+      "values": {
+        "-2": "This shall not be submitted",
+        "-1": "I would prefer this is not submitted as is",
+        " 0": "No score",
+        "+1": "Looks good to me, but someone else must approve",
+        "+2": "Looks good to me, approved"
+      },
+      "description": "",
+      "value": 1,
+      "default_value": 0
+    }
+  },
+  "permitted_labels": {
+    "Code-Review": [
+      "-2",
+      "-1",
+      " 0",
+      "+1",
+      "+2"
+    ]
+  }
+}

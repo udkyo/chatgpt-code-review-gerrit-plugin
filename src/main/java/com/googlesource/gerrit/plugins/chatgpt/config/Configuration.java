@@ -77,6 +77,8 @@ public class Configuration {
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_GPT_REQUEST_USER_PROMPT = "gptRequestUserPrompt";
     public static final String KEY_COMMENT_PROPERTIES_SIZE = "commentPropertiesSize";
+    public static final String KEY_VOTING_MIN_SCORE = "votingMinScore";
+    public static final String KEY_VOTING_MAX_SCORE = "votingMaxScore";
     private static final String KEY_GPT_TOKEN = "gptToken";
     private static final String KEY_GERRIT_AUTH_BASE_URL = "gerritAuthBaseUrl";
     private static final String KEY_GERRIT_USERNAME = "gerritUserName";
@@ -101,8 +103,6 @@ public class Configuration {
     private static final String KEY_MAX_REVIEW_FILE_SIZE = "maxReviewFileSize";
     private static final String KEY_ENABLED_FILE_EXTENSIONS = "enabledFileExtensions";
     private static final String KEY_ENABLED_VOTING = "enabledVoting";
-    private static final String KEY_VOTING_MIN_SCORE = "votingMinScore";
-    private static final String KEY_VOTING_MAX_SCORE = "votingMaxScore";
 
     // Prompt constants loaded from JSON file
     public static String DEFAULT_GPT_SYSTEM_PROMPT;
