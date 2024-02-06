@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.*;
 
@@ -27,6 +28,10 @@ import static com.google.gerrit.extensions.client.ChangeKind.REWORK;
 
 @Slf4j
 public class EventListenerHandler {
+    private final static Map<String, Boolean> EVENT_COMMENT_MAP = Map.of(
+            "patchset-created", false,
+            "comment-added", true
+    );
 
     private final PatchSetReviewer reviewer;
     private final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(100);
@@ -166,28 +171,34 @@ public class EventListenerHandler {
     private boolean preprocessEvent(Event event, String fullChangeId, Project.NameKey projectNameKey) {
         String eventType = Optional.ofNullable(event.getType()).orElse("");
         log.info("Event type {}", eventType);
+        if (!EVENT_COMMENT_MAP.containsKey(eventType) ) {
+            return false;
+        }
         PatchSetEvent patchSetEvent = (PatchSetEvent) event;
 
         if (!isReviewEnabled(patchSetEvent, projectNameKey)) {
             return false;
         }
-        switch (eventType) {
-            case "patchset-created":
-                if (!isPatchSetReviewEnabled(patchSetEvent)) {
-                    return false;
+        boolean isCommentEvent = EVENT_COMMENT_MAP.get(eventType);
+        if (isCommentEvent) {
+            if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
+                if (gerritClient.getForcedReview(fullChangeId)) {
+                    isCommentEvent = false;
                 }
-                reviewer.setCommentEvent(false);
-                break;
-            case "comment-added":
-                if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
+                else {
                     log.info("No comments found for review");
                     return false;
                 }
-                reviewer.setCommentEvent(true);
-                break;
-            default:
-                return false;
+            }
         }
+        else {
+            if (!isPatchSetReviewEnabled(patchSetEvent)) {
+                log.debug("Patch Set review disabled");
+                return false;
+            }
+        }
+        log.debug("Flag `isCommentEvent` set to {}", isCommentEvent);
+        reviewer.setCommentEvent(isCommentEvent);
 
         return true;
     }

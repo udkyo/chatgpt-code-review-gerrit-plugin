@@ -26,6 +26,7 @@ import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.getTimeS
 public class GerritClientComments extends GerritClientAccount {
     private static final String ROLE_USER = "user";
     private static final String ROLE_ASSISTANT = "assistant";
+    private static final Pattern REVIEW_LAST_COMMAND_PATTERN = Pattern.compile("/review_last\\b");
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
 
     private final Gson gson = new Gson();
@@ -36,6 +37,8 @@ public class GerritClientComments extends GerritClientAccount {
     private String authorUsername;
     @Getter
     private List<GerritComment> commentProperties;
+    @Getter
+    private Boolean forcedReview;
 
     public GerritClientComments(Configuration config) {
         super(config);
@@ -47,6 +50,7 @@ public class GerritClientComments extends GerritClientAccount {
 
     public boolean retrieveLastComments(Event event, String fullChangeId) {
         commentsStartTimestamp = event.eventCreatedOn;
+        forcedReview = false;
         CommentAddedEvent commentAddedEvent = (CommentAddedEvent) event;
         authorUsername = commentAddedEvent.author.get().username;
         log.debug("Found comments by '{}' on {}", authorUsername, commentsStartTimestamp);
@@ -127,6 +131,11 @@ public class GerritClientComments extends GerritClientAccount {
         return true;
     }
 
+    private boolean isForcingReview(String comment) {
+        Matcher reviewCommandMatcher = REVIEW_LAST_COMMAND_PATTERN.matcher(comment);
+        return reviewCommandMatcher.find();
+    }
+
     private void addAllComments(String fullChangeId) {
         try {
             List<GerritComment> latestComments = getLastComments(fullChangeId);
@@ -135,6 +144,12 @@ public class GerritClientComments extends GerritClientAccount {
             }
             for (GerritComment latestComment : latestComments) {
                 String commentMessage = latestComment.getMessage();
+                if (isForcingReview(commentMessage)) {
+                    log.debug("Forced review command detected in message {}", commentMessage);
+                    forcedReview = true;
+                    commentProperties.clear();
+                    return;
+                }
                 if (isBotAddressed(commentMessage)) {
                     commentProperties.add(latestComment);
                 }

@@ -54,6 +54,11 @@ public class GerritClient {
         return gerritClientPatchSet.getPatchSet(fullChangeId, isCommentEvent);
     }
 
+    public boolean getForcedReview(String fullChangeId) {
+        updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
+        return gerritClientComments.getForcedReview();
+    }
+
     public boolean isDisabledUser(String authorUsername) {
         return gerritClientPatchSet.isDisabledUser(authorUsername);
     }

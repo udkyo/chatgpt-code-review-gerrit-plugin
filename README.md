@@ -161,6 +161,11 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 
 - `isEnabled`: The default is false. If set to true, the plugin will review the Patch Set of this project.
 
+## Commands
+
+The `/review_last` command, when used in a comment directed at ChatGPT on any Change, triggers a review of the last
+Patch Set of the Change.
+
 ## Testing
 
 - You can run the unit tests in the project to familiarize yourself with the plugin's source code.
