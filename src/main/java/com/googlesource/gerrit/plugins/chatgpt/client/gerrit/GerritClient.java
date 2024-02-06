@@ -39,6 +39,7 @@ public class GerritClient {
 
     public void initialize(Configuration config, String fullChangeId) {
         log.debug("Initializing client instances for change: {}", fullChangeId);
+        config.resetDynamicConfiguration();
         for (GerritClientType clientTypes : clientMap.keySet()) {
             updateGerritClient(clientTypes, fullChangeId, config);
         }

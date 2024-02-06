@@ -30,7 +30,6 @@ public class GerritClientBase {
 
     public GerritClientBase(Configuration config) {
         this.config = config;
-        config.resetDynamicConfiguration();
     }
 
     protected String generateBasicAuth(String username, String password) {
