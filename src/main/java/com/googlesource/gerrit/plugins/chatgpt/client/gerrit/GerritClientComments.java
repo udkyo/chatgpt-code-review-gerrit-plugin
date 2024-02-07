@@ -1,7 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.google.gerrit.server.events.CommentAddedEvent;
-import com.google.gerrit.server.events.Event;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
@@ -33,7 +32,6 @@ public class GerritClientComments extends GerritClientAccount {
     @Getter
     private final Integer gptAccountId;
     private final HashMap<String, GerritComment> commentMap;
-    private long commentsStartTimestamp;
     private String authorUsername;
     @Getter
     private List<GerritComment> commentProperties;
@@ -48,12 +46,11 @@ public class GerritClientComments extends GerritClientAccount {
                 "Error retrieving ChatGPT account ID in Gerrit"));
     }
 
-    public boolean retrieveLastComments(Event event, String fullChangeId) {
-        commentsStartTimestamp = event.eventCreatedOn;
+    public boolean retrieveLastComments(GerritChange change) {
         forcedReview = false;
-        CommentAddedEvent commentAddedEvent = (CommentAddedEvent) event;
+        CommentAddedEvent commentAddedEvent = (CommentAddedEvent) change.getEvent();
         authorUsername = commentAddedEvent.author.get().username;
-        log.debug("Found comments by '{}' on {}", authorUsername, commentsStartTimestamp);
+        log.debug("Found comments by '{}' on {}", authorUsername, change.getEventTimeStamp());
         if (authorUsername.equals(config.getGerritUserName())) {
             log.debug("These are the Bot's own comments, do not process them.");
             return false;
@@ -62,7 +59,7 @@ public class GerritClientComments extends GerritClientAccount {
             log.info("Review of comments from user '{}' is disabled.", authorUsername);
             return false;
         }
-        addAllComments(fullChangeId);
+        addAllComments(change);
 
         return !commentProperties.isEmpty();
     }
@@ -77,9 +74,9 @@ public class GerritClientComments extends GerritClientAccount {
         return requestItems.isEmpty() ? "" : gson.toJson(requestItems);
     }
 
-    private List<GerritComment> getLastComments(String fullChangeId) throws Exception {
+    private List<GerritComment> getLastComments(GerritChange change) throws Exception {
         URI uri = URI.create(config.getGerritAuthBaseUrl()
-                + UriResourceLocator.gerritGetAllPatchSetCommentsUri(fullChangeId));
+                + UriResourceLocator.gerritGetAllPatchSetCommentsUri(change.getFullChangeId()));
         String responseBody = forwardGetRequest(uri);
         Type mapEntryType = new TypeToken<Map<String, List<GerritComment>>>(){}.getType();
         Map<String, List<GerritComment>> lastCommentMap = gson.fromJson(responseBody, mapEntryType);
@@ -100,7 +97,7 @@ public class GerritClientComments extends GerritClientAccount {
                 log.debug("Change Message Id: {} - Author: {}", latestChangeMessageId, commentAuthorUsername);
                 long updatedTimeStamp = getTimeStamp(commentObject.getUpdated());
                 if (commentAuthorUsername.equals(authorUsername) &&
-                        updatedTimeStamp >= commentsStartTimestamp - MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT) {
+                        updatedTimeStamp >= change.getEventTimeStamp() - MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT) {
                     log.debug("Found comment with updatedTimeStamp : {}", updatedTimeStamp);
                     latestChangeMessageId = changeMessageId;
                 }
@@ -136,9 +133,9 @@ public class GerritClientComments extends GerritClientAccount {
         return reviewCommandMatcher.find();
     }
 
-    private void addAllComments(String fullChangeId) {
+    private void addAllComments(GerritChange change) {
         try {
-            List<GerritComment> latestComments = getLastComments(fullChangeId);
+            List<GerritComment> latestComments = getLastComments(change);
             if (latestComments == null) {
                 return;
             }
@@ -155,7 +152,7 @@ public class GerritClientComments extends GerritClientAccount {
                 }
             }
         } catch (Exception e) {
-            log.error("Error while retrieving comments for change: {}", fullChangeId, e);
+            log.error("Error while retrieving comments for change: {}", change.getFullChangeId(), e);
         }
     }
 

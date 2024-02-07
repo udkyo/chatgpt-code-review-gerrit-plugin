@@ -27,14 +27,14 @@ public class GerritClientPatchSet extends GerritClientAccount {
         diffs = new ArrayList<>();
     }
 
-    public String getPatchSet(String fullChangeId, boolean isCommentEvent) throws Exception {
-        int revisionBase = isCommentEvent ? 0 : retrieveRevisionBase(fullChangeId);
+    public String getPatchSet(GerritChange change) throws Exception {
+        int revisionBase = change.getIsCommentEvent() ? 0 : retrieveRevisionBase(change.getFullChangeId());
         log.debug("Revision base: {}", revisionBase);
 
-        List<String> files = getAffectedFiles(fullChangeId, revisionBase);
+        List<String> files = getAffectedFiles(change.getFullChangeId(), revisionBase);
         log.debug("Patch files: {}", files);
 
-        String fileDiffsJson = getFileDiffsJson(fullChangeId, files, revisionBase);
+        String fileDiffsJson = getFileDiffsJson(change.getFullChangeId(), files, revisionBase);
         log.debug("File diffs: {}", fileDiffsJson);
 
         return fileDiffsJson;

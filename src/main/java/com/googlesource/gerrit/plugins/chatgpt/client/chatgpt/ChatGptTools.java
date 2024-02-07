@@ -11,13 +11,15 @@ import java.io.InputStreamReader;
 class ChatGptTools {
 
     private final Gson gson = new Gson();
+    private final Configuration config;
     private final boolean isCommentEvent;
 
-    public ChatGptTools(boolean isCommentEvent) {
+    public ChatGptTools(Configuration config, Boolean isCommentEvent) {
+        this.config = config;
         this.isCommentEvent = isCommentEvent;
     }
 
-    public ChatGptRequest retrieveTools(Configuration config) {
+    public ChatGptRequest retrieveTools() {
         ChatGptRequest tools;
         try (InputStreamReader reader = FileUtils.getInputStreamReader("Config/tools.json")) {
             tools = gson.fromJson(reader, ChatGptRequest.class);

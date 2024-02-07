@@ -2,23 +2,18 @@ package com.googlesource.gerrit.plugins.chatgpt.listener;
 
 import com.google.common.base.Splitter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.gerrit.entities.BranchNameKey;
-import com.google.gerrit.entities.Change;
-import com.google.gerrit.entities.Project;
 import com.google.gerrit.extensions.client.ChangeKind;
 import com.google.gerrit.server.data.ChangeAttribute;
 import com.google.gerrit.server.data.PatchSetAttribute;
 import com.google.gerrit.server.events.Event;
-import com.google.gerrit.server.events.PatchSetEvent;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.PatchSetReviewer;
+import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,39 +49,29 @@ public class EventListenerHandler {
         addShutdownHoot();
     }
 
-    public static String buildFullChangeId(Project.NameKey projectName, BranchNameKey branchName, Change.Key changeKey) {
-        return String.join("~", URLEncoder.encode(projectName.get(), StandardCharsets.UTF_8),
-                branchName.shortName(), changeKey.get());
-    }
-
     public void handleEvent(Configuration config, Event event) {
         this.config = config;
-        PatchSetEvent patchSetEvent = (PatchSetEvent) event;
-        Project.NameKey projectNameKey = patchSetEvent.getProjectNameKey();
-        BranchNameKey branchNameKey = patchSetEvent.getBranchNameKey();
-        Change.Key changeKey = patchSetEvent.getChangeKey();
-        String fullChangeId = buildFullChangeId(projectNameKey, branchNameKey, changeKey);
+        GerritChange change = new GerritChange(event);
+        gerritClient.initialize(config, change);
 
-        gerritClient.initialize(config, fullChangeId);
-
-        if (!preprocessEvent(event, fullChangeId, projectNameKey)) {
-            gerritClient.destroy(fullChangeId);
+        if (!preprocessEvent(change)) {
+            gerritClient.destroy(change);
             return;
         }
 
         // Execute the potentially time-consuming operation asynchronously
         latestFuture = CompletableFuture.runAsync(() -> {
             try {
-                log.info("Processing change: {}", fullChangeId);
-                reviewer.review(config, fullChangeId);
-                log.info("Finished processing change: {}", fullChangeId);
+                log.info("Processing change: {}", change.getFullChangeId());
+                reviewer.review(config, change);
+                log.info("Finished processing change: {}", change.getFullChangeId());
             } catch (Exception e) {
-                log.error("Error while processing change: {}", fullChangeId, e);
+                log.error("Error while processing change: {}", change.getFullChangeId(), e);
                 if (e instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
                 }
             } finally {
-                gerritClient.destroy(fullChangeId);
+                gerritClient.destroy(change);
             }
         }, executorService);
     }
@@ -105,18 +90,9 @@ public class EventListenerHandler {
         }));
     }
 
-    private Optional<PatchSetAttribute> getPatchSetAttribute(PatchSetEvent patchSetEvent) {
+    private Optional<String> getTopic(GerritChange change) {
         try {
-            return Optional.ofNullable(patchSetEvent.patchSet.get());
-        }
-        catch (NullPointerException e) {
-            return Optional.empty();
-        }
-    }
-
-    private Optional<String> getTopic(PatchSetEvent patchSetEvent) {
-        try {
-            ChangeAttribute changeAttribute = patchSetEvent.change.get();
+            ChangeAttribute changeAttribute = change.getPatchSetEvent().change.get();
             return Optional.ofNullable(changeAttribute.topic);
         }
         catch (NullPointerException e) {
@@ -124,17 +100,17 @@ public class EventListenerHandler {
         }
     }
 
-    private boolean isReviewEnabled(PatchSetEvent patchSetEvent, Project.NameKey projectNameKey) {
+    private boolean isReviewEnabled(GerritChange change) {
         List<String> enabledProjects = Splitter.on(",").omitEmptyStrings()
                 .splitToList(config.getEnabledProjects());
         if (!config.isGlobalEnable() &&
-                !enabledProjects.contains(projectNameKey.get()) &&
+                !enabledProjects.contains(change.getProjectNameKey().get()) &&
                 !config.isProjectEnable()) {
-            log.debug("The project {} is not enabled for review", projectNameKey);
+            log.debug("The project {} is not enabled for review", change.getProjectNameKey());
             return false;
         }
 
-        String topic = getTopic(patchSetEvent).orElse("");
+        String topic = getTopic(change).orElse("");
         log.debug("PatchSet Topic retrieved: '{}'", topic);
         if (gerritClient.isDisabledTopic(topic)) {
             log.info("Disabled review for PatchSets with Topic '{}'", topic);
@@ -144,12 +120,12 @@ public class EventListenerHandler {
         return true;
     }
 
-    private boolean isPatchSetReviewEnabled(PatchSetEvent patchSetEvent) {
+    private boolean isPatchSetReviewEnabled(GerritChange change) {
         if (!config.getGptReviewPatchSet()) {
             log.debug("Disabled review function for created or updated PatchSets.");
             return false;
         }
-        Optional<PatchSetAttribute> patchSetAttributeOptional = getPatchSetAttribute(patchSetEvent);
+        Optional<PatchSetAttribute> patchSetAttributeOptional = change.getPatchSetAttribute();
         if (patchSetAttributeOptional.isEmpty()) {
             log.info("PatchSetAttribute event properties not retrieved");
             return false;
@@ -168,21 +144,20 @@ public class EventListenerHandler {
         return true;
     }
 
-    private boolean preprocessEvent(Event event, String fullChangeId, Project.NameKey projectNameKey) {
-        String eventType = Optional.ofNullable(event.getType()).orElse("");
+    private boolean preprocessEvent(GerritChange change) {
+        String eventType = Optional.ofNullable(change.getEventType()).orElse("");
         log.info("Event type {}", eventType);
         if (!EVENT_COMMENT_MAP.containsKey(eventType) ) {
             return false;
         }
-        PatchSetEvent patchSetEvent = (PatchSetEvent) event;
 
-        if (!isReviewEnabled(patchSetEvent, projectNameKey)) {
+        if (!isReviewEnabled(change)) {
             return false;
         }
         boolean isCommentEvent = EVENT_COMMENT_MAP.get(eventType);
         if (isCommentEvent) {
-            if (!gerritClient.retrieveLastComments(fullChangeId, event)) {
-                if (gerritClient.getForcedReview(fullChangeId)) {
+            if (!gerritClient.retrieveLastComments(change)) {
+                if (gerritClient.getForcedReview(change)) {
                     isCommentEvent = false;
                 }
                 else {
@@ -192,13 +167,13 @@ public class EventListenerHandler {
             }
         }
         else {
-            if (!isPatchSetReviewEnabled(patchSetEvent)) {
+            if (!isPatchSetReviewEnabled(change)) {
                 log.debug("Patch Set review disabled");
                 return false;
             }
         }
         log.debug("Flag `isCommentEvent` set to {}", isCommentEvent);
-        reviewer.setCommentEvent(isCommentEvent);
+        change.setIsCommentEvent(isCommentEvent);
 
         return true;
     }

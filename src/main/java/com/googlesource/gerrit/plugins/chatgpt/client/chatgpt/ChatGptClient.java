@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.client.HttpClientWithRetry;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
+import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.*;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
@@ -56,11 +57,11 @@ public class ChatGptClient {
         throw new RuntimeException("Failed to receive valid ChatGPT response");
     }
 
-    public String ask(Configuration config, String changeId, String patchSet, boolean isCommentEvent) throws Exception {
-        this.isCommentEvent = isCommentEvent;
-        chatGptTools = new ChatGptTools(isCommentEvent);
+    public String ask(Configuration config, GerritChange change, String patchSet) throws Exception {
+        isCommentEvent = change.getIsCommentEvent();
+        chatGptTools = new ChatGptTools(config, isCommentEvent);
 
-        return this.ask(config, changeId, patchSet);
+        return this.ask(config, change.getFullChangeId(), patchSet);
     }
 
     private String extractContent(Configuration config, String body) throws Exception {
@@ -123,7 +124,7 @@ public class ChatGptClient {
                 .build();
 
         List<ChatGptRequest.Message> messages = List.of(systemMessage, userMessage);
-        ChatGptRequest tools = chatGptTools.retrieveTools(config);
+        ChatGptRequest tools = chatGptTools.retrieveTools();
         ChatGptRequest chatGptRequest = ChatGptRequest.builder()
                 .model(config.getGptModel())
                 .messages(messages)

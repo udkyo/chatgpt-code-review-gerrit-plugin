@@ -1,6 +1,5 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
-import com.google.gerrit.server.events.Event;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
@@ -23,8 +22,8 @@ public class GerritClientFacade {
         gerritClientReview = new GerritClientReview(config);
     }
 
-    public String getPatchSet(String fullChangeId, boolean isCommentEvent) throws Exception {
-        return gerritClientPatchSet.getPatchSet(fullChangeId, isCommentEvent);
+    public String getPatchSet(GerritChange change) throws Exception {
+        return gerritClientPatchSet.getPatchSet(change);
     }
 
     public boolean getForcedReview() {
@@ -55,8 +54,8 @@ public class GerritClientFacade {
         gerritClientReview.setReview(fullChangeId, reviewBatches, reviewScore);
     }
 
-    public boolean retrieveLastComments(String fullChangeId, Event event) {
-        return gerritClientComments.retrieveLastComments(event, fullChangeId);
+    public boolean retrieveLastComments(GerritChange change) {
+        return gerritClientComments.retrieveLastComments(change);
     }
 
     public String getUserRequests() {

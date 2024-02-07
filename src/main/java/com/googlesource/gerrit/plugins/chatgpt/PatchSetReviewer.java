@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.client.*;
 import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClientDetail;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptReplyItem;
@@ -30,8 +31,6 @@ public class PatchSetReviewer {
     private List<ReviewBatch> reviewBatches;
     private List<GerritComment> commentProperties;
     private HashMap<String, FileDiffProcessed> fileDiffsProcessed;
-    @Setter
-    private boolean isCommentEvent;
 
     @Inject
     PatchSetReviewer(GerritClient gerritClient, ChatGptClient chatGptClient) {
@@ -39,33 +38,33 @@ public class PatchSetReviewer {
         this.chatGptClient = chatGptClient;
     }
 
-    public void review(Configuration config, String fullChangeId) throws Exception {
+    public void review(Configuration config, GerritChange change) throws Exception {
         reviewBatches = new ArrayList<>();
-        commentProperties = gerritClient.getCommentProperties(fullChangeId);
-        String patchSet = gerritClient.getPatchSet(fullChangeId, isCommentEvent);
+        commentProperties = gerritClient.getCommentProperties(change);
+        String patchSet = gerritClient.getPatchSet(change);
         if (patchSet.isEmpty()) {
             log.info("No file to review has been found in the PatchSet");
             return;
         }
-        updateDynamicConfiguration(config, fullChangeId);
+        updateDynamicConfiguration(config, change);
 
-        String reviewReply = getReviewReply(config, fullChangeId, patchSet);
+        String reviewReply = getReviewReply(config, change, patchSet);
         log.debug("ChatGPT response: {}", reviewReply);
         ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
-        retrieveReviewFromJson(reviewJson, fullChangeId);
+        retrieveReviewFromJson(reviewJson, change);
 
-        gerritClient.setReview(fullChangeId, reviewBatches, reviewJson.getScore());
+        gerritClient.setReview(change, reviewBatches, reviewJson.getScore());
     }
 
-    private void updateDynamicConfiguration(Configuration config, String fullChangeId) {
+    private void updateDynamicConfiguration(Configuration config, GerritChange change) {
         config.configureDynamically(Configuration.KEY_GPT_REQUEST_USER_PROMPT,
-                gerritClient.getUserRequests(fullChangeId));
+                gerritClient.getUserRequests(change));
         config.configureDynamically(Configuration.KEY_COMMENT_PROPERTIES_SIZE, commentProperties.size());
-        if (config.isVotingEnabled() && !isCommentEvent) {
+        if (config.isVotingEnabled() && !change.getIsCommentEvent()) {
             GerritClientDetail gerritClientDetail = new GerritClientDetail(config,
-                    gerritClient.getGptAccountId(fullChangeId));
+                    gerritClient.getGptAccountId(change));
             GerritPatchSetDetail.PermittedVotingRange permittedVotingRange = gerritClientDetail.getPermittedVotingRange(
-                    fullChangeId);
+                    change.getFullChangeId());
             if (permittedVotingRange != null) {
                 if (permittedVotingRange.getMin() > config.getVotingMinScore()) {
                     log.debug("Minimum ChatGPT voting score set to {}", permittedVotingRange.getMin());
@@ -123,11 +122,11 @@ public class PatchSetReviewer {
         return gerritCommentRange;
     }
 
-    private void retrieveReviewFromJson(ChatGptResponseContent reviewJson, String fullChangeId) {
-        fileDiffsProcessed = gerritClient.getFileDiffsProcessed(fullChangeId);
+    private void retrieveReviewFromJson(ChatGptResponseContent reviewJson, GerritChange change) {
+        fileDiffsProcessed = gerritClient.getFileDiffsProcessed(change);
         for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
             ReviewBatch batchMap = new ReviewBatch();
-            if (isCommentEvent && replyItem.getId() != null) {
+            if (change.getIsCommentEvent() && replyItem.getId() != null) {
                 addReviewBatch(replyItem.getId(), replyItem.getReply());
             }
             else {
@@ -145,13 +144,13 @@ public class PatchSetReviewer {
         log.debug("fileDiffsProcessed Keys: {}", fileDiffsProcessed.keySet());
     }
 
-    private String getReviewReply(Configuration config, String changeId, String patchSet) throws Exception {
+    private String getReviewReply(Configuration config, GerritChange change, String patchSet) throws Exception {
         List<String> patchLines = Arrays.asList(patchSet.split("\n"));
         if (patchLines.size() > config.getMaxReviewLines()) {
-            log.warn("Patch set too large. Skipping review. changeId: {}", changeId);
+            log.warn("Patch set too large. Skipping review. changeId: {}", change.getFullChangeId());
             return String.format(SPLIT_REVIEW_MSG, config.getMaxReviewLines());
         }
-        return chatGptClient.ask(config, changeId, patchSet, isCommentEvent);
+        return chatGptClient.ask(config, change, patchSet);
     }
 }
 
