@@ -181,7 +181,7 @@ public class EventListenerHandler {
         }
         boolean isCommentEvent = EVENT_COMMENT_MAP.get(eventType);
         if (isCommentEvent) {
-            if (!gerritClient.retrieveLastComments(event, fullChangeId)) {
+            if (!gerritClient.retrieveLastComments(fullChangeId, event)) {
                 if (gerritClient.getForcedReview(fullChangeId)) {
                     isCommentEvent = false;
                 }

@@ -11,27 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Singleton
 public class GerritClient {
-    private enum GerritClientType {
-        PATCH_SET,
-        COMMENTS,
-        REVIEW
-    }
-
-    private static final Map<GerritClientType, Class<?>> clientMap = Map.of(
-        GerritClientType.PATCH_SET, GerritClientPatchSet.class,
-        GerritClientType.COMMENTS, GerritClientComments.class,
-        GerritClientType.REVIEW, GerritClientReview.class
-    );
     private static final String DEFAULT_CHANGE_ID = "DEFAULT_CHANGE_ID";
-
-    private GerritClientPatchSet gerritClientPatchSet;
-    private GerritClientComments gerritClientComments;
-    private GerritClientReview gerritClientReview;
+    private static GerritClientFacade gerritClientFacade;
 
     public void initialize(Configuration config) {
         initialize(config, DEFAULT_CHANGE_ID);
@@ -40,9 +25,7 @@ public class GerritClient {
     public void initialize(Configuration config, String fullChangeId) {
         log.debug("Initializing client instances for change: {}", fullChangeId);
         config.resetDynamicConfiguration();
-        for (GerritClientType clientTypes : clientMap.keySet()) {
-            updateGerritClient(clientTypes, fullChangeId, config);
-        }
+        gerritClientFacade = SingletonManager.getInstance(GerritClientFacade.class, fullChangeId, config);
     }
 
     public String getPatchSet(String fullChangeId) throws Exception {
@@ -50,79 +33,64 @@ public class GerritClient {
     }
 
     public String getPatchSet(String fullChangeId, boolean isCommentEvent) throws Exception {
-        updateGerritClient(GerritClientType.PATCH_SET, fullChangeId);
-        return gerritClientPatchSet.getPatchSet(fullChangeId, isCommentEvent);
+        updateGerritClientFacade(fullChangeId);
+        return gerritClientFacade.getPatchSet(fullChangeId, isCommentEvent);
     }
 
     public boolean getForcedReview(String fullChangeId) {
-        updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
-        return gerritClientComments.getForcedReview();
+        updateGerritClientFacade(fullChangeId);
+        return gerritClientFacade.getForcedReview();
     }
 
     public boolean isDisabledUser(String authorUsername) {
-        return gerritClientPatchSet.isDisabledUser(authorUsername);
+        return gerritClientFacade.isDisabledUser(authorUsername);
     }
 
     public boolean isDisabledTopic(String topic) {
-        return gerritClientPatchSet.isDisabledTopic(topic);
+        return gerritClientFacade.isDisabledTopic(topic);
     }
 
     public HashMap<String, FileDiffProcessed> getFileDiffsProcessed(String fullChangeId) {
-        updateGerritClient(GerritClientType.PATCH_SET, fullChangeId);
-        return gerritClientPatchSet.getFileDiffsProcessed();
+        updateGerritClientFacade(fullChangeId);
+        return gerritClientFacade.getFileDiffsProcessed();
     }
 
     public Integer getGptAccountId(String fullChangeId) {
-        updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
-        return gerritClientComments.getGptAccountId();
+        updateGerritClientFacade(fullChangeId);
+        return gerritClientFacade.getGptAccountId();
     }
 
     public List<GerritComment> getCommentProperties(String fullChangeId) {
-        updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
-        return gerritClientComments.getCommentProperties();
+        updateGerritClientFacade(fullChangeId);
+        return gerritClientFacade.getCommentProperties();
     }
 
     public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches, Integer reviewScore) throws Exception {
-        updateGerritClient(GerritClientType.REVIEW, fullChangeId);
-        gerritClientReview.setReview(fullChangeId, reviewBatches, reviewScore);
+        updateGerritClientFacade(fullChangeId);
+        gerritClientFacade.setReview(fullChangeId, reviewBatches, reviewScore);
     }
 
     public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
         setReview(fullChangeId, reviewBatches, null);
     }
 
-    public boolean retrieveLastComments(Event event, String fullChangeId) {
-        updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
-        return gerritClientComments.retrieveLastComments(event, fullChangeId);
+    public boolean retrieveLastComments(String fullChangeId, Event event) {
+        updateGerritClientFacade(fullChangeId);
+        return gerritClientFacade.retrieveLastComments(fullChangeId, event);
     }
 
     public String getUserRequests(String fullChangeId) {
-        updateGerritClient(GerritClientType.COMMENTS, fullChangeId);
-        updateGerritClient(GerritClientType.PATCH_SET, fullChangeId);
-        HashMap<String, FileDiffProcessed> fileDiffsProcessed = gerritClientPatchSet.getFileDiffsProcessed();
-        return gerritClientComments.getUserRequests(fileDiffsProcessed);
+        updateGerritClientFacade(fullChangeId);
+        return gerritClientFacade.getUserRequests();
     }
 
     public void destroy(String fullChangeId) {
-        log.debug("Destroying client instances for change: {}", fullChangeId);
-        for (Map.Entry<GerritClientType, Class<?>> client : clientMap.entrySet()) {
-            SingletonManager.removeInstance(client.getValue(), fullChangeId);
-        }
+        log.debug("Destroying GerritClientFacade instance for change: {}", fullChangeId);
+        SingletonManager.removeInstance(GerritClientFacade.class, fullChangeId);
     }
 
-    private void updateGerritClient(GerritClientType clientType, String fullChangeId, Object... constructorArgs) {
-        Object clientInstance = SingletonManager.getInstance(clientMap.get(clientType), fullChangeId, constructorArgs);
-        switch (clientType) {
-            case PATCH_SET:
-                gerritClientPatchSet = (GerritClientPatchSet) clientInstance;
-                break;
-            case COMMENTS:
-                gerritClientComments = (GerritClientComments) clientInstance;
-                break;
-            case REVIEW:
-                gerritClientReview = (GerritClientReview) clientInstance;
-                break;
-        }
+    private void updateGerritClientFacade(String fullChangeId) {
+        gerritClientFacade = SingletonManager.getInstance(GerritClientFacade.class, fullChangeId);
     }
 
 }
