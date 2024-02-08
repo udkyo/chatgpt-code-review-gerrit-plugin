@@ -4,12 +4,14 @@ import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
+import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.client.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptRequest;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptRequestItem;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,18 +27,17 @@ import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.getTimeS
 public class GerritClientComments extends GerritClientAccount {
     private static final String ROLE_USER = "user";
     private static final String ROLE_ASSISTANT = "assistant";
-    private static final Pattern REVIEW_LAST_COMMAND_PATTERN = Pattern.compile("/review_last\\b");
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
 
     private final Gson gson = new Gson();
     @Getter
     private final Integer gptAccountId;
     private final HashMap<String, GerritComment> commentMap;
+
+    private ClientCommands clientCommands;
     private String authorUsername;
     @Getter
     private List<GerritComment> commentProperties;
-    @Getter
-    private Boolean forcedReview;
 
     public GerritClientComments(Configuration config) {
         super(config);
@@ -47,7 +48,7 @@ public class GerritClientComments extends GerritClientAccount {
     }
 
     public boolean retrieveLastComments(GerritChange change) {
-        forcedReview = false;
+        clientCommands = SingletonManager.getNewInstance(ClientCommands.class, change);
         CommentAddedEvent commentAddedEvent = (CommentAddedEvent) change.getEvent();
         authorUsername = commentAddedEvent.author.get().username;
         log.debug("Found comments by '{}' on {}", authorUsername, change.getEventTimeStamp());
@@ -128,11 +129,6 @@ public class GerritClientComments extends GerritClientAccount {
         return true;
     }
 
-    private boolean isForcingReview(String comment) {
-        Matcher reviewCommandMatcher = REVIEW_LAST_COMMAND_PATTERN.matcher(comment);
-        return reviewCommandMatcher.find();
-    }
-
     private void addAllComments(GerritChange change) {
         try {
             List<GerritComment> latestComments = getLastComments(change);
@@ -141,9 +137,7 @@ public class GerritClientComments extends GerritClientAccount {
             }
             for (GerritComment latestComment : latestComments) {
                 String commentMessage = latestComment.getMessage();
-                if (isForcingReview(commentMessage)) {
-                    log.debug("Forced review command detected in message {}", commentMessage);
-                    forcedReview = true;
+                if (clientCommands.parseCommands(commentMessage)) {
                     commentProperties.clear();
                     return;
                 }

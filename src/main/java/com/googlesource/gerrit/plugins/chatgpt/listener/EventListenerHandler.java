@@ -10,7 +10,9 @@ import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.PatchSetReviewer;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,8 +56,8 @@ public class EventListenerHandler {
         GerritChange change = new GerritChange(event);
         gerritClient.initialize(config, change);
 
-        if (!preprocessEvent(change)) {
-            gerritClient.destroy(change);
+        if (!preProcessEvent(change)) {
+            postProcessEvent(change);
             return;
         }
 
@@ -71,7 +73,7 @@ public class EventListenerHandler {
                     Thread.currentThread().interrupt();
                 }
             } finally {
-                gerritClient.destroy(change);
+                postProcessEvent(change);
             }
         }, executorService);
     }
@@ -144,7 +146,12 @@ public class EventListenerHandler {
         return true;
     }
 
-    private boolean preprocessEvent(GerritChange change) {
+    private boolean isForcedReview(GerritChange change) {
+        ClientCommands clientCommands = SingletonManager.getInstance(ClientCommands.class, change);
+        return clientCommands.getForcedReview();
+    }
+
+    private boolean preProcessEvent(GerritChange change) {
         String eventType = Optional.ofNullable(change.getEventType()).orElse("");
         log.info("Event type {}", eventType);
         if (!EVENT_COMMENT_MAP.containsKey(eventType) ) {
@@ -157,7 +164,7 @@ public class EventListenerHandler {
         boolean isCommentEvent = EVENT_COMMENT_MAP.get(eventType);
         if (isCommentEvent) {
             if (!gerritClient.retrieveLastComments(change)) {
-                if (gerritClient.getForcedReview(change)) {
+                if (isForcedReview(change)) {
                     isCommentEvent = false;
                 }
                 else {
@@ -176,6 +183,11 @@ public class EventListenerHandler {
         change.setIsCommentEvent(isCommentEvent);
 
         return true;
+    }
+
+    private void postProcessEvent(GerritChange change) {
+        gerritClient.destroy(change);
+        ClientCommands.destroy(change);
     }
 
 }

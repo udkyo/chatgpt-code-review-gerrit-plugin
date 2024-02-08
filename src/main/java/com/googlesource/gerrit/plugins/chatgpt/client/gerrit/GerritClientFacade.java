@@ -26,10 +26,6 @@ public class GerritClientFacade {
         return gerritClientPatchSet.getPatchSet(change);
     }
 
-    public boolean getForcedReview() {
-        return gerritClientComments.getForcedReview();
-    }
-
     public boolean isDisabledUser(String authorUsername) {
         return gerritClientPatchSet.isDisabledUser(authorUsername);
     }

@@ -163,8 +163,9 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 
 ## Commands
 
-The `/review_last` command, when used in a comment directed at ChatGPT on any Change, triggers a review of the last
-Patch Set of the Change.
+- `/review`: when used in a comment directed at ChatGPT on any Change Set, triggers a review of the full Change Set.
+- `/review_last`: when used in a comment directed at ChatGPT on any Change Set, triggers a review of the last Patch Set
+  of the Change Set.
 
 ## Testing
 

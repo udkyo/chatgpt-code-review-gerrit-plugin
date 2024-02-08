@@ -5,10 +5,12 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
+import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.OutputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
@@ -28,7 +30,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
     }
 
     public String getPatchSet(GerritChange change) throws Exception {
-        int revisionBase = change.getIsCommentEvent() ? 0 : retrieveRevisionBase(change.getFullChangeId());
+        int revisionBase = retrieveRevisionBase(change);
         log.debug("Revision base: {}", revisionBase);
 
         List<String> files = getAffectedFiles(change.getFullChangeId(), revisionBase);
@@ -40,9 +42,17 @@ public class GerritClientPatchSet extends GerritClientAccount {
         return fileDiffsJson;
     }
 
-    private int retrieveRevisionBase(String fullChangeId) throws Exception {
+    private boolean isChangeSetBased(GerritChange change) {
+        ClientCommands clientCommands = SingletonManager.getInstance(ClientCommands.class, change);
+        return change.getIsCommentEvent() || clientCommands.getForcedReviewChangeSet();
+    }
+
+    private int retrieveRevisionBase(GerritChange change) throws Exception {
+        if (isChangeSetBased(change)) {
+            return 0;
+        }
         URI uri = URI.create(config.getGerritAuthBaseUrl()
-                + UriResourceLocator.gerritPatchSetRevisionsUri(fullChangeId));
+                + UriResourceLocator.gerritPatchSetRevisionsUri(change.getFullChangeId()));
         log.debug("Retrieve Revision URI: '{}'", uri);
         JsonObject reviews = forwardGetRequestReturnJsonObject(uri);
         try {
@@ -50,7 +60,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
             return revisions.size() -1;
         }
         catch (Exception e) {
-            log.error("Could not retrieve revisions for PatchSet with fullChangeId: {}", fullChangeId, e);
+            log.error("Could not retrieve revisions for PatchSet with fullChangeId: {}", change.getFullChangeId(), e);
             throw e;
         }
     }

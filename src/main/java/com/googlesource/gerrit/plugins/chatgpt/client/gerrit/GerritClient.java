@@ -24,7 +24,7 @@ public class GerritClient {
     public void initialize(Configuration config, GerritChange change) {
         log.debug("Initializing client instances for change: {}", change.getFullChangeId());
         config.resetDynamicConfiguration();
-        gerritClientFacade = SingletonManager.getInstance(GerritClientFacade.class, change.getFullChangeId(), config);
+        gerritClientFacade = SingletonManager.getInstance(GerritClientFacade.class, change, config);
     }
 
     public String getPatchSet(String fullChangeId) throws Exception {
@@ -34,11 +34,6 @@ public class GerritClient {
     public String getPatchSet(GerritChange change) throws Exception {
         updateGerritClientFacade(change);
         return gerritClientFacade.getPatchSet(change);
-    }
-
-    public boolean getForcedReview(GerritChange change) {
-        updateGerritClientFacade(change);
-        return gerritClientFacade.getForcedReview();
     }
 
     public boolean isDisabledUser(String authorUsername) {
@@ -89,7 +84,7 @@ public class GerritClient {
     }
 
     private void updateGerritClientFacade(GerritChange change) {
-        gerritClientFacade = SingletonManager.getInstance(GerritClientFacade.class, change.getFullChangeId());
+        gerritClientFacade = SingletonManager.getInstance(GerritClientFacade.class, change);
     }
 
 }
