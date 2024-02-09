@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.List;
 
 @Slf4j
-public class GerritClientDetail extends GerritClientAccount {
+public class GerritClientDetail extends GerritClientBase {
     private final Integer gptAccountId;
 
     public GerritClientDetail(Configuration config, Integer gptAccountId) {

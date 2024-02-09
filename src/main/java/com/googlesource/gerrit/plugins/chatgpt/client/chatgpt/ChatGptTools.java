@@ -1,6 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.chatgpt;
 
-import com.google.gson.Gson;
+import com.googlesource.gerrit.plugins.chatgpt.client.ClientBase;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptRequest;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
@@ -8,14 +8,11 @@ import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-class ChatGptTools {
-
-    private final Gson gson = new Gson();
-    private final Configuration config;
+class ChatGptTools extends ClientBase {
     private final boolean isCommentEvent;
 
     public ChatGptTools(Configuration config, Boolean isCommentEvent) {
-        this.config = config;
+        super(config);
         this.isCommentEvent = isCommentEvent;
     }
 
