@@ -2,36 +2,30 @@ package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gson.reflect.TypeToken;
-import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.client.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptRequest;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptRequestItem;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.getTimeStamp;
 
 @Slf4j
 public class GerritClientComments extends GerritClientAccount {
-    private static final String ROLE_USER = "user";
-    private static final String ROLE_ASSISTANT = "assistant";
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
 
     private final HashMap<String, GerritComment> commentMap;
 
-    private Integer gptAccountId;
+    private GerritMessage gerritMessage;
+    private GerritMessageHistory gerritMessageHistory;
     private String authorUsername;
     @Getter
     private List<GerritComment> commentProperties;
@@ -43,6 +37,7 @@ public class GerritClientComments extends GerritClientAccount {
     }
 
     public boolean retrieveLastComments(GerritChange change) {
+        gerritMessage = new GerritMessage(config);
         CommentAddedEvent commentAddedEvent = (CommentAddedEvent) change.getEvent();
         authorUsername = commentAddedEvent.author.get().username;
         log.debug("Found comments by '{}' on {}", authorUsername, change.getEventTimeStamp());
@@ -61,9 +56,8 @@ public class GerritClientComments extends GerritClientAccount {
 
 
     public String getUserRequests(GerritChange change, HashMap<String, FileDiffProcessed> fileDiffsProcessed) {
+        gerritMessageHistory = new GerritMessageHistory(config, change, commentMap);
         this.fileDiffsProcessed = fileDiffsProcessed;
-        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, change);
-        gptAccountId = dynamicSettings.getGptAccountId();
         List<ChatGptRequestItem> requestItems = new ArrayList<>();
         for (int i = 0; i < commentProperties.size(); i++) {
             requestItems.add(getRequestItem(i));
@@ -106,25 +100,6 @@ public class GerritClientComments extends GerritClientAccount {
         return latestComments.getOrDefault(latestChangeMessageId, null);
     }
 
-    private Pattern getBotMentionPattern() {
-        String escapedUserName = Pattern.quote(config.getGerritUserName());
-        String emailRegex = "@" + escapedUserName + "(?:@[A-Za-z0-9.-]+\\.[A-Za-z]{2,})?\\b";
-        return Pattern.compile(emailRegex);
-    }
-
-    private boolean isBotAddressed(String comment) {
-        log.info("Processing comment: {}", comment);
-
-        Matcher userMatcher = getBotMentionPattern().matcher(comment);
-        if (!userMatcher.find()) {
-            log.debug("Skipping action since the comment does not mention the ChatGPT bot." +
-                            " Expected bot name in comment: {}, Actual comment text: {}",
-                    config.getGerritUserName(), comment);
-            return false;
-        }
-        return true;
-    }
-
     private void addAllComments(GerritChange change) {
         try {
             List<GerritComment> latestComments = getLastComments(change);
@@ -137,46 +112,12 @@ public class GerritClientComments extends GerritClientAccount {
                     commentProperties.clear();
                     return;
                 }
-                if (isBotAddressed(commentMessage)) {
+                if (gerritMessage.isBotAddressed(commentMessage)) {
                     commentProperties.add(latestComment);
                 }
             }
         } catch (Exception e) {
             log.error("Error while retrieving comments for change: {}", change.getFullChangeId(), e);
-        }
-    }
-
-    private String getMessageWithoutMentions(GerritComment commentProperty) {
-        String commentMessage = commentProperty.getMessage();
-        return commentMessage.replaceAll(getBotMentionPattern().pattern(), "").trim();
-    }
-
-    private String getRoleFromComment(GerritComment currentComment) {
-        return currentComment.getAuthor().getAccountId() == gptAccountId ? ROLE_ASSISTANT : ROLE_USER;
-    }
-
-    private String retrieveMessageHistory(GerritComment currentComment) {
-        List<ChatGptRequest.Message> messageHistory = new ArrayList<>();
-        while (currentComment != null) {
-            ChatGptRequest.Message message = ChatGptRequest.Message.builder()
-                    .role(getRoleFromComment(currentComment))
-                    .content(getMessageWithoutMentions(currentComment))
-                    .build();
-            messageHistory.add(message);
-            currentComment = commentMap.get(currentComment.getInReplyTo());
-        }
-        // Reverse the history sequence so that the oldest message appears first and the newest message is last
-        Collections.reverse(messageHistory);
-
-        return gson.toJson(messageHistory);
-    }
-
-    private String retrieveCommentMessage(GerritComment commentProperty) {
-        if (commentProperty.getInReplyTo() != null) {
-            return retrieveMessageHistory(commentProperty);
-        }
-        else {
-            return getMessageWithoutMentions(commentProperty);
         }
     }
 
@@ -191,7 +132,7 @@ public class GerritClientComments extends GerritClientAccount {
             requestItem.setLineNumber(commentProperty.getLine());
             requestItem.setCodeSnippet(inlineCode.getInlineCode(commentProperty));
         }
-        requestItem.setRequest(retrieveCommentMessage(commentProperty));
+        requestItem.setRequest(gerritMessageHistory.retrieveCommentMessage(commentProperty));
 
         return requestItem;
     }
