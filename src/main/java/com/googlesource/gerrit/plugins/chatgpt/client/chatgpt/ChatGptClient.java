@@ -38,7 +38,7 @@ public class ChatGptClient {
 
     public String ask(Configuration config, String changeId, String patchSet) throws Exception {
         for (int attemptInd = 0; attemptInd < REVIEW_ATTEMPT_LIMIT; attemptInd++) {
-            HttpRequest request = createRequest(config, patchSet);
+            HttpRequest request = createRequest(config, changeId, patchSet);
             log.debug("ChatGPT request: {}", request.toString());
 
             HttpResponse<String> response = httpClientWithRetry.execute(request);
@@ -99,10 +99,10 @@ public class ChatGptClient {
         return toolCalls.get(0).getFunction().getArguments();
     }
 
-    private HttpRequest createRequest(Configuration config, String patchSet) {
+    private HttpRequest createRequest(Configuration config, String changeId, String patchSet) {
         URI uri = URI.create(URI.create(config.getGptDomain()) + UriResourceLocator.chatCompletionsUri());
         log.debug("ChatGPT request URI: {}", uri);
-        requestBody = createRequestBody(config, patchSet);
+        requestBody = createRequestBody(config, changeId, patchSet);
         log.debug("ChatGPT request body: {}", requestBody);
 
         return HttpRequest.newBuilder()
@@ -113,14 +113,14 @@ public class ChatGptClient {
                 .build();
     }
 
-    private String createRequestBody(Configuration config, String patchSet) {
+    private String createRequestBody(Configuration config, String changeId, String patchSet) {
         ChatGptRequest.Message systemMessage = ChatGptRequest.Message.builder()
                 .role("system")
                 .content(config.getGptSystemPrompt())
                 .build();
         ChatGptRequest.Message userMessage = ChatGptRequest.Message.builder()
                 .role("user")
-                .content(config.getGptUserPrompt(patchSet))
+                .content(config.getGptUserPrompt(patchSet, changeId))
                 .build();
 
         List<ChatGptRequest.Message> messages = List.of(systemMessage, userMessage);

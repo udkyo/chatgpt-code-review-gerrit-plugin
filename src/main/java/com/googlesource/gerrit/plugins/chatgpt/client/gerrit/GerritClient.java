@@ -23,7 +23,6 @@ public class GerritClient {
 
     public void initialize(Configuration config, GerritChange change) {
         log.debug("Initializing client instances for change: {}", change.getFullChangeId());
-        config.resetDynamicConfiguration();
         gerritClientFacade = SingletonManager.getInstance(GerritClientFacade.class, change, config);
     }
 
@@ -49,9 +48,9 @@ public class GerritClient {
         return gerritClientFacade.getFileDiffsProcessed();
     }
 
-    public Integer getGptAccountId(GerritChange change) {
+    public Integer getNotNullAccountId(GerritChange change, String authorUsername) {
         updateGerritClientFacade(change);
-        return gerritClientFacade.getGptAccountId();
+        return gerritClientFacade.getNotNullAccountId(authorUsername);
     }
 
     public List<GerritComment> getCommentProperties(GerritChange change) {
@@ -75,7 +74,7 @@ public class GerritClient {
 
     public String getUserRequests(GerritChange change) {
         updateGerritClientFacade(change);
-        return gerritClientFacade.getUserRequests();
+        return gerritClientFacade.getUserRequests(change);
     }
 
     public void destroy(GerritChange change) {

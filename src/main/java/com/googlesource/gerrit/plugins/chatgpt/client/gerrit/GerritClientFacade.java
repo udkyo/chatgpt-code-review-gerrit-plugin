@@ -16,7 +16,6 @@ public class GerritClientFacade {
     private final GerritClientReview gerritClientReview;
 
     public GerritClientFacade(Configuration config) {
-        config.resetDynamicConfiguration();
         gerritClientPatchSet = new GerritClientPatchSet(config);
         gerritClientComments = new GerritClientComments(config);
         gerritClientReview = new GerritClientReview(config);
@@ -38,8 +37,8 @@ public class GerritClientFacade {
         return gerritClientPatchSet.getFileDiffsProcessed();
     }
 
-    public Integer getGptAccountId() {
-        return gerritClientComments.getGptAccountId();
+    public Integer getNotNullAccountId(String authorUsername) {
+        return gerritClientPatchSet.getNotNullAccountId(authorUsername);
     }
 
     public List<GerritComment> getCommentProperties() {
@@ -54,9 +53,9 @@ public class GerritClientFacade {
         return gerritClientComments.retrieveLastComments(change);
     }
 
-    public String getUserRequests() {
+    public String getUserRequests(GerritChange change) {
         HashMap<String, FileDiffProcessed> fileDiffsProcessed = gerritClientPatchSet.getFileDiffsProcessed();
-        return gerritClientComments.getUserRequests(fileDiffsProcessed);
+        return gerritClientComments.getUserRequests(change, fileDiffsProcessed);
     }
 
 }

@@ -14,7 +14,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRan
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import lombok.Setter;
+import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -46,7 +46,7 @@ public class PatchSetReviewer {
             log.info("No file to review has been found in the PatchSet");
             return;
         }
-        updateDynamicConfiguration(config, change);
+        updateDynamicSettings(config, change);
 
         String reviewReply = getReviewReply(config, change, patchSet);
         log.debug("ChatGPT response: {}", reviewReply);
@@ -56,23 +56,23 @@ public class PatchSetReviewer {
         gerritClient.setReview(change, reviewBatches, reviewJson.getScore());
     }
 
-    private void updateDynamicConfiguration(Configuration config, GerritChange change) {
-        config.configureDynamically(Configuration.KEY_GPT_REQUEST_USER_PROMPT,
-                gerritClient.getUserRequests(change));
-        config.configureDynamically(Configuration.KEY_COMMENT_PROPERTIES_SIZE, commentProperties.size());
+    private void updateDynamicSettings(Configuration config, GerritChange change) {
+        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, change);
+
+        dynamicSettings.setCommentPropertiesSize(commentProperties.size());
+        dynamicSettings.setGptRequestUserPrompt(gerritClient.getUserRequests(change));
         if (config.isVotingEnabled() && !change.getIsCommentEvent()) {
-            GerritClientDetail gerritClientDetail = new GerritClientDetail(config,
-                    gerritClient.getGptAccountId(change));
+            GerritClientDetail gerritClientDetail = new GerritClientDetail(config, dynamicSettings.getGptAccountId());
             GerritPatchSetDetail.PermittedVotingRange permittedVotingRange = gerritClientDetail.getPermittedVotingRange(
                     change.getFullChangeId());
             if (permittedVotingRange != null) {
                 if (permittedVotingRange.getMin() > config.getVotingMinScore()) {
                     log.debug("Minimum ChatGPT voting score set to {}", permittedVotingRange.getMin());
-                    config.configureDynamically(Configuration.KEY_VOTING_MIN_SCORE, permittedVotingRange.getMin());
+                    dynamicSettings.setVotingMinScore(permittedVotingRange.getMin());
                 }
                 if (permittedVotingRange.getMax() < config.getVotingMaxScore()) {
                     log.debug("Maximum ChatGPT voting score set to {}", permittedVotingRange.getMax());
-                    config.configureDynamically(Configuration.KEY_VOTING_MAX_SCORE, permittedVotingRange.getMax());
+                    dynamicSettings.setVotingMaxScore(permittedVotingRange.getMax());
                 }
             }
         }

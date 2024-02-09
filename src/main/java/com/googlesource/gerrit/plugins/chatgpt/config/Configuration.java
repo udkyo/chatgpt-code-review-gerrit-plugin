@@ -1,10 +1,11 @@
 package com.googlesource.gerrit.plugins.chatgpt.config;
 
-import com.google.common.collect.Maps;
 import com.google.gerrit.server.config.PluginConfig;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
+import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -75,8 +76,6 @@ public class Configuration {
 
     // Config setting keys
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
-    public static final String KEY_GPT_REQUEST_USER_PROMPT = "gptRequestUserPrompt";
-    public static final String KEY_COMMENT_PROPERTIES_SIZE = "commentPropertiesSize";
     public static final String KEY_VOTING_MIN_SCORE = "votingMinScore";
     public static final String KEY_VOTING_MAX_SCORE = "votingMaxScore";
     private static final String KEY_GPT_TOKEN = "gptToken";
@@ -117,7 +116,6 @@ public class Configuration {
     public static String DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT;
     public static String DEFAULT_GPT_VOTING_REVIEW_USER_PROMPT;
 
-    private final Map<String, Object> configsDynamically = Maps.newHashMap();
     private final PluginConfig globalConfig;
     private final PluginConfig projectConfig;
 
@@ -135,21 +133,11 @@ public class Configuration {
         return DEFAULT_GPT_JSON_USER_PROMPT + DOT_SPACE + DEFAULT_GPT_JSON_USER_PROMPT_2;
     }
 
-    public String getCommentRequestUserPrompt() {
+    public String getCommentRequestUserPrompt(int commentPropertiesSize) {
         return DEFAULT_GPT_JSON_USER_PROMPT + SPACE +
                 DEFAULT_GPT_REQUEST_JSON_USER_PROMPT + DOT_SPACE +
                 DEFAULT_GPT_JSON_USER_PROMPT_2 + SPACE +
-                String.format(DEFAULT_GPT_JSON_USER_PROMPT_ENFORCE_RESPONSE_CHECK,
-                    configsDynamically.get(KEY_COMMENT_PROPERTIES_SIZE));
-    }
-
-    public void resetDynamicConfiguration() {
-        configsDynamically.clear();
-        log.debug("configsDynamically initialized: {}", configsDynamically);
-    }
-
-    public <T> void configureDynamically(String key, T value) {
-        configsDynamically.put(key, value);
+                String.format(DEFAULT_GPT_JSON_USER_PROMPT_ENFORCE_RESPONSE_CHECK, commentPropertiesSize);
     }
 
     public String getGptToken() {
@@ -181,9 +169,10 @@ public class Configuration {
                 DEFAULT_GPT_SYSTEM_PROMPT_INSTRUCTIONS;
     }
 
-    public String getGptUserPrompt(String patchSet) {
+    public String getGptUserPrompt(String patchSet, String changeId) {
         List<String> prompt = new ArrayList<>();
-        String gptRequestUserPrompt = configsDynamically.get(KEY_GPT_REQUEST_USER_PROMPT).toString();
+        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, changeId);
+        String gptRequestUserPrompt = dynamicSettings.getGptRequestUserPrompt();
         if (gptRequestUserPrompt != null && !gptRequestUserPrompt.isEmpty()) {
             log.debug("ConfigsDynamically value found: {}", gptRequestUserPrompt);
             prompt.addAll(Arrays.asList(
@@ -191,7 +180,7 @@ public class Configuration {
                     patchSet,
                     DEFAULT_GPT_REQUEST_USER_PROMPT_2,
                     gptRequestUserPrompt,
-                    getCommentRequestUserPrompt()
+                    getCommentRequestUserPrompt(dynamicSettings.getCommentPropertiesSize())
             ));
         }
         else {

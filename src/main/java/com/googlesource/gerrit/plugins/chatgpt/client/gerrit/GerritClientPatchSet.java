@@ -4,8 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
-import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.OutputFileDiff;
@@ -43,8 +43,8 @@ public class GerritClientPatchSet extends GerritClientAccount {
     }
 
     private boolean isChangeSetBased(GerritChange change) {
-        ClientCommands clientCommands = SingletonManager.getInstance(ClientCommands.class, change);
-        return change.getIsCommentEvent() || clientCommands.getForcedReviewChangeSet();
+        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, change);
+        return change.getIsCommentEvent() || dynamicSettings.getForcedReviewChangeSet();
     }
 
     private int retrieveRevisionBase(GerritChange change) throws Exception {

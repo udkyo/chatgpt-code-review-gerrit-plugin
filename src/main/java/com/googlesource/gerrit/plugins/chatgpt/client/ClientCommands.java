@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
+import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -30,34 +31,22 @@ public class ClientCommands {
     private static final Pattern COMMAND_PATTERN = Pattern.compile("/(" + String.join("|",
             COMMAND_MAP.keySet()) + ")\\b");
 
-    private Boolean forcedReview;
-    private Boolean forcedReviewChangeSet;
-
-    public ClientCommands() {
-        forcedReview = false;
-        forcedReviewChangeSet = false;
-    }
-
-    public boolean parseCommands(String comment) {
+    public static boolean parseCommands(GerritChange change, String comment) {
+        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, change);
         Matcher reviewCommandMatcher = COMMAND_PATTERN.matcher(comment);
         if (reviewCommandMatcher.find()) {
             COMMAND_SET command = COMMAND_MAP.get(reviewCommandMatcher.group(1));
             if (REVIEW_COMMANDS.contains(command)) {
                 log.debug("Forced review command detected in message {}", comment);
-                forcedReview = true;
+                dynamicSettings.setForcedReview(true);
             }
             if (command == COMMAND_SET.REVIEW) {
                 log.debug("Forced review command applied to the whole Change Set");
-                forcedReviewChangeSet = true;
+                dynamicSettings.setForcedReviewChangeSet(true);
             }
             return true;
         }
         return false;
-    }
-
-    public static void destroy(GerritChange change) {
-        log.debug("Destroying GerritClientCommands instance for change: {}", change.getFullChangeId());
-        SingletonManager.removeInstance(ClientCommands.class, change.getFullChangeId());
     }
 
 }

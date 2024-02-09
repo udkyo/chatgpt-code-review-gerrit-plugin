@@ -3,6 +3,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.client.InlineCode;
@@ -30,11 +31,9 @@ public class GerritClientComments extends GerritClientAccount {
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
 
     private final Gson gson = new Gson();
-    @Getter
-    private final Integer gptAccountId;
     private final HashMap<String, GerritComment> commentMap;
 
-    private ClientCommands clientCommands;
+    private Integer gptAccountId;
     private String authorUsername;
     @Getter
     private List<GerritComment> commentProperties;
@@ -43,12 +42,9 @@ public class GerritClientComments extends GerritClientAccount {
         super(config);
         commentProperties = new ArrayList<>();
         commentMap = new HashMap<>();
-        gptAccountId = getAccountId(config.getGerritUserName()).orElseThrow(() -> new NoSuchElementException(
-                "Error retrieving ChatGPT account ID in Gerrit"));
     }
 
     public boolean retrieveLastComments(GerritChange change) {
-        clientCommands = SingletonManager.getNewInstance(ClientCommands.class, change);
         CommentAddedEvent commentAddedEvent = (CommentAddedEvent) change.getEvent();
         authorUsername = commentAddedEvent.author.get().username;
         log.debug("Found comments by '{}' on {}", authorUsername, change.getEventTimeStamp());
@@ -66,8 +62,10 @@ public class GerritClientComments extends GerritClientAccount {
     }
 
 
-    public String getUserRequests(HashMap<String, FileDiffProcessed> fileDiffsProcessed) {
+    public String getUserRequests(GerritChange change, HashMap<String, FileDiffProcessed> fileDiffsProcessed) {
         this.fileDiffsProcessed = fileDiffsProcessed;
+        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, change);
+        gptAccountId = dynamicSettings.getGptAccountId();
         List<ChatGptRequestItem> requestItems = new ArrayList<>();
         for (int i = 0; i < commentProperties.size(); i++) {
             requestItems.add(getRequestItem(i));
@@ -137,7 +135,7 @@ public class GerritClientComments extends GerritClientAccount {
             }
             for (GerritComment latestComment : latestComments) {
                 String commentMessage = latestComment.getMessage();
-                if (clientCommands.parseCommands(commentMessage)) {
+                if (ClientCommands.parseCommands(change, commentMessage)) {
                     commentProperties.clear();
                     return;
                 }

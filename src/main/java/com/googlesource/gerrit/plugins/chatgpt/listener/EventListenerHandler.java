@@ -7,10 +7,10 @@ import com.google.gerrit.server.data.ChangeAttribute;
 import com.google.gerrit.server.data.PatchSetAttribute;
 import com.google.gerrit.server.events.Event;
 import com.google.inject.Inject;
+import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.PatchSetReviewer;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
-import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.Getter;
@@ -40,6 +40,7 @@ public class EventListenerHandler {
             1, 1, 0L, TimeUnit.MILLISECONDS, queue, threadFactory, handler);
     private final GerritClient gerritClient;
     private Configuration config;
+    private DynamicSettings dynamicSettings;
     @Getter
     private CompletableFuture<Void> latestFuture;
 
@@ -55,6 +56,7 @@ public class EventListenerHandler {
         this.config = config;
         GerritChange change = new GerritChange(event);
         gerritClient.initialize(config, change);
+        dynamicSettings = createDynamicSettings(change);
 
         if (!preProcessEvent(change)) {
             postProcessEvent(change);
@@ -90,6 +92,13 @@ public class EventListenerHandler {
                 Thread.currentThread().interrupt();
             }
         }));
+    }
+
+    private DynamicSettings createDynamicSettings(GerritChange change) {
+        return SingletonManager.getNewInstance(DynamicSettings.class, change,
+                gerritClient.getNotNullAccountId(change, config.getGerritUserName()),
+                config.getVotingMinScore(),
+                config.getVotingMaxScore());
     }
 
     private Optional<String> getTopic(GerritChange change) {
@@ -146,11 +155,6 @@ public class EventListenerHandler {
         return true;
     }
 
-    private boolean isForcedReview(GerritChange change) {
-        ClientCommands clientCommands = SingletonManager.getInstance(ClientCommands.class, change);
-        return clientCommands.getForcedReview();
-    }
-
     private boolean preProcessEvent(GerritChange change) {
         String eventType = Optional.ofNullable(change.getEventType()).orElse("");
         log.info("Event type {}", eventType);
@@ -164,7 +168,7 @@ public class EventListenerHandler {
         boolean isCommentEvent = EVENT_COMMENT_MAP.get(eventType);
         if (isCommentEvent) {
             if (!gerritClient.retrieveLastComments(change)) {
-                if (isForcedReview(change)) {
+                if (dynamicSettings.getForcedReview()) {
                     isCommentEvent = false;
                 }
                 else {
@@ -187,7 +191,7 @@ public class EventListenerHandler {
 
     private void postProcessEvent(GerritChange change) {
         gerritClient.destroy(change);
-        ClientCommands.destroy(change);
+        DynamicSettings.destroy(change);
     }
 
 }

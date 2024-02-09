@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -46,6 +47,11 @@ public class GerritClientAccount extends GerritClientBase {
             log.error("Could not find account ID for username '{}'", authorUsername);
             return Optional.empty();
         }
+    }
+
+    protected Integer getNotNullAccountId(String authorUsername) {
+        return getAccountId(authorUsername).orElseThrow(() -> new NoSuchElementException(
+                String.format("Error retrieving '%s' account ID in Gerrit", authorUsername)));
     }
 
     private List<String> getAccountGroups(Integer accountId) {

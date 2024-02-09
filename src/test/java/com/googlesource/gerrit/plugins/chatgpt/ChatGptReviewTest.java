@@ -103,8 +103,8 @@ public class ChatGptReviewTest {
         initComparisonContent();
     }
 
-    private String getFullChangeId() {
-        return new GerritChange(PROJECT_NAME, BRANCH_NAME, CHANGE_ID).getFullChangeId();
+    private GerritChange getGerritChange() {
+        return new GerritChange(PROJECT_NAME, BRANCH_NAME, CHANGE_ID);
     }
 
     private void initConfig() {
@@ -141,7 +141,7 @@ public class ChatGptReviewTest {
 
     private void setupMockRequests() {
         Configuration config = new Configuration(globalConfig, projectConfig);
-        String fullChangeId = getFullChangeId();
+        String fullChangeId = getGerritChange().getFullChangeId();
 
         // Mock the behavior of the gerritAccountIdUri request
         WireMock.stubFor(WireMock.get(gerritAccountIdUri(GERRIT_GPT_USERNAME))
@@ -282,7 +282,7 @@ public class ChatGptReviewTest {
         future.get();
 
         RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(
-                WireMock.urlEqualTo(gerritSetReviewUri(getFullChangeId())));
+                WireMock.urlEqualTo(gerritSetReviewUri(getGerritChange().getFullChangeId())));
         List<LoggedRequest> loggedRequests = WireMock.findAll(requestPatternBuilder);
         Assert.assertEquals(1, loggedRequests.size());
         JsonObject gptRequestBody = gson.fromJson(chatGptClient.getRequestBody(), JsonObject.class);
@@ -329,7 +329,7 @@ public class ChatGptReviewTest {
         future.get();
 
         RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(
-                WireMock.urlEqualTo(gerritSetReviewUri(getFullChangeId())));
+                WireMock.urlEqualTo(gerritSetReviewUri(getGerritChange().getFullChangeId())));
         List<LoggedRequest> loggedRequests = WireMock.findAll(requestPatternBuilder);
         Assert.assertEquals(1, loggedRequests.size());
         JsonObject gptRequestBody = gson.fromJson(chatGptClient.getRequestBody(), JsonObject.class);
@@ -370,6 +370,7 @@ public class ChatGptReviewTest {
     @Test
     public void gptMentionedInComment() throws InterruptedException, NoSuchProjectException, ExecutionException {
         Configuration config = new Configuration(globalConfig, projectConfig);
+        GerritChange gerritChange = getGerritChange();
         GerritClient gerritClient = new GerritClient();
         ChatGptClient chatGptClient = new ChatGptClient();
         PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, chatGptClient);
@@ -395,6 +396,7 @@ public class ChatGptReviewTest {
 
         GerritListener gerritListener = new GerritListener(mockConfigCreator, eventListenerHandler);
         gerritListener.onEvent(event);
+        int commentPropertiesSize = gerritClient.getCommentProperties(gerritChange).size();
         CompletableFuture<Void> future = eventListenerHandler.getLatestFuture();
         future.get();
 
@@ -403,10 +405,10 @@ public class ChatGptReviewTest {
                 diffContent,
                 Configuration.DEFAULT_GPT_REQUEST_USER_PROMPT_2,
                 REVIEW_TAG_COMMENTS,
-                config.getCommentRequestUserPrompt()
+                config.getCommentRequestUserPrompt(commentPropertiesSize)
         ));
         RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(
-                WireMock.urlEqualTo(gerritSetReviewUri(getFullChangeId())));
+                WireMock.urlEqualTo(gerritSetReviewUri(gerritChange.getFullChangeId())));
         List<LoggedRequest> loggedRequests = WireMock.findAll(requestPatternBuilder);
         Assert.assertEquals(1, loggedRequests.size());
         JsonObject gptRequestBody = gson.fromJson(chatGptClient.getRequestBody(), JsonObject.class);
