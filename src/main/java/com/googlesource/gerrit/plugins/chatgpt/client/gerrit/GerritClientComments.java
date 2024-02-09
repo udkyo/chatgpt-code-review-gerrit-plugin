@@ -1,7 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.google.gerrit.server.events.CommentAddedEvent;
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
@@ -30,7 +29,6 @@ public class GerritClientComments extends GerritClientAccount {
     private static final String ROLE_ASSISTANT = "assistant";
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
 
-    private final Gson gson = new Gson();
     private final HashMap<String, GerritComment> commentMap;
 
     private Integer gptAccountId;

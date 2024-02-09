@@ -1,6 +1,5 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
-import com.google.gson.Gson;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPatchSetDetail;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
@@ -11,15 +10,12 @@ import java.util.List;
 
 @Slf4j
 public class GerritClientDetail extends GerritClientAccount {
-
-    private final Gson gson = new Gson();
     private final Integer gptAccountId;
 
     public GerritClientDetail(Configuration config, Integer gptAccountId) {
         super(config);
         this.gptAccountId = gptAccountId;
     }
-
 
     public GerritPatchSetDetail.PermittedVotingRange getPermittedVotingRange(String fullChangeId) {
         GerritPatchSetDetail gerritPatchSetDetail;

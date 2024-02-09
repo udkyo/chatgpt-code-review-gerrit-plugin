@@ -1,7 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.google.common.net.HttpHeaders;
-import com.google.gson.Gson;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
@@ -26,7 +25,6 @@ import static java.net.HttpURLConnection.HTTP_OK;
 public class GerritClientReview extends GerritClientAccount {
     private static final String BULLET_POINT = "* ";
 
-    private final Gson gson = new Gson();
     @Getter
     private List<GerritComment> commentProperties;
 
