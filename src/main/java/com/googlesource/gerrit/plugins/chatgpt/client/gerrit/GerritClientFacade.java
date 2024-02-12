@@ -3,6 +3,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPermittedVotingRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
@@ -11,14 +12,24 @@ import java.util.List;
 
 @Slf4j
 public class GerritClientFacade {
+    private final GerritClientDetail gerritClientDetail;
     private final GerritClientPatchSet gerritClientPatchSet;
     private final GerritClientComments gerritClientComments;
     private final GerritClientReview gerritClientReview;
 
     public GerritClientFacade(Configuration config) {
+        gerritClientDetail = new GerritClientDetail(config);
         gerritClientPatchSet = new GerritClientPatchSet(config);
         gerritClientComments = new GerritClientComments(config);
         gerritClientReview = new GerritClientReview(config);
+    }
+
+    public void loadClientDetail(GerritChange change, Integer gptAccountId) {
+        gerritClientDetail.loadClientDetail(change, gptAccountId);
+    }
+
+    public GerritPermittedVotingRange getPermittedVotingRange() {
+        return gerritClientDetail.getPermittedVotingRange();
     }
 
     public String getPatchSet(GerritChange change) throws Exception {

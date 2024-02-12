@@ -2,6 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPatchSetDetail;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPermittedVotingRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.extern.slf4j.Slf4j;
 
@@ -10,22 +11,24 @@ import java.util.List;
 
 @Slf4j
 public class GerritClientDetail extends GerritClientBase {
-    private final Integer gptAccountId;
+    private Integer gptAccountId;
+    private GerritPatchSetDetail gerritPatchSetDetail;
 
-    public GerritClientDetail(Configuration config, Integer gptAccountId) {
+    public GerritClientDetail(Configuration config) {
         super(config);
-        this.gptAccountId = gptAccountId;
     }
 
-    public GerritPatchSetDetail.PermittedVotingRange getPermittedVotingRange(String fullChangeId) {
-        GerritPatchSetDetail gerritPatchSetDetail;
+    public void loadClientDetail(GerritChange change, Integer gptAccountId) {
+        this.gptAccountId = gptAccountId;
         try {
-            gerritPatchSetDetail = getReviewDetail(fullChangeId);
+            gerritPatchSetDetail = getReviewDetail(change.getFullChangeId());
         }
         catch (Exception e) {
             log.debug("Error retrieving PatchSet details", e);
-            return null;
         }
+    }
+
+    public GerritPermittedVotingRange getPermittedVotingRange() {
         List<GerritPatchSetDetail.Permission> permissions = gerritPatchSetDetail.getLabels().getCodeReview().getAll();
         if (permissions == null) {
             log.debug("No limitations on the ChatGPT voting range were detected");

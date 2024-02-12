@@ -4,6 +4,7 @@ import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.client.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPermittedVotingRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,15 @@ public class GerritClient {
     public void initialize(Configuration config, GerritChange change) {
         log.debug("Initializing client instances for change: {}", change.getFullChangeId());
         gerritClientFacade = SingletonManager.getInstance(GerritClientFacade.class, change, config);
+    }
+
+    public void loadClientDetail(GerritChange change, Integer gptAccountId) {
+        gerritClientFacade.loadClientDetail(change, gptAccountId);
+    }
+
+    public GerritPermittedVotingRange getPermittedVotingRange(GerritChange change) {
+        updateGerritClientFacade(change);
+        return gerritClientFacade.getPermittedVotingRange();
     }
 
     public String getPatchSet(String fullChangeId) throws Exception {

@@ -52,14 +52,20 @@ public class EventListenerHandler {
         addShutdownHoot();
     }
 
+    public void initializeSingletons(GerritChange change) {
+        gerritClient.initialize(config, change);
+        Integer gptAccountId = gerritClient.getNotNullAccountId(change, config.getGerritUserName());
+        dynamicSettings = createDynamicSettings(change, gptAccountId);
+        gerritClient.loadClientDetail(change, gptAccountId);
+    }
+
     public void handleEvent(Configuration config, Event event) {
         this.config = config;
         GerritChange change = new GerritChange(event);
-        gerritClient.initialize(config, change);
-        dynamicSettings = createDynamicSettings(change);
+        initializeSingletons(change);
 
         if (!preProcessEvent(change)) {
-            postProcessEvent(change);
+            destroySingletons(change);
             return;
         }
 
@@ -75,7 +81,7 @@ public class EventListenerHandler {
                     Thread.currentThread().interrupt();
                 }
             } finally {
-                postProcessEvent(change);
+                destroySingletons(change);
             }
         }, executorService);
     }
@@ -94,9 +100,9 @@ public class EventListenerHandler {
         }));
     }
 
-    private DynamicSettings createDynamicSettings(GerritChange change) {
+    private DynamicSettings createDynamicSettings(GerritChange change, Integer gptAccountId) {
         return SingletonManager.getNewInstance(DynamicSettings.class, change,
-                gerritClient.getNotNullAccountId(change, config.getGerritUserName()),
+                gptAccountId,
                 config.getVotingMinScore(),
                 config.getVotingMaxScore());
     }
@@ -189,9 +195,9 @@ public class EventListenerHandler {
         return true;
     }
 
-    private void postProcessEvent(GerritChange change) {
+    private void destroySingletons(GerritChange change) {
         gerritClient.destroy(change);
-        DynamicSettings.destroy(change);
+        SingletonManager.removeInstance(DynamicSettings.class, change.getFullChangeId());
     }
 
 }

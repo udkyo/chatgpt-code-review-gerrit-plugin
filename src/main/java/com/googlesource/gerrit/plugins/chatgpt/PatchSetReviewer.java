@@ -6,13 +6,12 @@ import com.googlesource.gerrit.plugins.chatgpt.client.*;
 import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
-import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClientDetail;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptReplyItem;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptResponseContent;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPatchSetDetail;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRange;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPermittedVotingRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
@@ -62,9 +61,7 @@ public class PatchSetReviewer {
         dynamicSettings.setCommentPropertiesSize(commentProperties.size());
         dynamicSettings.setGptRequestUserPrompt(gerritClient.getUserRequests(change));
         if (config.isVotingEnabled() && !change.getIsCommentEvent()) {
-            GerritClientDetail gerritClientDetail = new GerritClientDetail(config, dynamicSettings.getGptAccountId());
-            GerritPatchSetDetail.PermittedVotingRange permittedVotingRange = gerritClientDetail.getPermittedVotingRange(
-                    change.getFullChangeId());
+            GerritPermittedVotingRange permittedVotingRange = gerritClient.getPermittedVotingRange(change);
             if (permittedVotingRange != null) {
                 if (permittedVotingRange.getMin() > config.getVotingMinScore()) {
                     log.debug("Minimum ChatGPT voting score set to {}", permittedVotingRange.getMin());

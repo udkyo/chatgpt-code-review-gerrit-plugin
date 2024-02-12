@@ -25,15 +25,9 @@ public class GerritPatchSetDetail {
         private Integer value;
         private String date;
         @SerializedName("permitted_voting_range")
-        private PermittedVotingRange permittedVotingRange;
+        private GerritPermittedVotingRange permittedVotingRange;
         @SerializedName("_account_id")
         private int accountId;
-    }
-
-    @Data
-    public static class PermittedVotingRange {
-        private int min;
-        private int max;
     }
 
 }
