@@ -99,11 +99,12 @@ public class PatchSetReviewer {
 
     private Optional<GerritCodeRange> getGerritCommentCodeRange(ChatGptReplyItem replyItem) {
         Optional<GerritCodeRange> gerritCommentRange = Optional.empty();
-        if (replyItem.getFilename() == null) {
+        String filename = replyItem.getFilename();
+        if (filename == null || filename.equals("/COMMIT_MSG")) {
             return gerritCommentRange;
         }
-        String filename = replyItem.getFilename();
-        if (filename.equals("/COMMIT_MSG")) {
+        if (replyItem.getCodeSnippet() == null) {
+            log.info("CodeSnippet is null in reply '{}'.", replyItem);
             return gerritCommentRange;
         }
         if (!fileDiffsProcessed.containsKey(filename)) {
