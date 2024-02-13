@@ -19,4 +19,9 @@ public class DynamicSettings {
     private Integer votingMaxScore;
     private Boolean forcedReview = false;
     private Boolean forcedReviewChangeSet = false;
+
+    public Boolean getForcedReviewLastPatchSet() {
+        return forcedReview && !forcedReviewChangeSet;
+    }
+
 }

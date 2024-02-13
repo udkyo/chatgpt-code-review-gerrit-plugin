@@ -163,9 +163,11 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 
 ## Commands
 
-- `/review`: when used in a comment directed at ChatGPT on any Change Set, triggers a review of the full Change Set.
+- `/review`: when used in a comment directed at ChatGPT on any Change Set, triggers a review of the full Change Set. A
+  vote is cast on the Change Set if the voting feature is enabled and the ChatGPT Gerrit user is authorized to vote on
+  it.
 - `/review_last`: when used in a comment directed at ChatGPT on any Change Set, triggers a review of the last Patch Set
-  of the Change Set.
+  of the Change Set. Unlike `/review`, this command does not result in casting or updating votes.
 
 ## Testing
 

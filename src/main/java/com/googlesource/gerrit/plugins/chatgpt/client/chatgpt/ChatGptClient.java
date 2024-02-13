@@ -124,7 +124,7 @@ public class ChatGptClient {
                 .build();
 
         List<ChatGptRequest.Message> messages = List.of(systemMessage, userMessage);
-        ChatGptRequest tools = chatGptTools.retrieveTools();
+        ChatGptRequest tools = chatGptTools.retrieveTools(changeId);
         ChatGptRequest chatGptRequest = ChatGptRequest.builder()
                 .model(config.getGptModel())
                 .messages(messages)
