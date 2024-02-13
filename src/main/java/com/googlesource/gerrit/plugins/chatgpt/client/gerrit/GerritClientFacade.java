@@ -66,7 +66,8 @@ public class GerritClientFacade {
 
     public String getUserRequests(GerritChange change) {
         HashMap<String, FileDiffProcessed> fileDiffsProcessed = gerritClientPatchSet.getFileDiffsProcessed();
-        return gerritClientComments.getUserRequests(change, fileDiffsProcessed);
+        List<GerritComment> detailComments = gerritClientDetail.getMessages();
+        return gerritClientComments.getUserRequests(change, fileDiffsProcessed, detailComments);
     }
 
 }

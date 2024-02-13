@@ -31,6 +31,22 @@
       "updated": "2023-11-06 11:47:51.000000000",
       "message": "@gpt comment 2",
       "commit_id": "f5433ac8b8650225de6d2912032689089e5d9f40"
+    },
+    {
+      "author": {
+        "_account_id": 1000001,
+        "name": "Test",
+        "display_name": "Test",
+        "email": "test@example.com",
+        "username": "test"
+      },
+      "change_message_id": "cdd9047ba969b9fce3c37b78c62e530e9f9b83bd",
+      "unresolved": false,
+      "patch_set": 1,
+      "id": "252493f6_3986f386",
+      "updated": "2024-02-13 07:52:17.000000000",
+      "message": "@gpt can you suggest an alternative commit message?",
+      "commit_id": "f5433ac8b8650225de6d2912032689089e5d9f40"
     }
   ],
   "test_file.py": [

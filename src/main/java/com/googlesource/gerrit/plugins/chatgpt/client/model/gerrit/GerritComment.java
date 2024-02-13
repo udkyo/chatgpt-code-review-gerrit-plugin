@@ -12,6 +12,7 @@ public class GerritComment {
     @SerializedName("patch_set")
     private Integer patchSet;
     private String id;
+    private String tag;
     private Integer line;
     private GerritCodeRange range;
     @SerializedName("in_reply_to")

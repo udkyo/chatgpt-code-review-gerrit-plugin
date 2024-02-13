@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPatchSetDetail;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPermittedVotingRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
@@ -24,8 +25,12 @@ public class GerritClientDetail extends GerritClientBase {
             gerritPatchSetDetail = getReviewDetail(change.getFullChangeId());
         }
         catch (Exception e) {
-            log.debug("Error retrieving PatchSet details", e);
+            log.error("Error retrieving PatchSet details", e);
         }
+    }
+
+    public List<GerritComment> getMessages() {
+        return gerritPatchSetDetail.getMessages();
     }
 
     public GerritPermittedVotingRange getPermittedVotingRange() {

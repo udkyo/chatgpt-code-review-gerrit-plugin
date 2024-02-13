@@ -75,11 +75,6 @@ public class ChatGptReviewTest {
     private static final long TEST_TIMESTAMP = 1699270812;
     private static final int VOTING_MIN_SCORE = -1;
     private static final int VOTING_MAX_SCORE = 1;
-    private static final String REVIEW_TAG_COMMENTS = "[{\"request\":\"comment 2\",\"id\":0},{\"request\":" +
-            "\"message\",\"id\":1,\"filename\":\"test_file.py\",\"lineNumber\":5,\"codeSnippet\":\"TypeClassOrPath\"" +
-            "},{\"request\":\"[{\\\"role\\\":\\\"assistant\\\",\\\"content\\\":\\\"message from gpt\\\"},{" +
-            "\\\"role\\\":\\\"user\\\",\\\"content\\\":\\\"message 2\\\"}]\",\"id\":2,\"filename\":\"test_file.py\"," +
-            "\"lineNumber\":5,\"codeSnippet\":\"TypeClassOrPath\"}]";
 
     private final Gson gson = new Gson();
 
@@ -87,6 +82,7 @@ public class ChatGptReviewTest {
     private String expectedSystemPrompt;
     private String reviewUserPrompt;
     private String reviewVoteUserPrompt;
+    private String reviewTagComments;
     private String diffContent;
     private String gerritPatchSetReview;
 
@@ -222,12 +218,11 @@ public class ChatGptReviewTest {
     }
 
     private void initComparisonContent() throws IOException {
-        diffContent = new String(Files.readAllBytes(basePath.resolve(
-                "reducePatchSet/patchSetDiffOutput.json")));
-        gerritPatchSetReview = new String(Files.readAllBytes(basePath.resolve(
-                "__files/gerritPatchSetReview.json")));
+        diffContent = new String(Files.readAllBytes(basePath.resolve("reducePatchSet/patchSetDiffOutput.json")));
+        gerritPatchSetReview = new String(Files.readAllBytes(basePath.resolve("__files/gerritPatchSetReview.json")));
         expectedResponseStreamed = new String(Files.readAllBytes(basePath.resolve(
                 "__files/chatGptExpectedResponseStreamed.json")));
+        reviewTagComments = new String(Files.readAllBytes(basePath.resolve("__files/chatGptReviewTagComments.json")));
         expectedSystemPrompt = Configuration.getDefaultSystemPrompt();
         reviewUserPrompt = String.join("\n", Arrays.asList(
                 Configuration.DEFAULT_GPT_REVIEW_USER_PROMPT,
@@ -404,7 +399,7 @@ public class ChatGptReviewTest {
                 Configuration.DEFAULT_GPT_REQUEST_USER_PROMPT_1,
                 diffContent,
                 Configuration.DEFAULT_GPT_REQUEST_USER_PROMPT_2,
-                REVIEW_TAG_COMMENTS,
+                reviewTagComments,
                 config.getCommentRequestUserPrompt(commentPropertiesSize)
         ));
         RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(

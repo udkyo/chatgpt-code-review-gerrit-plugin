@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 public class GerritPatchSetDetail {
     private Labels labels;
+    private List<GerritComment> messages;
 
     @Data
     public static class Labels {

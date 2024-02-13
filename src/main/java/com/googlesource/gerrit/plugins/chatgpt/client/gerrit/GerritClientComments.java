@@ -23,6 +23,7 @@ public class GerritClientComments extends GerritClientAccount {
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
 
     private final HashMap<String, GerritComment> commentMap;
+    private final HashMap<String, GerritComment> commentGlobalMap;
 
     private GerritMessage gerritMessage;
     private GerritMessageHistory gerritMessageHistory;
@@ -34,6 +35,7 @@ public class GerritClientComments extends GerritClientAccount {
         super(config);
         commentProperties = new ArrayList<>();
         commentMap = new HashMap<>();
+        commentGlobalMap = new HashMap<>();
     }
 
     public boolean retrieveLastComments(GerritChange change) {
@@ -55,8 +57,9 @@ public class GerritClientComments extends GerritClientAccount {
     }
 
 
-    public String getUserRequests(GerritChange change, HashMap<String, FileDiffProcessed> fileDiffsProcessed) {
-        gerritMessageHistory = new GerritMessageHistory(config, change, commentMap);
+    public String getUserRequests(GerritChange change, HashMap<String, FileDiffProcessed> fileDiffsProcessed,
+                                  List<GerritComment> detailComments) {
+        gerritMessageHistory = new GerritMessageHistory(config, change, commentMap, commentGlobalMap, detailComments);
         this.fileDiffsProcessed = fileDiffsProcessed;
         List<ChatGptRequestItem> requestItems = new ArrayList<>();
         for (int i = 0; i < commentProperties.size(); i++) {
@@ -94,6 +97,9 @@ public class GerritClientComments extends GerritClientAccount {
                 }
                 latestComments.computeIfAbsent(changeMessageId, k -> new ArrayList<>()).add(commentObject);
                 commentMap.put(commentId, commentObject);
+                if (filename.equals(GerritMessage.GLOBAL_MESSAGES_FILENAME)) {
+                    commentGlobalMap.put(changeMessageId, commentObject);
+                }
             }
         }
 
