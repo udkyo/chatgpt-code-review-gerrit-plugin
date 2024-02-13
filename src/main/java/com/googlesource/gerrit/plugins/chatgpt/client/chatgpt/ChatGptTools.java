@@ -2,7 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client.chatgpt;
 
 import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.client.ClientBase;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptRequest;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.chatgpt.ChatGptRequest;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;

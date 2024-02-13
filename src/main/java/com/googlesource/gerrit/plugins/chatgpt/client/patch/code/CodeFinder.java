@@ -1,6 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.patch.code;
 
-import com.googlesource.gerrit.plugins.chatgpt.client.model.chatGpt.ChatGptReplyItem;
+import com.googlesource.gerrit.plugins.chatgpt.client.model.chatgpt.ChatGptReplyItem;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.CodeFinderDiff;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.DiffContent;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRange;
