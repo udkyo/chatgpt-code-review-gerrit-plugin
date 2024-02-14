@@ -7,12 +7,12 @@ import com.google.gerrit.server.data.ChangeAttribute;
 import com.google.gerrit.server.data.PatchSetAttribute;
 import com.google.gerrit.server.events.Event;
 import com.google.inject.Inject;
-import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.PatchSetReviewer;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
+import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
+import com.googlesource.gerrit.plugins.chatgpt.settings.model.Settings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,7 +40,7 @@ public class EventListenerHandler {
             1, 1, 0L, TimeUnit.MILLISECONDS, queue, threadFactory, handler);
     private final GerritClient gerritClient;
     private Configuration config;
-    private DynamicSettings dynamicSettings;
+    private Settings settings;
     @Getter
     private CompletableFuture<Void> latestFuture;
 
@@ -52,20 +52,20 @@ public class EventListenerHandler {
         addShutdownHoot();
     }
 
-    public void initializeSingletons(GerritChange change) {
+    public void initialize(GerritChange change) {
         gerritClient.initialize(config, change);
         Integer gptAccountId = gerritClient.getNotNullAccountId(change, config.getGerritUserName());
-        dynamicSettings = createDynamicSettings(change, gptAccountId);
+        settings = DynamicSettings.getNewInstance(config, change, gptAccountId);
         gerritClient.loadClientDetail(change, gptAccountId);
     }
 
     public void handleEvent(Configuration config, Event event) {
         this.config = config;
         GerritChange change = new GerritChange(event);
-        initializeSingletons(change);
+        initialize(change);
 
         if (!preProcessEvent(change)) {
-            destroySingletons(change);
+            destroy(change);
             return;
         }
 
@@ -81,7 +81,7 @@ public class EventListenerHandler {
                     Thread.currentThread().interrupt();
                 }
             } finally {
-                destroySingletons(change);
+                destroy(change);
             }
         }, executorService);
     }
@@ -98,13 +98,6 @@ public class EventListenerHandler {
                 Thread.currentThread().interrupt();
             }
         }));
-    }
-
-    private DynamicSettings createDynamicSettings(GerritChange change, Integer gptAccountId) {
-        return SingletonManager.getNewInstance(DynamicSettings.class, change,
-                gptAccountId,
-                config.getVotingMinScore(),
-                config.getVotingMaxScore());
     }
 
     private Optional<String> getTopic(GerritChange change) {
@@ -174,7 +167,7 @@ public class EventListenerHandler {
         boolean isCommentEvent = EVENT_COMMENT_MAP.get(eventType);
         if (isCommentEvent) {
             if (!gerritClient.retrieveLastComments(change)) {
-                if (dynamicSettings.getForcedReview()) {
+                if (settings.getForcedReview()) {
                     isCommentEvent = false;
                 }
                 else {
@@ -195,9 +188,9 @@ public class EventListenerHandler {
         return true;
     }
 
-    private void destroySingletons(GerritChange change) {
+    private void destroy(GerritChange change) {
         gerritClient.destroy(change);
-        SingletonManager.removeInstance(DynamicSettings.class, change.getFullChangeId());
+        DynamicSettings.removeInstance(change);
     }
 
 }

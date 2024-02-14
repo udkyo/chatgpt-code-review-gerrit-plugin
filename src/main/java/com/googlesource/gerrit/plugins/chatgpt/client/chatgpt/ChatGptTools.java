@@ -1,11 +1,10 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.chatgpt;
 
-import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.client.ClientBase;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.chatgpt.ChatGptRequest;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
-import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -25,8 +24,8 @@ class ChatGptTools extends ClientBase {
         } catch (IOException e) {
             throw new RuntimeException("Failed to load ChatGPT request tools", e);
         }
-        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, changeId);
-        if (!config.isVotingEnabled() || isCommentEvent || dynamicSettings.getForcedReviewLastPatchSet()) {
+        if (!config.isVotingEnabled() || isCommentEvent
+                || DynamicSettings.getInstance(changeId).getForcedReviewLastPatchSet()) {
             removeScoreFromTools(tools);
         }
         return tools;

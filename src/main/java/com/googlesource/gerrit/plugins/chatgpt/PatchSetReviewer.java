@@ -10,11 +10,9 @@ import com.googlesource.gerrit.plugins.chatgpt.client.model.chatgpt.ChatGptRespo
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRange;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritPermittedVotingRange;
-import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
-import com.googlesource.gerrit.plugins.chatgpt.client.patch.code.InlineCode;
+import com.googlesource.gerrit.plugins.chatgpt.client.patch.comment.GerritCommentRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
+import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -28,9 +26,9 @@ public class PatchSetReviewer {
     private final GerritClient gerritClient;
     private final ChatGptClient chatGptClient;
 
+    private GerritCommentRange gerritCommentRange;
     private List<ReviewBatch> reviewBatches;
     private List<GerritComment> commentProperties;
-    private HashMap<String, FileDiffProcessed> fileDiffsProcessed;
 
     @Inject
     PatchSetReviewer(GerritClient gerritClient, ChatGptClient chatGptClient) {
@@ -41,48 +39,26 @@ public class PatchSetReviewer {
     public void review(Configuration config, GerritChange change) throws Exception {
         reviewBatches = new ArrayList<>();
         commentProperties = gerritClient.getCommentProperties(change);
+        gerritCommentRange = new GerritCommentRange(gerritClient, change);
         String patchSet = gerritClient.getPatchSet(change);
         if (patchSet.isEmpty()) {
             log.info("No file to review has been found in the PatchSet");
             return;
         }
-        updateDynamicSettings(config, change);
+        DynamicSettings.update(config, change, gerritClient);
 
         String reviewReply = getReviewReply(config, change, patchSet);
         log.debug("ChatGPT response: {}", reviewReply);
-        ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
-        retrieveReviewFromJson(reviewJson, change);
 
+        ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
+        retrieveReviewBatches(reviewJson, change);
         gerritClient.setReview(change, reviewBatches, reviewJson.getScore());
     }
 
-    private void updateDynamicSettings(Configuration config, GerritChange change) {
-        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, change);
-
-        dynamicSettings.setCommentPropertiesSize(commentProperties.size());
-        dynamicSettings.setGptRequestUserPrompt(gerritClient.getUserRequests(change));
-        if (config.isVotingEnabled() && !change.getIsCommentEvent()) {
-            GerritPermittedVotingRange permittedVotingRange = gerritClient.getPermittedVotingRange(change);
-            if (permittedVotingRange != null) {
-                if (permittedVotingRange.getMin() > config.getVotingMinScore()) {
-                    log.debug("Minimum ChatGPT voting score set to {}", permittedVotingRange.getMin());
-                    dynamicSettings.setVotingMinScore(permittedVotingRange.getMin());
-                }
-                if (permittedVotingRange.getMax() < config.getVotingMaxScore()) {
-                    log.debug("Maximum ChatGPT voting score set to {}", permittedVotingRange.getMax());
-                    dynamicSettings.setVotingMaxScore(permittedVotingRange.getMax());
-                }
-            }
-        }
-    }
-
-    private void addReviewBatch(Integer batchID, String batch) {
-        ReviewBatch batchMap = new ReviewBatch();
-        batchMap.setContent(batch);
+    private void setCommentBatchMap(ReviewBatch batchMap, Integer batchID) {
         if (commentProperties != null && batchID < commentProperties.size()) {
             GerritComment commentProperty = commentProperties.get(batchID);
-            if (commentProperty != null &&
-                    (commentProperty.getLine() != null || commentProperty.getRange() != null)) {
+            if (commentProperty != null && (commentProperty.getLine() != null || commentProperty.getRange() != null)) {
                 String id = commentProperty.getId();
                 String filename = commentProperty.getFilename();
                 Integer line = commentProperty.getLine();
@@ -95,52 +71,30 @@ public class PatchSetReviewer {
                 }
             }
         }
-        reviewBatches.add(batchMap);
     }
 
-    private Optional<GerritCodeRange> getGerritCommentCodeRange(ChatGptReplyItem replyItem) {
-        Optional<GerritCodeRange> gerritCommentRange = Optional.empty();
-        String filename = replyItem.getFilename();
-        if (filename == null || filename.equals("/COMMIT_MSG")) {
-            return gerritCommentRange;
+    private void setPatchSetReviewBatchMap(ReviewBatch batchMap, ChatGptReplyItem replyItem) {
+        Optional<GerritCodeRange> optGerritCommentRange = gerritCommentRange.getGerritCommentRange(replyItem);
+        if (optGerritCommentRange.isPresent()) {
+            GerritCodeRange gerritCodeRange = optGerritCommentRange.get();
+            batchMap.setFilename(replyItem.getFilename());
+            batchMap.setLine(gerritCodeRange.getStartLine());
+            batchMap.setRange(gerritCodeRange);
         }
-        if (replyItem.getCodeSnippet() == null) {
-            log.info("CodeSnippet is null in reply '{}'.", replyItem);
-            return gerritCommentRange;
-        }
-        if (!fileDiffsProcessed.containsKey(filename)) {
-            log.info("Filename '{}' not found for reply '{}'.\nFileDiffsProcessed = {}", filename, replyItem,
-                    fileDiffsProcessed);
-            return gerritCommentRange;
-        }
-        InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));
-        gerritCommentRange = inlineCode.findCommentRange(replyItem);
-        if (gerritCommentRange.isEmpty()) {
-            log.info("Inline code not found for reply {}", replyItem);
-        }
-        return gerritCommentRange;
     }
 
-    private void retrieveReviewFromJson(ChatGptResponseContent reviewJson, GerritChange change) {
-        fileDiffsProcessed = gerritClient.getFileDiffsProcessed(change);
+    private void retrieveReviewBatches(ChatGptResponseContent reviewJson, GerritChange change) {
         for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
             ReviewBatch batchMap = new ReviewBatch();
+            batchMap.setContent(replyItem.getReply());
             if (change.getIsCommentEvent() && replyItem.getId() != null) {
-                addReviewBatch(replyItem.getId(), replyItem.getReply());
+                setCommentBatchMap(batchMap, replyItem.getId());
             }
             else {
-                batchMap.setContent(replyItem.getReply());
-                Optional<GerritCodeRange> optGerritCommentRange = getGerritCommentCodeRange(replyItem);
-                if (optGerritCommentRange.isPresent()) {
-                    GerritCodeRange gerritCodeRange = optGerritCommentRange.get();
-                    batchMap.setFilename(replyItem.getFilename());
-                    batchMap.setLine(gerritCodeRange.getStartLine());
-                    batchMap.setRange(gerritCodeRange);
-                }
-                reviewBatches.add(batchMap);
+                setPatchSetReviewBatchMap(batchMap, replyItem);
             }
+            reviewBatches.add(batchMap);
         }
-        log.debug("fileDiffsProcessed Keys: {}", fileDiffsProcessed.keySet());
     }
 
     private String getReviewReply(Configuration config, GerritChange change, String patchSet) throws Exception {
@@ -151,5 +105,5 @@ public class PatchSetReviewer {
         }
         return chatGptClient.ask(config, change, patchSet);
     }
-}
 
+}

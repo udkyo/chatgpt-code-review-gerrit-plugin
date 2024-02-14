@@ -1,9 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
-import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
 import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
+import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -14,8 +13,7 @@ public class GerritMessageComment extends GerritMessage {
 
     public GerritMessageComment(Configuration config, GerritChange change) {
         super(config);
-        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, change);
-        gptAccountId = dynamicSettings.getGptAccountId();
+        gptAccountId = DynamicSettings.getInstance(change).getGptAccountId();
     }
 
     protected String getCleanedMessage(GerritComment commentProperty) {

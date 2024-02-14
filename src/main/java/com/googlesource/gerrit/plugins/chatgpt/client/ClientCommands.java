@@ -1,8 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
-import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
-import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
+import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
+import com.googlesource.gerrit.plugins.chatgpt.settings.model.Settings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,17 +32,17 @@ public class ClientCommands {
             COMMAND_MAP.keySet()) + ")\\b");
 
     public static boolean parseCommands(GerritChange change, String comment) {
-        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, change);
+        Settings settings = DynamicSettings.getInstance(change);
         Matcher reviewCommandMatcher = COMMAND_PATTERN.matcher(comment);
         if (reviewCommandMatcher.find()) {
             COMMAND_SET command = COMMAND_MAP.get(reviewCommandMatcher.group(1));
             if (REVIEW_COMMANDS.contains(command)) {
                 log.debug("Forced review command detected in message {}", comment);
-                dynamicSettings.setForcedReview(true);
+                settings.setForcedReview(true);
             }
             if (command == COMMAND_SET.REVIEW) {
                 log.debug("Forced review command applied to the whole Change Set");
-                dynamicSettings.setForcedReviewChangeSet(true);
+                settings.setForcedReviewChangeSet(true);
             }
             return true;
         }

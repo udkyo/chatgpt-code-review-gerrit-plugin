@@ -1,4 +1,4 @@
-package com.googlesource.gerrit.plugins.chatgpt;
+package com.googlesource.gerrit.plugins.chatgpt.settings.model;
 
 import lombok.Data;
 import lombok.NonNull;
@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Data
 @Slf4j
-public class DynamicSettings {
+public class Settings {
     @NonNull
     private Integer gptAccountId;
     private String gptRequestUserPrompt;

@@ -3,9 +3,9 @@ package com.googlesource.gerrit.plugins.chatgpt.config;
 import com.google.gerrit.server.config.PluginConfig;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.googlesource.gerrit.plugins.chatgpt.DynamicSettings;
+import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
+import com.googlesource.gerrit.plugins.chatgpt.settings.model.Settings;
 import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
-import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -171,8 +171,8 @@ public class Configuration {
 
     public String getGptUserPrompt(String patchSet, String changeId) {
         List<String> prompt = new ArrayList<>();
-        DynamicSettings dynamicSettings = SingletonManager.getInstance(DynamicSettings.class, changeId);
-        String gptRequestUserPrompt = dynamicSettings.getGptRequestUserPrompt();
+        Settings settings = DynamicSettings.getInstance(changeId);
+        String gptRequestUserPrompt = settings.getGptRequestUserPrompt();
         if (gptRequestUserPrompt != null && !gptRequestUserPrompt.isEmpty()) {
             log.debug("ConfigsDynamically value found: {}", gptRequestUserPrompt);
             prompt.addAll(Arrays.asList(
@@ -180,7 +180,7 @@ public class Configuration {
                     patchSet,
                     DEFAULT_GPT_REQUEST_USER_PROMPT_2,
                     gptRequestUserPrompt,
-                    getCommentRequestUserPrompt(dynamicSettings.getCommentPropertiesSize())
+                    getCommentRequestUserPrompt(settings.getCommentPropertiesSize())
             ));
         }
         else {
