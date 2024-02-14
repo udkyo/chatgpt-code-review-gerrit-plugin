@@ -267,7 +267,7 @@ public class Configuration {
     }
 
     public boolean isVotingEnabled() {
-        return globalConfig.getBoolean(KEY_ENABLED_VOTING, DEFAULT_ENABLED_VOTING);
+        return getBoolean(KEY_ENABLED_VOTING, DEFAULT_ENABLED_VOTING);
     }
 
     public int getVotingMinScore() {
