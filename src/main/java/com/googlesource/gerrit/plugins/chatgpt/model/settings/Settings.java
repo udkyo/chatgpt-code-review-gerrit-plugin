@@ -1,4 +1,4 @@
-package com.googlesource.gerrit.plugins.chatgpt.settings.model;
+package com.googlesource.gerrit.plugins.chatgpt.model.settings;
 
 import lombok.Data;
 import lombok.NonNull;

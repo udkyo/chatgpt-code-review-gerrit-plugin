@@ -1,8 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.patch.diff;
 
-import com.googlesource.gerrit.plugins.chatgpt.client.model.CodeFinderDiff;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.DiffContent;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff;
+import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritPatchSetFileDiff;
+import com.googlesource.gerrit.plugins.chatgpt.model.patch.code.CodeFinderDiff;
+import com.googlesource.gerrit.plugins.chatgpt.model.patch.diff.DiffContent;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,51 +33,52 @@ public class FileDiffProcessed {
     @Getter
     private List<String> newContent;
     @Getter
-    private List<DiffContent> outputDiffContent;
+    private List<DiffContent> reviewDiffContent;
     @Getter
     private String randomPlaceholder;
     private int lineNum;
     private DiffContent diffContentItem;
-    private DiffContent outputDiffContentItem;
+    private DiffContent reviewDiffContentItem;
     private TreeMap<Integer, Integer> charToLineMapItem;
 
-    public FileDiffProcessed(Configuration config, boolean isCommitMessage, InputFileDiff inputFileDiff) {
+    public FileDiffProcessed(Configuration config, boolean isCommitMessage,
+                             GerritPatchSetFileDiff gerritPatchSetFileDiff) {
         this.config = config;
         this.isCommitMessage = isCommitMessage;
 
-        updateContent(inputFileDiff);
-        updateRandomPlaceholder(inputFileDiff);
+        updateContent(gerritPatchSetFileDiff);
+        updateRandomPlaceholder(gerritPatchSetFileDiff);
     }
 
-    private void updateContent(InputFileDiff inputFileDiff) {
+    private void updateContent(GerritPatchSetFileDiff gerritPatchSetFileDiff) {
         newContent = new ArrayList<>() {{
             add("DUMMY LINE #0");
         }};
         lineNum = 1;
-        outputDiffContent = new ArrayList<>();
+        reviewDiffContent = new ArrayList<>();
         codeFinderDiffs = new ArrayList<>();
-        List<InputFileDiff.Content> inputDiffContent = inputFileDiff.getContent();
+        List<GerritPatchSetFileDiff.Content> patchSetDiffContent = gerritPatchSetFileDiff.getContent();
         // Iterate over the items of the diff content
-        for (InputFileDiff.Content inputContentItem : inputDiffContent) {
+        for (GerritPatchSetFileDiff.Content patchSetContentItem : patchSetDiffContent) {
             diffContentItem = new DiffContent();
-            outputDiffContentItem = new DiffContent();
+            reviewDiffContentItem = new DiffContent();
             charToLineMapItem = new TreeMap<>();
             // Iterate over the fields `a`, `b` and `ab` of each diff content
-            for (Field inputDiffField : InputFileDiff.Content.class.getDeclaredFields()) {
-                processFileDiffItem(inputDiffField, inputContentItem);
+            for (Field patchSetDiffField : GerritPatchSetFileDiff.Content.class.getDeclaredFields()) {
+                processFileDiffItem(patchSetDiffField, patchSetContentItem);
             }
-            outputDiffContent.add(outputDiffContentItem);
+            reviewDiffContent.add(reviewDiffContentItem);
             codeFinderDiffs.add(new CodeFinderDiff(diffContentItem, charToLineMapItem));
         }
     }
 
-    private void updateRandomPlaceholder(InputFileDiff inputFileDiff) {
+    private void updateRandomPlaceholder(GerritPatchSetFileDiff gerritPatchSetFileDiff) {
         int placeholderVariableLength = MIN_RANDOM_PLACEHOLDER_VARIABLE_LENGTH;
         do {
             randomPlaceholder = '#' + RandomStringUtils.random(placeholderVariableLength, true, false);
             placeholderVariableLength++;
         }
-        while (inputFileDiff.toString().contains(randomPlaceholder));
+        while (gerritPatchSetFileDiff.toString().contains(randomPlaceholder));
     }
 
     private void filterCommitMessageContent(List<String> fieldValue) {
@@ -110,28 +111,28 @@ public class FileDiffProcessed {
         }
 
         if (config.getGptFullFileReview() || !diffType.equals("ab")) {
-            // Store the new field's value in the output diff content `outputContentItem`
-            diffField.set(outputDiffContentItem, content);
+            // Store the new field's value in the diff content for the Patch Set review `reviewDiffContentItem`
+            diffField.set(reviewDiffContentItem, content);
         }
     }
 
-    private void processFileDiffItem(Field inputDiffField, InputFileDiff.Content contentItem) {
+    private void processFileDiffItem(Field patchSetDiffField, GerritPatchSetFileDiff.Content contentItem) {
         try {
-            // Get the `a`, `b` or `ab` field's value from the input diff content
+            // Get the `a`, `b` or `ab` field's value from the Patch Set diff content
             @SuppressWarnings("unchecked")
-            List<String> diffLines = (List<String>) inputDiffField.get(contentItem);
+            List<String> diffLines = (List<String>) patchSetDiffField.get(contentItem);
             if (diffLines == null) {
                 return;
             }
             if (isCommitMessage) {
                 filterCommitMessageContent(diffLines);
             }
-            // Get the corresponding `a`, `b` or `ab` field from the output diff class
-            Field diffField = DiffContent.class.getDeclaredField(inputDiffField.getName());
+            // Get the corresponding `a`, `b` or `ab` field from the DiffContent class
+            Field diffField = DiffContent.class.getDeclaredField(patchSetDiffField.getName());
             updateCodeEntities(diffField, diffLines);
 
         } catch (IllegalAccessException | NoSuchFieldException e) {
-            log.error("Error while processing file difference (diff type: {})", inputDiffField.getName(), e);
+            log.error("Error while processing file difference (diff type: {})", patchSetDiffField.getName(), e);
         }
     }
 

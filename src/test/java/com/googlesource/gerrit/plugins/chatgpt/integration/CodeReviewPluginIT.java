@@ -2,8 +2,8 @@ package com.googlesource.gerrit.plugins.chatgpt.integration;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.model.review.ReviewBatch;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Ignore;
 import org.junit.Test;

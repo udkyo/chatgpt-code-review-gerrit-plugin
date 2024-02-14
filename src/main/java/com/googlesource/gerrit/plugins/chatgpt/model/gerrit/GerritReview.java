@@ -1,4 +1,4 @@
-package com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit;
+package com.googlesource.gerrit.plugins.chatgpt.model.gerrit;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;

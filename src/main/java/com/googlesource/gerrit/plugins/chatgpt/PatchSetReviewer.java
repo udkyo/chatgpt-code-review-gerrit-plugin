@@ -5,13 +5,13 @@ import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.chatgpt.ChatGptReplyItem;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.chatgpt.ChatGptResponseContent;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRange;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.comment.GerritCommentRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptReplyItem;
+import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptResponseContent;
+import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritCodeRange;
+import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
+import com.googlesource.gerrit.plugins.chatgpt.model.review.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
 import lombok.extern.slf4j.Slf4j;
 

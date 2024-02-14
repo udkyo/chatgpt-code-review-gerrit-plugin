@@ -1,10 +1,10 @@
-package com.googlesource.gerrit.plugins.chatgpt.client.model;
+package com.googlesource.gerrit.plugins.chatgpt.model.gerrit;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
 @Data
-public abstract class FileDiff {
+public abstract class GerritFileDiff {
     @SerializedName("meta_a")
     protected Meta metaA;
     @SerializedName("meta_b")

@@ -1,8 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.client;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
+import com.googlesource.gerrit.plugins.chatgpt.model.settings.Settings;
 import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
-import com.googlesource.gerrit.plugins.chatgpt.settings.model.Settings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

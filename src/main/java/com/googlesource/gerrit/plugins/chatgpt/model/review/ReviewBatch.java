@@ -1,6 +1,6 @@
-package com.googlesource.gerrit.plugins.chatgpt.client.model;
+package com.googlesource.gerrit.plugins.chatgpt.model.review;
 
-import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritCodeRange;
+import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritCodeRange;
 import lombok.Data;
 
 @Data

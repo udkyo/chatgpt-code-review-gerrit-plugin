@@ -4,11 +4,11 @@ import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gson.reflect.TypeToken;
 import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.chatgpt.ChatGptRequestItem;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.code.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptRequestItem;
+import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

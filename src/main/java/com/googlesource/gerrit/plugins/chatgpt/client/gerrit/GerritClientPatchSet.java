@@ -5,10 +5,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.InputFileDiff;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.OutputFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritPatchSetFileDiff;
+import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritReviewFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,13 +88,14 @@ public class GerritClientPatchSet extends GerritClientAccount {
 
     private void processFileDiff(String filename, String fileDiffJson) {
         log.debug("FileDiff Json processed: {}", fileDiffJson);
-        InputFileDiff inputFileDiff = gson.fromJson(fileDiffJson, InputFileDiff.class);
-        // Initialize the reduced output file diff with fields `meta_a` and `meta_b`
-        OutputFileDiff outputFileDiff = new OutputFileDiff(inputFileDiff.getMetaA(), inputFileDiff.getMetaB());
-        FileDiffProcessed fileDiffProcessed = new FileDiffProcessed(config, isCommitMessage, inputFileDiff);
+        GerritPatchSetFileDiff gerritPatchSetFileDiff = gson.fromJson(fileDiffJson, GerritPatchSetFileDiff.class);
+        // Initialize the reduced file diff for the Gerrit review with fields `meta_a` and `meta_b`
+        GerritReviewFileDiff gerritReviewFileDiff = new GerritReviewFileDiff(gerritPatchSetFileDiff.getMetaA(),
+                gerritPatchSetFileDiff.getMetaB());
+        FileDiffProcessed fileDiffProcessed = new FileDiffProcessed(config, isCommitMessage, gerritPatchSetFileDiff);
         fileDiffsProcessed.put(filename, fileDiffProcessed);
-        outputFileDiff.setContent(fileDiffProcessed.getOutputDiffContent());
-        diffs.add(gson.toJson(outputFileDiff));
+        gerritReviewFileDiff.setContent(fileDiffProcessed.getReviewDiffContent());
+        diffs.add(gson.toJson(gerritReviewFileDiff));
     }
 
     private String getFileDiffsJson(String fullChangeId, List<String> files, int revisionBase) throws Exception {

@@ -3,8 +3,8 @@ package com.googlesource.gerrit.plugins.chatgpt.config;
 import com.google.gerrit.server.config.PluginConfig;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.googlesource.gerrit.plugins.chatgpt.model.settings.Settings;
 import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
-import com.googlesource.gerrit.plugins.chatgpt.settings.model.Settings;
 import com.googlesource.gerrit.plugins.chatgpt.utils.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 

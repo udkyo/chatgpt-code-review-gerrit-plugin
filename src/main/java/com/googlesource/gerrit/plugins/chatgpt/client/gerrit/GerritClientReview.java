@@ -2,10 +2,10 @@ package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.google.common.net.HttpHeaders;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.ReviewBatch;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritComment;
-import com.googlesource.gerrit.plugins.chatgpt.client.model.gerrit.GerritReview;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
+import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritReview;
+import com.googlesource.gerrit.plugins.chatgpt.model.review.ReviewBatch;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;

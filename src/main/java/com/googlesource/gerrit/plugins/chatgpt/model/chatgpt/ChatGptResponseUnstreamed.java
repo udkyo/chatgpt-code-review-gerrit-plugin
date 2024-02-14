@@ -1,4 +1,4 @@
-package com.googlesource.gerrit.plugins.chatgpt.client.model.chatgpt;
+package com.googlesource.gerrit.plugins.chatgpt.model.chatgpt;
 
 import lombok.Data;
 
