@@ -117,7 +117,7 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `gptModel`: The default model is gpt-3.5-turbo. You can also configure it to gpt-3.5-turbo-16k, gpt-4 or gpt-4-32k.
 - `gptDomain`: The default ChatGPT domain is `https://api.openai.com`.
 - `gptSystemPrompt`: You can modify the default system prompt ("Act as a PatchSet Reviewer") to your preferred prompt.
-- `gptTemperature`: The default value is 1. What sampling temperature to use, between 0 and 2. Higher values like 0.8
+- `gptTemperature`: The default value is 0.2. What sampling temperature to use, between 0 and 2. Higher values like 0.8
   will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
 - `gptReviewPatchSet`: Set to true by default. When switched to false, it disables the automatic review of Patch Sets as
   they are created or updated.

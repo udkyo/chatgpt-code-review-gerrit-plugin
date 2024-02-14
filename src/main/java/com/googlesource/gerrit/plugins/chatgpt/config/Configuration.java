@@ -26,7 +26,7 @@ public class Configuration {
     // Default Config values
     public static final String OPENAI_DOMAIN = "https://api.openai.com";
     public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
-    private static final String DEFAULT_GPT_TEMPERATURE = "1";
+    private static final double DEFAULT_GPT_TEMPERATURE = 0.2;
     private static final boolean DEFAULT_REVIEW_PATCH_SET = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
     private static final boolean DEFAULT_FULL_FILE_REVIEW = true;
@@ -199,7 +199,7 @@ public class Configuration {
     }
 
     public double getGptTemperature() {
-        return Double.parseDouble(getString(KEY_GPT_TEMPERATURE, DEFAULT_GPT_TEMPERATURE));
+        return Double.parseDouble(getString(KEY_GPT_TEMPERATURE, String.valueOf(DEFAULT_GPT_TEMPERATURE)));
     }
 
     public boolean getGptReviewPatchSet() {
