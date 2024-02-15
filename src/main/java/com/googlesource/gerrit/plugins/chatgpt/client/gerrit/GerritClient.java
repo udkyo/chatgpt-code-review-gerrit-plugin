@@ -3,9 +3,9 @@ package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritPermittedVotingRange;
 import com.googlesource.gerrit.plugins.chatgpt.model.review.ReviewBatch;
+import com.googlesource.gerrit.plugins.chatgpt.model.common.GerritClientData;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,6 +28,7 @@ public class GerritClient {
     }
 
     public void loadClientDetail(GerritChange change, Integer gptAccountId) {
+        updateGerritClientFacade(change);
         gerritClientFacade.loadClientDetail(change, gptAccountId);
     }
 
@@ -63,11 +64,6 @@ public class GerritClient {
         return gerritClientFacade.getNotNullAccountId(authorUsername);
     }
 
-    public List<GerritComment> getCommentProperties(GerritChange change) {
-        updateGerritClientFacade(change);
-        return gerritClientFacade.getCommentProperties();
-    }
-
     public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
         setReview(new GerritChange(fullChangeId), reviewBatches, null);
     }
@@ -82,9 +78,9 @@ public class GerritClient {
         return gerritClientFacade.retrieveLastComments(change);
     }
 
-    public String getUserRequests(GerritChange change) {
+    public GerritClientData getClientData(GerritChange change) {
         updateGerritClientFacade(change);
-        return gerritClientFacade.getUserRequests(change);
+        return gerritClientFacade.getClientData();
     }
 
     public void destroy(GerritChange change) {

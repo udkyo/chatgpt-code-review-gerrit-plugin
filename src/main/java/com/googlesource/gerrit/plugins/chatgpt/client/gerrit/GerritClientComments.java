@@ -4,10 +4,9 @@ import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gson.reflect.TypeToken;
 import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
-import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
-import com.googlesource.gerrit.plugins.chatgpt.client.patch.code.InlineCode;
+import com.googlesource.gerrit.plugins.chatgpt.client.common.ClientMessage;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptRequestItem;
+import com.googlesource.gerrit.plugins.chatgpt.model.common.CommentData;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -16,17 +15,17 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.*;
 
-import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.getTimeStamp;
+import static com.googlesource.gerrit.plugins.chatgpt.utils.TimeUtils.getTimeStamp;
 
 @Slf4j
 public class GerritClientComments extends GerritClientAccount {
+    public static final String GLOBAL_MESSAGES_FILENAME = "/PATCHSET_LEVEL";
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
 
     private final HashMap<String, GerritComment> commentMap;
     private final HashMap<String, GerritComment> commentGlobalMap;
 
-    private GerritMessage gerritMessage;
-    private GerritMessageHistory gerritMessageHistory;
+    private ClientMessage clientMessage;
     private String authorUsername;
     @Getter
     private List<GerritComment> commentProperties;
@@ -38,8 +37,12 @@ public class GerritClientComments extends GerritClientAccount {
         commentGlobalMap = new HashMap<>();
     }
 
+    public CommentData getCommentData() {
+        return new CommentData(commentProperties, commentMap, commentGlobalMap);
+    }
+
     public boolean retrieveLastComments(GerritChange change) {
-        gerritMessage = new GerritMessage(config);
+        clientMessage = new ClientMessage(config);
         CommentAddedEvent commentAddedEvent = (CommentAddedEvent) change.getEvent();
         authorUsername = commentAddedEvent.author.get().username;
         log.debug("Found comments by '{}' on {}", authorUsername, change.getEventTimeStamp());
@@ -54,18 +57,6 @@ public class GerritClientComments extends GerritClientAccount {
         addAllComments(change);
 
         return !commentProperties.isEmpty();
-    }
-
-
-    public String getUserRequests(GerritChange change, HashMap<String, FileDiffProcessed> fileDiffsProcessed,
-                                  List<GerritComment> detailComments) {
-        gerritMessageHistory = new GerritMessageHistory(config, change, commentMap, commentGlobalMap, detailComments);
-        this.fileDiffsProcessed = fileDiffsProcessed;
-        List<ChatGptRequestItem> requestItems = new ArrayList<>();
-        for (int i = 0; i < commentProperties.size(); i++) {
-            requestItems.add(getRequestItem(i));
-        }
-        return requestItems.isEmpty() ? "" : gson.toJson(requestItems);
     }
 
     private List<GerritComment> getLastComments(GerritChange change) throws Exception {
@@ -97,7 +88,7 @@ public class GerritClientComments extends GerritClientAccount {
                 }
                 latestComments.computeIfAbsent(changeMessageId, k -> new ArrayList<>()).add(commentObject);
                 commentMap.put(commentId, commentObject);
-                if (filename.equals(GerritMessage.GLOBAL_MESSAGES_FILENAME)) {
+                if (filename.equals(GLOBAL_MESSAGES_FILENAME)) {
                     commentGlobalMap.put(changeMessageId, commentObject);
                 }
             }
@@ -118,29 +109,13 @@ public class GerritClientComments extends GerritClientAccount {
                     commentProperties.clear();
                     return;
                 }
-                if (gerritMessage.isBotAddressed(commentMessage)) {
+                if (clientMessage.isBotAddressed(commentMessage)) {
                     commentProperties.add(latestComment);
                 }
             }
         } catch (Exception e) {
             log.error("Error while retrieving comments for change: {}", change.getFullChangeId(), e);
         }
-    }
-
-    private ChatGptRequestItem getRequestItem(int i) {
-        ChatGptRequestItem requestItem = new ChatGptRequestItem();
-        GerritComment commentProperty = commentProperties.get(i);
-        requestItem.setId(i);
-        if (commentProperty.getLine() != null || commentProperty.getRange() != null) {
-            String filename = commentProperty.getFilename();
-            InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));
-            requestItem.setFilename(filename);
-            requestItem.setLineNumber(commentProperty.getLine());
-            requestItem.setCodeSnippet(inlineCode.getInlineCode(commentProperty));
-        }
-        requestItem.setRequest(gerritMessageHistory.retrieveCommentMessage(commentProperty));
-
-        return requestItem;
     }
 
 }

@@ -38,7 +38,7 @@ public class PatchSetReviewer {
 
     public void review(Configuration config, GerritChange change) throws Exception {
         reviewBatches = new ArrayList<>();
-        commentProperties = gerritClient.getCommentProperties(change);
+        commentProperties = gerritClient.getClientData(change).getCommentProperties();
         gerritCommentRange = new GerritCommentRange(gerritClient, change);
         String patchSet = gerritClient.getPatchSet(change);
         if (patchSet.isEmpty()) {

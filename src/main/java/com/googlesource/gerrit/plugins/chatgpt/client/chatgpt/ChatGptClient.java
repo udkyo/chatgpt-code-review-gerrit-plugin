@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.client.HttpClientWithRetry;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
+import com.googlesource.gerrit.plugins.chatgpt.client.prompt.ChatGptPrompt;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.*;
 import lombok.Getter;
@@ -114,13 +115,14 @@ public class ChatGptClient {
     }
 
     private String createRequestBody(Configuration config, String changeId, String patchSet) {
+        ChatGptPrompt chatGptPrompt = new ChatGptPrompt(config);
         ChatGptRequest.Message systemMessage = ChatGptRequest.Message.builder()
                 .role("system")
-                .content(config.getGptSystemPrompt())
+                .content(chatGptPrompt.getGptSystemPrompt())
                 .build();
         ChatGptRequest.Message userMessage = ChatGptRequest.Message.builder()
                 .role("user")
-                .content(config.getGptUserPrompt(patchSet, changeId))
+                .content(chatGptPrompt.getGptUserPrompt(patchSet, changeId))
                 .build();
 
         List<ChatGptRequest.Message> messages = List.of(systemMessage, userMessage);

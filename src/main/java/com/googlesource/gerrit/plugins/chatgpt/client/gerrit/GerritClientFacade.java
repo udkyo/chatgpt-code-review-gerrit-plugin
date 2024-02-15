@@ -2,9 +2,9 @@ package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritPermittedVotingRange;
 import com.googlesource.gerrit.plugins.chatgpt.model.review.ReviewBatch;
+import com.googlesource.gerrit.plugins.chatgpt.model.common.GerritClientData;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -52,10 +52,6 @@ public class GerritClientFacade {
         return gerritClientPatchSet.getNotNullAccountId(authorUsername);
     }
 
-    public List<GerritComment> getCommentProperties() {
-        return gerritClientComments.getCommentProperties();
-    }
-
     public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches, Integer reviewScore) throws Exception {
         gerritClientReview.setReview(fullChangeId, reviewBatches, reviewScore);
     }
@@ -64,10 +60,12 @@ public class GerritClientFacade {
         return gerritClientComments.retrieveLastComments(change);
     }
 
-    public String getUserRequests(GerritChange change) {
-        HashMap<String, FileDiffProcessed> fileDiffsProcessed = gerritClientPatchSet.getFileDiffsProcessed();
-        List<GerritComment> detailComments = gerritClientDetail.getMessages();
-        return gerritClientComments.getUserRequests(change, fileDiffsProcessed, detailComments);
+    public GerritClientData getClientData() {
+        return new GerritClientData(
+                gerritClientPatchSet.getFileDiffsProcessed(),
+                gerritClientDetail.getMessages(),
+                gerritClientComments.getCommentData()
+        );
     }
 
 }

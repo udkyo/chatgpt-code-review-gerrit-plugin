@@ -21,6 +21,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
+import com.googlesource.gerrit.plugins.chatgpt.client.prompt.ChatGptPrompt;
 import com.googlesource.gerrit.plugins.chatgpt.config.ConfigCreator;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.listener.EventListenerHandler;
@@ -91,6 +92,7 @@ public class ChatGptReviewTest {
 
     private PluginConfig globalConfig;
     private PluginConfig projectConfig;
+    private Configuration config;
 
     @Before
     public void before() throws IOException {
@@ -133,10 +135,12 @@ public class ChatGptReviewTest {
 
         // Mock the Project Config values
         when(projectConfig.getBoolean(Mockito.eq("isEnabled"), Mockito.anyBoolean())).thenReturn(true);
+
+        config = new Configuration(globalConfig, projectConfig);
+        new ChatGptPrompt(config);
     }
 
     private void setupMockRequests() {
-        Configuration config = new Configuration(globalConfig, projectConfig);
         String fullChangeId = getGerritChange().getFullChangeId();
 
         // Mock the behavior of the gerritAccountIdUri request
@@ -223,18 +227,18 @@ public class ChatGptReviewTest {
         expectedResponseStreamed = new String(Files.readAllBytes(basePath.resolve(
                 "__files/chatGptExpectedResponseStreamed.json")));
         reviewTagComments = new String(Files.readAllBytes(basePath.resolve("__files/chatGptReviewTagComments.json")));
-        expectedSystemPrompt = Configuration.getDefaultSystemPrompt();
+        expectedSystemPrompt = ChatGptPrompt.getDefaultSystemPrompt();
         reviewUserPrompt = String.join("\n", Arrays.asList(
-                Configuration.DEFAULT_GPT_REVIEW_USER_PROMPT,
-                Configuration.getPatchSetReviewUserPrompt(),
-                Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_USER_PROMPT,
+                ChatGptPrompt.getPatchSetReviewUserPrompt(),
+                ChatGptPrompt.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
                 diffContent
         ));
         reviewVoteUserPrompt = String.join("\n", Arrays.asList(
-                Configuration.DEFAULT_GPT_REVIEW_USER_PROMPT,
-                Configuration.getPatchSetReviewUserPrompt(),
-                Configuration.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
-                String.format(Configuration.DEFAULT_GPT_VOTING_REVIEW_USER_PROMPT, VOTING_MIN_SCORE, VOTING_MAX_SCORE),
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_USER_PROMPT,
+                ChatGptPrompt.getPatchSetReviewUserPrompt(),
+                ChatGptPrompt.DEFAULT_GPT_COMMIT_MESSAGES_REVIEW_USER_PROMPT,
+                String.format(ChatGptPrompt.DEFAULT_GPT_VOTING_REVIEW_USER_PROMPT, VOTING_MIN_SCORE, VOTING_MAX_SCORE),
                 diffContent
         ));
     }
@@ -256,7 +260,6 @@ public class ChatGptReviewTest {
 
     @Test
     public void patchSetCreatedOrUpdatedStreamed() throws InterruptedException, NoSuchProjectException, ExecutionException {
-        Configuration config = new Configuration(globalConfig, projectConfig);
         GerritClient gerritClient = new GerritClient();
         ChatGptClient chatGptClient = new ChatGptClient();
         PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, chatGptClient);
@@ -297,7 +300,6 @@ public class ChatGptReviewTest {
                 .thenReturn(false);
         when(globalConfig.getBoolean(Mockito.eq("enabledVoting"), Mockito.anyBoolean()))
                 .thenReturn(true);
-        Configuration config = new Configuration(globalConfig, projectConfig);
         GerritClient gerritClient = new GerritClient();
         ChatGptClient chatGptClient = new ChatGptClient();
         PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, chatGptClient);
@@ -340,7 +342,6 @@ public class ChatGptReviewTest {
     public void patchSetDisableUserGroup() throws NoSuchProjectException {
         when(globalConfig.getString(Mockito.eq("disabledGroups"), Mockito.anyString()))
                 .thenReturn(GERRIT_USER_GROUP);
-        Configuration config = new Configuration(globalConfig, projectConfig);
         GerritClient gerritClient = new GerritClient();
         ChatGptClient chatGptClient = new ChatGptClient();
         PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, chatGptClient);
@@ -364,7 +365,6 @@ public class ChatGptReviewTest {
 
     @Test
     public void gptMentionedInComment() throws InterruptedException, NoSuchProjectException, ExecutionException {
-        Configuration config = new Configuration(globalConfig, projectConfig);
         GerritChange gerritChange = getGerritChange();
         GerritClient gerritClient = new GerritClient();
         ChatGptClient chatGptClient = new ChatGptClient();
@@ -391,16 +391,16 @@ public class ChatGptReviewTest {
 
         GerritListener gerritListener = new GerritListener(mockConfigCreator, eventListenerHandler);
         gerritListener.onEvent(event);
-        int commentPropertiesSize = gerritClient.getCommentProperties(gerritChange).size();
+        int commentPropertiesSize = gerritClient.getClientData(gerritChange).getCommentProperties().size();
         CompletableFuture<Void> future = eventListenerHandler.getLatestFuture();
         future.get();
 
         String commentUserPrompt = String.join("\n", Arrays.asList(
-                Configuration.DEFAULT_GPT_REQUEST_USER_PROMPT_1,
+                ChatGptPrompt.DEFAULT_GPT_REQUEST_USER_PROMPT_1,
                 diffContent,
-                Configuration.DEFAULT_GPT_REQUEST_USER_PROMPT_2,
+                ChatGptPrompt.DEFAULT_GPT_REQUEST_USER_PROMPT_2,
                 reviewTagComments,
-                config.getCommentRequestUserPrompt(commentPropertiesSize)
+                ChatGptPrompt.getCommentRequestUserPrompt(commentPropertiesSize)
         ));
         RequestPatternBuilder requestPatternBuilder = WireMock.postRequestedFor(
                 WireMock.urlEqualTo(gerritSetReviewUri(gerritChange.getFullChangeId())));

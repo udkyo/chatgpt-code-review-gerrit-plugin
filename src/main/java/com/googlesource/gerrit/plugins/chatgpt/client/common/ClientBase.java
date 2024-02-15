@@ -1,4 +1,4 @@
-package com.googlesource.gerrit.plugins.chatgpt.client;
+package com.googlesource.gerrit.plugins.chatgpt.client.common;
 
 import com.google.gson.Gson;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;

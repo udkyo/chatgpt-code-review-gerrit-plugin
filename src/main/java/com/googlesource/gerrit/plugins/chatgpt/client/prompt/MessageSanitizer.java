@@ -1,33 +1,24 @@
-package com.googlesource.gerrit.plugins.chatgpt.utils;
+package com.googlesource.gerrit.plugins.chatgpt.client.prompt;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.googlesource.gerrit.plugins.chatgpt.utils.StringUtils.parseOutOfDelimiters;
 
-public class ReviewUtils {
+public class MessageSanitizer {
     private static final Pattern SANITIZE_REGEX = Pattern.compile("(\\*{1,2}|(?<!\\w)_{1,2})(.+?)\\1",
             Pattern.DOTALL);
 
-    public static String processChatGptMessage(String message) {
+    public static String sanitizeChatGptMessage(String message) {
         // Sanitize code blocks (delimited by "```") by stripping out the language for syntax highlighting and ensuring
         // that is preceded by two "\n" chars. Additionally, sanitize the content outside these blocks.
-        return parseOutOfDelimiters(message, "\\s*```\\w*\\s*", ReviewUtils::sanitizeOutsideInlineCodeBlocks,
+        return parseOutOfDelimiters(message, "\\s*```\\w*\\s*", MessageSanitizer::sanitizeOutsideInlineCodeBlocks,
                 "\n\n```\n", "\n```\n");
-    }
-
-    public static long getTimeStamp(String updatedString) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSSSS");
-        LocalDateTime updatedDateTime = LocalDateTime.parse(updatedString, formatter);
-        return updatedDateTime.toInstant(ZoneOffset.UTC).getEpochSecond();
     }
 
     private static String sanitizeOutsideInlineCodeBlocks(String message) {
         // Sanitize the content outside the inline code blocks (delimited by a single "`").
-        return parseOutOfDelimiters(message, "`", ReviewUtils::sanitizeGerritComment);
+        return parseOutOfDelimiters(message, "`", MessageSanitizer::sanitizeGerritComment);
     }
 
     private static String sanitizeGerritComment(String message) {

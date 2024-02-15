@@ -2,6 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.integration;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.prompt.ChatGptPrompt;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.model.review.ReviewBatch;
 import lombok.extern.slf4j.Slf4j;
@@ -34,10 +35,11 @@ public class CodeReviewPluginIT {
 
     @Test
     public void sayHelloToGPT() throws Exception {
+        ChatGptPrompt chatGptPrompt = new ChatGptPrompt(config);
         when(config.getGptDomain()).thenReturn(Configuration.OPENAI_DOMAIN);
         when(config.getGptToken()).thenReturn("Your GPT token");
         when(config.getGptModel()).thenReturn(Configuration.DEFAULT_GPT_MODEL);
-        when(config.getGptSystemPrompt()).thenReturn(Configuration.DEFAULT_GPT_SYSTEM_PROMPT);
+        when(chatGptPrompt.getGptSystemPrompt()).thenReturn(ChatGptPrompt.DEFAULT_GPT_SYSTEM_PROMPT);
 
         String answer = chatGptClient.ask(config, "", "hello");
         log.info("answer: {}", answer);

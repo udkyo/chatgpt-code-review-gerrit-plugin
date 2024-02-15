@@ -3,7 +3,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 import com.google.common.net.HttpHeaders;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.googlesource.gerrit.plugins.chatgpt.client.ClientBase;
+import com.googlesource.gerrit.plugins.chatgpt.client.common.ClientBase;
 import com.googlesource.gerrit.plugins.chatgpt.client.HttpClientWithRetry;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;

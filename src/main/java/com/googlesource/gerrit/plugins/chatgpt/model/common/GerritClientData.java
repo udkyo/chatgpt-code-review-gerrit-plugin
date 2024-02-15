@@ -1,0 +1,22 @@
+package com.googlesource.gerrit.plugins.chatgpt.model.common;
+
+import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
+import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+import java.util.HashMap;
+import java.util.List;
+
+@AllArgsConstructor
+@Data
+public class GerritClientData {
+    private HashMap<String, FileDiffProcessed> fileDiffsProcessed;
+    private List<GerritComment> detailComments;
+    private CommentData commentData;
+
+    public List<GerritComment> getCommentProperties() {
+        return commentData.getCommentProperties();
+    }
+
+}

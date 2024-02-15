@@ -2,14 +2,13 @@ package com.googlesource.gerrit.plugins.chatgpt.settings;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.prompt.ChatGptUserPrompt;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
+import com.googlesource.gerrit.plugins.chatgpt.model.common.GerritClientData;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritPermittedVotingRange;
 import com.googlesource.gerrit.plugins.chatgpt.model.settings.Settings;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 @Slf4j
 public class DynamicSettings {
@@ -31,10 +30,11 @@ public class DynamicSettings {
 
     public static void update(Configuration config, GerritChange change, GerritClient gerritClient) {
         Settings settings = getInstance(change);
+        GerritClientData gerritClientData = gerritClient.getClientData(change);
+        ChatGptUserPrompt chatGptUserPrompt = new ChatGptUserPrompt(config, gerritClientData);
 
-        List<GerritComment> commentProperties = gerritClient.getCommentProperties(change);
-        settings.setCommentPropertiesSize(commentProperties.size());
-        settings.setGptRequestUserPrompt(gerritClient.getUserRequests(change));
+        settings.setCommentPropertiesSize(gerritClientData.getCommentProperties().size());
+        settings.setGptRequestUserPrompt(chatGptUserPrompt.buildPrompt(change));
         if (config.isVotingEnabled() && !change.getIsCommentEvent()) {
             GerritPermittedVotingRange permittedVotingRange = gerritClient.getPermittedVotingRange(change);
             if (permittedVotingRange != null) {

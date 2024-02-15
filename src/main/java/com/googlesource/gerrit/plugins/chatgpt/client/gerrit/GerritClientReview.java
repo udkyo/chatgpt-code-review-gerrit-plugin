@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.googlesource.gerrit.plugins.chatgpt.utils.ReviewUtils.processChatGptMessage;
+import static com.googlesource.gerrit.plugins.chatgpt.client.prompt.MessageSanitizer.sanitizeChatGptMessage;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 @Slf4j
@@ -70,7 +70,7 @@ public class GerritClientReview extends GerritClientAccount {
         List<String> messages = new ArrayList<>();
         Map<String, List<GerritComment>> comments = new HashMap<>();
         for (ReviewBatch reviewBatch : reviewBatches) {
-            String message = processChatGptMessage(reviewBatch.getContent());
+            String message = sanitizeChatGptMessage(reviewBatch.getContent());
             if (message.trim().isEmpty()) {
                 log.info("Empty message from review not submitted.");
                 continue;
