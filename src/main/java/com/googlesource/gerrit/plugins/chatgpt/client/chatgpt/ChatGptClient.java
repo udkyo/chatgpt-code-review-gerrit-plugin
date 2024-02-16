@@ -22,7 +22,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 @Singleton
@@ -125,16 +124,16 @@ public class ChatGptClient {
                 .content(chatGptPrompt.getGptUserPrompt(patchSet, changeId))
                 .build();
 
-        List<ChatGptRequest.Message> messages = List.of(systemMessage, userMessage);
+        ChatGptParameters chatGptParameters = new ChatGptParameters(config, isCommentEvent);
         ChatGptRequest tools = chatGptTools.retrieveTools(changeId);
         ChatGptRequest chatGptRequest = ChatGptRequest.builder()
                 .model(config.getGptModel())
-                .messages(messages)
-                .temperature(config.getGptTemperature())
-                .stream(config.getGptStreamOutput() && !isCommentEvent)
+                .messages(List.of(systemMessage, userMessage))
+                .temperature(chatGptParameters.getGptTemperature())
+                .stream(chatGptParameters.getStreamOutput())
                 // Seed value is Utilized to prevent ChatGPT from mixing up separate API calls that occur in close
                 // temporal proximity.
-                .seed(ThreadLocalRandom.current().nextInt())
+                .seed(chatGptParameters.getRandomSeed())
                 .tools(tools.getTools())
                 .toolChoice(tools.getToolChoice())
                 .build();

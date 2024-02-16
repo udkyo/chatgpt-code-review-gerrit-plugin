@@ -17,7 +17,8 @@ public class Configuration {
     // Default Config values
     public static final String OPENAI_DOMAIN = "https://api.openai.com";
     public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
-    private static final double DEFAULT_GPT_TEMPERATURE = 0.2;
+    public static final double DEFAULT_GPT_REVIEW_TEMPERATURE = 0.2;
+    public static final double DEFAULT_GPT_COMMENT_TEMPERATURE = 1.0;
     private static final boolean DEFAULT_REVIEW_PATCH_SET = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = false;
     private static final boolean DEFAULT_FULL_FILE_REVIEW = true;
@@ -69,13 +70,14 @@ public class Configuration {
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
     public static final String KEY_VOTING_MIN_SCORE = "votingMinScore";
     public static final String KEY_VOTING_MAX_SCORE = "votingMaxScore";
+    public static final String KEY_GPT_REVIEW_TEMPERATURE = "gptReviewTemperature";
+    public static final String KEY_GPT_COMMENT_TEMPERATURE = "gptCommentTemperature";
     private static final String KEY_GPT_TOKEN = "gptToken";
     private static final String KEY_GERRIT_AUTH_BASE_URL = "gerritAuthBaseUrl";
     private static final String KEY_GERRIT_USERNAME = "gerritUserName";
     private static final String KEY_GERRIT_PASSWORD = "gerritPassword";
     private static final String KEY_GPT_DOMAIN = "gptDomain";
     private static final String KEY_GPT_MODEL = "gptModel";
-    private static final String KEY_GPT_TEMPERATURE = "gptTemperature";
     private static final String KEY_STREAM_OUTPUT = "gptStreamOutput";
     private static final String KEY_REVIEW_COMMIT_MESSAGES = "gptReviewCommitMessages";
     private static final String KEY_REVIEW_PATCH_SET = "gptReviewPatchSet";
@@ -126,10 +128,6 @@ public class Configuration {
 
     public String getGptModel() {
         return getString(KEY_GPT_MODEL, DEFAULT_GPT_MODEL);
-    }
-
-    public double getGptTemperature() {
-        return Double.parseDouble(getString(KEY_GPT_TEMPERATURE, String.valueOf(DEFAULT_GPT_TEMPERATURE)));
     }
 
     public boolean getGptReviewPatchSet() {
