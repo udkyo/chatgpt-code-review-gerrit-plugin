@@ -54,6 +54,11 @@ public class GerritClient {
         return gerritClientFacade.isDisabledTopic(topic);
     }
 
+    public boolean isWorkInProgress(GerritChange change) {
+        updateGerritClientFacade(change);
+        return gerritClientFacade.isWorkInProgress();
+    }
+
     public HashMap<String, FileDiffProcessed> getFileDiffsProcessed(GerritChange change) {
         updateGerritClientFacade(change);
         return gerritClientFacade.getFileDiffsProcessed();

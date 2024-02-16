@@ -9,6 +9,8 @@ import java.util.List;
 public class GerritPatchSetDetail {
     private Labels labels;
     private List<GerritComment> messages;
+    @SerializedName("work_in_progress")
+    private Boolean workInProgress;
 
     @Data
     public static class Labels {

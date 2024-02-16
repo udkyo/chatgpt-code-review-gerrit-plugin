@@ -33,6 +33,10 @@ public class GerritClientDetail extends GerritClientBase {
         return gerritPatchSetDetail.getMessages();
     }
 
+    public boolean isWorkInProgress() {
+        return gerritPatchSetDetail.getWorkInProgress() != null && gerritPatchSetDetail.getWorkInProgress();
+    }
+
     public GerritPermittedVotingRange getPermittedVotingRange() {
         List<GerritPatchSetDetail.Permission> permissions = gerritPatchSetDetail.getLabels().getCodeReview().getAll();
         if (permissions == null) {

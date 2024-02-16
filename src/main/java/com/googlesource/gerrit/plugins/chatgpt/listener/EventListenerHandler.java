@@ -140,6 +140,10 @@ public class EventListenerHandler {
             log.info("PatchSetAttribute event properties not retrieved");
             return false;
         }
+        if (gerritClient.isWorkInProgress(change)) {
+            log.debug("Skipping Patch Set processing due to its WIP status.");
+            return false;
+        }
         PatchSetAttribute patchSetAttribute = patchSetAttributeOptional.get();
         ChangeKind patchSetEventKind = patchSetAttribute.kind;
         if (patchSetEventKind != REWORK) {
