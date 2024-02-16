@@ -22,7 +22,7 @@ public class ChatGptComment extends ClientMessage {
             return removeHeadings(commentMessage);
         }
         else {
-            return removeMentions(commentMessage);
+            return removeHeadings(removeMentions(commentMessage));
         }
     }
 

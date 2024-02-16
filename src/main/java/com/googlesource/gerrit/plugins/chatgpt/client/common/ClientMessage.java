@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 @Slf4j
 public class ClientMessage extends ClientBase {
     private static final Pattern MESSAGE_HEADING_PATTERN = Pattern.compile(
-            "^(?:Patch Set \\d+:[^\\n]*\\s+(?:\\(\\d+ comments?\\)\\s+)?)+");
+            "^(?:Patch Set \\d+:[^\\n]*\\s+(?:\\(\\d+ comments?\\)\\s*)?)+");
 
     private final Pattern botMentionPattern;
 

@@ -78,9 +78,13 @@ public class ChatGptHistory extends ChatGptComment {
     }
 
     private void addMessageToHistory(List<ChatGptRequest.Message> messageHistory, GerritComment comment) {
+        String messageContent = getCleanedMessage(comment);
+        if (messageContent.isEmpty()) {
+            return;
+        }
         ChatGptRequest.Message message = ChatGptRequest.Message.builder()
                 .role(getRoleFromComment(comment))
-                .content(getCleanedMessage(comment))
+                .content(messageContent)
                 .build();
         messageHistory.add(message);
     }
