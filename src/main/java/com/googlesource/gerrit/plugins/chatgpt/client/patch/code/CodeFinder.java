@@ -106,11 +106,25 @@ public class CodeFinder {
         while (codeMatcher.find()) {
             int startPosition = codeMatcher.start();
             int endPosition = codeMatcher.end();
+            int startLine = getLineNumber(charToLineMapItem, startPosition);
+            int endLine = getLineNumber(charToLineMapItem, endPosition);
+            if (startLine > endLine) {
+                log.info("Code range discarded: start line ({}) greater than end line ({}).\ncodeMatcher: {}.\n" +
+                        "diffCode: {}", startLine, endLine, codeMatcher, diffCode);
+                continue;
+            }
+            int startCharacter = getLineCharacter(diffCode, startPosition);
+            int endCharacter = getLineCharacter(diffCode, endPosition);
+            if (startLine == endLine && startCharacter > endCharacter) {
+                log.info("Code range discarded: start char ({}) greater than end char ({}) for line {}.\ncodeMatcher:" +
+                        " {}.\ndiffCode: {}", startCharacter, endCharacter, startLine, codeMatcher, diffCode);
+                continue;
+            }
             currentCodeRange = GerritCodeRange.builder()
-                    .startLine(getLineNumber(charToLineMapItem, startPosition))
-                    .endLine(getLineNumber(charToLineMapItem, endPosition))
-                    .startCharacter(getLineCharacter(diffCode, startPosition))
-                    .endCharacter(getLineCharacter(diffCode, endPosition))
+                    .startLine(startLine)
+                    .endLine(endLine)
+                    .startCharacter(startCharacter)
+                    .endCharacter(endCharacter)
                     .build();
             // If multiple commented code portions are found and currentCommentRange is closer to the line
             // number suggested by ChatGPT than closestCommentRange, it becomes the new closestCommentRange
