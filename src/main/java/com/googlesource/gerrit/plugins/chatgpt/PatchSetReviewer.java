@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
+import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClientReview;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.comment.GerritCommentRange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptReplyItem;
@@ -40,6 +41,7 @@ public class PatchSetReviewer {
         reviewBatches = new ArrayList<>();
         commentProperties = gerritClient.getClientData(change).getCommentProperties();
         gerritCommentRange = new GerritCommentRange(gerritClient, change);
+        GerritClientReview gerritClientReview = new GerritClientReview(config);
         String patchSet = gerritClient.getPatchSet(change);
         if (patchSet.isEmpty()) {
             log.info("No file to review has been found in the PatchSet");
@@ -52,7 +54,7 @@ public class PatchSetReviewer {
 
         ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
         retrieveReviewBatches(reviewJson, change);
-        gerritClient.setReview(change, reviewBatches, reviewJson.getScore());
+        gerritClientReview.setReview(change.getFullChangeId(), reviewBatches, reviewJson.getScore());
     }
 
     private void setCommentBatchMap(ReviewBatch batchMap, Integer batchID) {

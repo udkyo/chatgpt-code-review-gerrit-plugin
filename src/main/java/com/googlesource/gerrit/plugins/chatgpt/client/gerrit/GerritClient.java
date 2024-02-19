@@ -4,13 +4,11 @@ import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritPermittedVotingRange;
-import com.googlesource.gerrit.plugins.chatgpt.model.review.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.model.common.GerritClientData;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
-import java.util.List;
 
 @Slf4j
 @Singleton
@@ -67,15 +65,6 @@ public class GerritClient {
     public Integer getNotNullAccountId(GerritChange change, String authorUsername) {
         updateGerritClientFacade(change);
         return gerritClientFacade.getNotNullAccountId(authorUsername);
-    }
-
-    public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
-        setReview(new GerritChange(fullChangeId), reviewBatches, null);
-    }
-
-    public void setReview(GerritChange change, List<ReviewBatch> reviewBatches, Integer reviewScore) throws Exception {
-        updateGerritClientFacade(change);
-        gerritClientFacade.setReview(change.getFullChangeId(), reviewBatches, reviewScore);
     }
 
     public boolean retrieveLastComments(GerritChange change) {

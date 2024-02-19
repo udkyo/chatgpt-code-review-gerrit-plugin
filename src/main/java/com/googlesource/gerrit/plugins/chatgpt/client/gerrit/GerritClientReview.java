@@ -6,7 +6,6 @@ import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritReview;
 import com.googlesource.gerrit.plugins.chatgpt.model.review.ReviewBatch;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 
@@ -24,9 +23,6 @@ import static java.net.HttpURLConnection.HTTP_OK;
 @Slf4j
 public class GerritClientReview extends GerritClientAccount {
     private static final String BULLET_POINT = "* ";
-
-    @Getter
-    private List<GerritComment> commentProperties;
 
     public GerritClientReview(Configuration config) {
         super(config);
@@ -56,6 +52,10 @@ public class GerritClientReview extends GerritClientAccount {
         if (response.statusCode() != HTTP_OK) {
             log.error("Review setting failed with status code: {}", response.statusCode());
         }
+    }
+
+    public void setReview(String fullChangeId, List<ReviewBatch> reviewBatches) throws Exception {
+        setReview(fullChangeId, reviewBatches, null);
     }
 
     private String joinMessages(List<String> messages) {
