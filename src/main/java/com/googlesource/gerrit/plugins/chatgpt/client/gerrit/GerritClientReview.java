@@ -83,6 +83,7 @@ public class GerritClientReview extends GerritClientAccount {
                 filenameComment.setLine(reviewBatch.getLine());
                 filenameComment.setRange(reviewBatch.getRange());
                 filenameComment.setInReplyTo(reviewBatch.getId());
+                filenameComment.setUnresolved(!config.getInlineCommentsAsResolved());
                 filenameComments.add(filenameComment);
                 comments.putIfAbsent(filename, filenameComments);
             }

@@ -65,6 +65,7 @@ public class Configuration {
     private static final boolean DEFAULT_ENABLED_VOTING = false;
     private static final int DEFAULT_VOTING_MIN_SCORE = -1;
     private static final int DEFAULT_VOTING_MAX_SCORE = 1;
+    private static final boolean DEFAULT_INLINE_COMMENTS_AS_RESOLVED = false;
 
     // Config setting keys
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
@@ -95,6 +96,7 @@ public class Configuration {
     private static final String KEY_MAX_REVIEW_FILE_SIZE = "maxReviewFileSize";
     private static final String KEY_ENABLED_FILE_EXTENSIONS = "enabledFileExtensions";
     private static final String KEY_ENABLED_VOTING = "enabledVoting";
+    private static final String KEY_INLINE_COMMENTS_AS_RESOLVED = "inlineCommentsAsResolved";
 
     @Getter
     private final PluginConfig globalConfig;
@@ -204,6 +206,10 @@ public class Configuration {
 
     public int getVotingMaxScore() {
         return getInt(KEY_VOTING_MAX_SCORE, DEFAULT_VOTING_MAX_SCORE);
+    }
+
+    public boolean getInlineCommentsAsResolved() {
+        return getBoolean(KEY_INLINE_COMMENTS_AS_RESOLVED, DEFAULT_INLINE_COMMENTS_AS_RESOLVED);
     }
 
     public String getString(String key, String defaultValue) {
