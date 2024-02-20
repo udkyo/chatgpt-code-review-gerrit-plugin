@@ -20,12 +20,8 @@ public class GerritClientFacade {
         gerritClientComments = new GerritClientComments(config);
     }
 
-    public void loadClientDetail(GerritChange change, Integer gptAccountId) {
-        gerritClientDetail.loadClientDetail(change, gptAccountId);
-    }
-
-    public GerritPermittedVotingRange getPermittedVotingRange() {
-        return gerritClientDetail.getPermittedVotingRange();
+    public GerritPermittedVotingRange getPermittedVotingRange(GerritChange change) {
+        return gerritClientDetail.getPermittedVotingRange(change);
     }
 
     public String getPatchSet(GerritChange change) throws Exception {
@@ -40,8 +36,8 @@ public class GerritClientFacade {
         return gerritClientPatchSet.isDisabledTopic(topic);
     }
 
-    public boolean isWorkInProgress() {
-        return gerritClientDetail.isWorkInProgress();
+    public boolean isWorkInProgress(GerritChange change) {
+        return gerritClientDetail.isWorkInProgress(change);
     }
 
     public HashMap<String, FileDiffProcessed> getFileDiffsProcessed() {
@@ -56,10 +52,10 @@ public class GerritClientFacade {
         return gerritClientComments.retrieveLastComments(change);
     }
 
-    public GerritClientData getClientData() {
+    public GerritClientData getClientData(GerritChange change) {
         return new GerritClientData(
                 gerritClientPatchSet.getFileDiffsProcessed(),
-                gerritClientDetail.getMessages(),
+                gerritClientDetail.getMessages(change),
                 gerritClientComments.getCommentData()
         );
     }

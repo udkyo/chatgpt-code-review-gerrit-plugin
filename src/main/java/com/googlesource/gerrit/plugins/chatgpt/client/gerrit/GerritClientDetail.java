@@ -5,6 +5,7 @@ import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritPatchSetDetail;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritPermittedVotingRange;
+import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
@@ -12,32 +13,25 @@ import java.util.List;
 
 @Slf4j
 public class GerritClientDetail extends GerritClientBase {
-    private Integer gptAccountId;
     private GerritPatchSetDetail gerritPatchSetDetail;
 
     public GerritClientDetail(Configuration config) {
         super(config);
     }
 
-    public void loadClientDetail(GerritChange change, Integer gptAccountId) {
-        this.gptAccountId = gptAccountId;
-        try {
-            gerritPatchSetDetail = getReviewDetail(change.getFullChangeId());
-        }
-        catch (Exception e) {
-            log.error("Error retrieving PatchSet details", e);
-        }
-    }
-
-    public List<GerritComment> getMessages() {
+    public List<GerritComment> getMessages(GerritChange change) {
+        loadPatchSetDetail(change);
         return gerritPatchSetDetail.getMessages();
     }
 
-    public boolean isWorkInProgress() {
+    public boolean isWorkInProgress(GerritChange change) {
+        loadPatchSetDetail(change);
         return gerritPatchSetDetail.getWorkInProgress() != null && gerritPatchSetDetail.getWorkInProgress();
     }
 
-    public GerritPermittedVotingRange getPermittedVotingRange() {
+    public GerritPermittedVotingRange getPermittedVotingRange(GerritChange change) {
+        int gptAccountId = DynamicSettings.getInstance(change).getGptAccountId();
+        loadPatchSetDetail(change);
         List<GerritPatchSetDetail.Permission> permissions = gerritPatchSetDetail.getLabels().getCodeReview().getAll();
         if (permissions == null) {
             log.debug("No limitations on the ChatGPT voting range were detected");
@@ -50,6 +44,18 @@ public class GerritClientDetail extends GerritClientBase {
             }
         }
         return null;
+    }
+
+    private void loadPatchSetDetail(GerritChange change) {
+        if (gerritPatchSetDetail != null) {
+            return;
+        }
+        try {
+            gerritPatchSetDetail = getReviewDetail(change.getFullChangeId());
+        }
+        catch (Exception e) {
+            log.error("Error retrieving PatchSet details", e);
+        }
     }
 
     private GerritPatchSetDetail getReviewDetail(String fullChangeId) throws Exception {

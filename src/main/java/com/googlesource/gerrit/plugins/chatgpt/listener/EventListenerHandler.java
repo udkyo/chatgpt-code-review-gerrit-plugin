@@ -56,7 +56,6 @@ public class EventListenerHandler {
         gerritClient.initialize(config, change);
         Integer gptAccountId = gerritClient.getNotNullAccountId(change, config.getGerritUserName());
         settings = DynamicSettings.getNewInstance(config, change, gptAccountId);
-        gerritClient.loadClientDetail(change, gptAccountId);
     }
 
     public void handleEvent(Configuration config, Event event) {
@@ -140,10 +139,6 @@ public class EventListenerHandler {
             log.info("PatchSetAttribute event properties not retrieved");
             return false;
         }
-        if (gerritClient.isWorkInProgress(change)) {
-            log.debug("Skipping Patch Set processing due to its WIP status.");
-            return false;
-        }
         PatchSetAttribute patchSetAttribute = patchSetAttributeOptional.get();
         ChangeKind patchSetEventKind = patchSetAttribute.kind;
         if (patchSetEventKind != REWORK) {
@@ -153,6 +148,10 @@ public class EventListenerHandler {
         String authorUsername = patchSetAttribute.author.username;
         if (gerritClient.isDisabledUser(authorUsername)) {
             log.info("Review of PatchSets from user '{}' is disabled.", authorUsername);
+            return false;
+        }
+        if (gerritClient.isWorkInProgress(change)) {
+            log.debug("Skipping Patch Set processing due to its WIP status.");
             return false;
         }
         return true;

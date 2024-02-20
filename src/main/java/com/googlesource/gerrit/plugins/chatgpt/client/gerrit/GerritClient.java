@@ -25,14 +25,9 @@ public class GerritClient {
         gerritClientFacade = SingletonManager.getInstance(GerritClientFacade.class, change, config);
     }
 
-    public void loadClientDetail(GerritChange change, Integer gptAccountId) {
-        updateGerritClientFacade(change);
-        gerritClientFacade.loadClientDetail(change, gptAccountId);
-    }
-
     public GerritPermittedVotingRange getPermittedVotingRange(GerritChange change) {
         updateGerritClientFacade(change);
-        return gerritClientFacade.getPermittedVotingRange();
+        return gerritClientFacade.getPermittedVotingRange(change);
     }
 
     public String getPatchSet(String fullChangeId) throws Exception {
@@ -54,7 +49,7 @@ public class GerritClient {
 
     public boolean isWorkInProgress(GerritChange change) {
         updateGerritClientFacade(change);
-        return gerritClientFacade.isWorkInProgress();
+        return gerritClientFacade.isWorkInProgress(change);
     }
 
     public HashMap<String, FileDiffProcessed> getFileDiffsProcessed(GerritChange change) {
@@ -74,7 +69,7 @@ public class GerritClient {
 
     public GerritClientData getClientData(GerritChange change) {
         updateGerritClientFacade(change);
-        return gerritClientFacade.getClientData();
+        return gerritClientFacade.getClientData(change);
     }
 
     public void destroy(GerritChange change) {
