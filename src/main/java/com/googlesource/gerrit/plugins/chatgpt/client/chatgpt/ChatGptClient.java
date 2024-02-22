@@ -114,7 +114,7 @@ public class ChatGptClient {
     }
 
     private String createRequestBody(Configuration config, String changeId, String patchSet) {
-        ChatGptPrompt chatGptPrompt = new ChatGptPrompt(config);
+        ChatGptPrompt chatGptPrompt = new ChatGptPrompt(config, isCommentEvent);
         ChatGptRequest.Message systemMessage = ChatGptRequest.Message.builder()
                 .role("system")
                 .content(chatGptPrompt.getGptSystemPrompt())

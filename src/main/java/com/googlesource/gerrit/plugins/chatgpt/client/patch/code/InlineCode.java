@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.googlesource.gerrit.plugins.chatgpt.utils.StringUtils.joinWithNewLine;
+
 @Slf4j
 public class InlineCode {
     private final CodeFinder codeFinder;
@@ -28,7 +30,7 @@ public class InlineCode {
             for (int line_num = range.startLine; line_num <= range.endLine; line_num++) {
                 codeByRange.add(getLineSlice(line_num));
             }
-            return String.join("\n", codeByRange);
+            return joinWithNewLine(codeByRange);
         }
         else {
             return newContent.get(commentProperty.getLine());

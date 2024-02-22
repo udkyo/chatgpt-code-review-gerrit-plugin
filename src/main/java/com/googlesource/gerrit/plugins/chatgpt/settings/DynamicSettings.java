@@ -31,10 +31,10 @@ public class DynamicSettings {
     public static void update(Configuration config, GerritChange change, GerritClient gerritClient) {
         Settings settings = getInstance(change);
         GerritClientData gerritClientData = gerritClient.getClientData(change);
-        ChatGptUserPrompt chatGptUserPrompt = new ChatGptUserPrompt(config, gerritClientData);
+        ChatGptUserPrompt chatGptUserPrompt = new ChatGptUserPrompt(config, change, gerritClientData);
 
         settings.setCommentPropertiesSize(gerritClientData.getCommentProperties().size());
-        settings.setGptRequestUserPrompt(chatGptUserPrompt.buildPrompt(change));
+        settings.setGptRequestUserPrompt(chatGptUserPrompt.buildPrompt());
         if (config.isVotingEnabled() && !change.getIsCommentEvent()) {
             GerritPermittedVotingRange permittedVotingRange = gerritClient.getPermittedVotingRange(change);
             if (permittedVotingRange != null) {

@@ -67,6 +67,11 @@ public class GerritClient {
         return gerritClientFacade.retrieveLastComments(change);
     }
 
+    public void retrieveAllComments(GerritChange change) {
+        updateGerritClientFacade(change);
+        gerritClientFacade.retrieveAllComments(change);
+    }
+
     public GerritClientData getClientData(GerritChange change) {
         updateGerritClientFacade(change);
         return gerritClientFacade.getClientData(change);

@@ -23,6 +23,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 @Slf4j
 public class GerritClientReview extends GerritClientAccount {
     private static final String BULLET_POINT = "* ";
+    private static final String EMPTY_REVIEW_MESSAGE = "No review update for this Change Set";
 
     public GerritClientReview(Configuration config) {
         super(config);
@@ -96,6 +97,9 @@ public class GerritClientReview extends GerritClientAccount {
         }
         if (!comments.isEmpty()) {
             reviewMap.setComments(comments);
+        }
+        if (messages.isEmpty() && comments.isEmpty()) {
+            reviewMap.setMessage(EMPTY_REVIEW_MESSAGE);
         }
         if (reviewScore != null) {
             reviewMap.setLabels(new GerritReview.Labels(reviewScore));

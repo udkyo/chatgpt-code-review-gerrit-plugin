@@ -25,7 +25,6 @@ public class GerritClientComments extends GerritClientAccount {
     private final HashMap<String, GerritComment> commentMap;
     private final HashMap<String, GerritComment> commentGlobalMap;
 
-    private ClientMessage clientMessage;
     private String authorUsername;
     @Getter
     private List<GerritComment> commentProperties;
@@ -42,7 +41,6 @@ public class GerritClientComments extends GerritClientAccount {
     }
 
     public boolean retrieveLastComments(GerritChange change) {
-        clientMessage = new ClientMessage(config);
         CommentAddedEvent commentAddedEvent = (CommentAddedEvent) change.getEvent();
         authorUsername = commentAddedEvent.author.get().username;
         log.debug("Found comments by '{}' on {}", authorUsername, change.getEventTimeStamp());
@@ -54,12 +52,20 @@ public class GerritClientComments extends GerritClientAccount {
             log.info("Review of comments from user '{}' is disabled.", authorUsername);
             return false;
         }
-        addAllComments(change);
+        addLastComments(change);
 
         return !commentProperties.isEmpty();
     }
 
-    private List<GerritComment> getLastComments(GerritChange change) throws Exception {
+    public void retrieveAllComments(GerritChange change) {
+        try {
+            retrieveComments(change);
+        } catch (Exception e) {
+            log.error("Error while retrieving all comments for change: {}", change.getFullChangeId(), e);
+        }
+    }
+
+    private List<GerritComment> retrieveComments(GerritChange change) throws Exception {
         URI uri = URI.create(config.getGerritAuthBaseUrl()
                 + UriResourceLocator.gerritGetAllPatchSetCommentsUri(change.getFullChangeId()));
         String responseBody = forwardGetRequest(uri);
@@ -97,9 +103,10 @@ public class GerritClientComments extends GerritClientAccount {
         return latestComments.getOrDefault(latestChangeMessageId, null);
     }
 
-    private void addAllComments(GerritChange change) {
+    private void addLastComments(GerritChange change) {
+        ClientMessage clientMessage = new ClientMessage(config);
         try {
-            List<GerritComment> latestComments = getLastComments(change);
+            List<GerritComment> latestComments = retrieveComments(change);
             if (latestComments == null) {
                 return;
             }
@@ -114,7 +121,7 @@ public class GerritClientComments extends GerritClientAccount {
                 }
             }
         } catch (Exception e) {
-            log.error("Error while retrieving comments for change: {}", change.getFullChangeId(), e);
+            log.error("Error while retrieving last comments for change: {}", change.getFullChangeId(), e);
         }
     }
 

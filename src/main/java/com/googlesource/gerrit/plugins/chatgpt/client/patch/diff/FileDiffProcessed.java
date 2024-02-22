@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
 
+import static com.googlesource.gerrit.plugins.chatgpt.utils.StringUtils.joinWithNewLine;
+
 @Slf4j
 public class FileDiffProcessed {
     private static final int MIN_RANDOM_PLACEHOLDER_VARIABLE_LENGTH = 1;
@@ -88,7 +90,7 @@ public class FileDiffProcessed {
 
     private void updateCodeEntities(Field diffField, List<String> diffLines) throws IllegalAccessException {
         String diffType = diffField.getName();
-        String content = String.join("\n", diffLines);
+        String content = joinWithNewLine(diffLines);
         diffField.set(diffContentItem, content);
         // If the lines modified in the PatchSet are not deleted, they are utilized to populate newContent and
         // charToLineMapItem

@@ -52,6 +52,10 @@ public class GerritClientFacade {
         return gerritClientComments.retrieveLastComments(change);
     }
 
+    public void retrieveAllComments(GerritChange change) {
+        gerritClientComments.retrieveAllComments(change);
+    }
+
     public GerritClientData getClientData(GerritChange change) {
         return new GerritClientData(
                 gerritClientPatchSet.getFileDiffsProcessed(),

@@ -1,5 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.chatgpt;
 
+import com.google.gson.Gson;
 import com.googlesource.gerrit.plugins.chatgpt.client.common.ClientBase;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptRequest;
@@ -11,6 +12,7 @@ import java.io.InputStreamReader;
 
 class ChatGptTools extends ClientBase {
     private final boolean isCommentEvent;
+    private final Gson gson = new Gson();
 
     public ChatGptTools(Configuration config, Boolean isCommentEvent) {
         super(config);

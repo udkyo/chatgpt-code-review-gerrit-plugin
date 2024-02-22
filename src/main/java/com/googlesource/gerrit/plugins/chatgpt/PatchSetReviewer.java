@@ -87,6 +87,9 @@ public class PatchSetReviewer {
 
     private void retrieveReviewBatches(ChatGptResponseContent reviewJson, GerritChange change) {
         for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
+            if (replyItem.isRepeated() || replyItem.isConflicting()) {
+                continue;
+            }
             ReviewBatch batchMap = new ReviewBatch();
             batchMap.setContent(replyItem.getReply());
             if (change.getIsCommentEvent() && replyItem.getId() != null) {

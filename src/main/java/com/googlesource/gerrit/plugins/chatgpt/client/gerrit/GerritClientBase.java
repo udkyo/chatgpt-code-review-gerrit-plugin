@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.google.common.net.HttpHeaders;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.googlesource.gerrit.plugins.chatgpt.client.common.ClientBase;
@@ -23,6 +24,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 @Slf4j
 public abstract class GerritClientBase extends ClientBase {
     protected final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
+    protected final Gson gson = new Gson();
     @Getter
     protected HashMap<String, FileDiffProcessed> fileDiffsProcessed = new HashMap<>();
 

@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class ChatGptRequestItem extends ChatGptDialogueItem {
+public class ChatGptHistoryItem extends ChatGptDialogueItem {
     private String request;
+    private String message;
 }

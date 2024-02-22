@@ -1,5 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.prompt;
 
+import com.google.gson.Gson;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptRequest;
@@ -20,6 +21,7 @@ public class ChatGptHistory extends ChatGptComment {
     private static final String ROLE_USER = "user";
     private static final String ROLE_ASSISTANT = "assistant";
 
+    private final Gson gson = new Gson();
     private final HashMap<String, GerritComment> commentMap;
     private final HashMap<String, GerritComment> commentGlobalMap;
     private final List<GerritComment> detailComments;
@@ -33,14 +35,11 @@ public class ChatGptHistory extends ChatGptComment {
     }
 
     public String retrieveHistory(GerritComment commentProperty) {
-        if (commentProperty.getInReplyTo() != null) {
-            return retrieveMessageHistory(commentProperty);
-        }
-        else if (commentProperty.getFilename().equals(GLOBAL_MESSAGES_FILENAME) && detailComments != null) {
+        if (commentProperty.getFilename().equals(GLOBAL_MESSAGES_FILENAME) && detailComments != null) {
             return retrieveGlobalMessageHistory();
         }
         else {
-            return getMessageWithoutMentions(commentProperty);
+            return retrieveMessageHistory(commentProperty);
         }
     }
 

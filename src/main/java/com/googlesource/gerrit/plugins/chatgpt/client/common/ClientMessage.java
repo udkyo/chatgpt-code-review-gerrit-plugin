@@ -1,6 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.common;
 
+import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.regex.Matcher;
@@ -13,9 +15,17 @@ public class ClientMessage extends ClientBase {
 
     private final Pattern botMentionPattern;
 
+    @Getter
+    private String message;
+
     public ClientMessage(Configuration config) {
         super(config);
         botMentionPattern = getBotMentionPattern();
+    }
+
+    public ClientMessage(Configuration config, String message) {
+        this(config);
+        this.message = message;
     }
 
     public boolean isBotAddressed(String message) {
@@ -30,12 +40,19 @@ public class ClientMessage extends ClientBase {
         return true;
     }
 
-    protected String removeHeadings(String message) {
-        return MESSAGE_HEADING_PATTERN.matcher(message).replaceAll("");
+    public ClientMessage removeHeadings() {
+        message = MESSAGE_HEADING_PATTERN.matcher(message).replaceAll("");
+        return this;
     }
 
-    protected String removeMentions(String message) {
-        return botMentionPattern.matcher(message).replaceAll("").trim();
+    public ClientMessage removeMentions() {
+        message = botMentionPattern.matcher(message).replaceAll("").trim();
+        return this;
+    }
+
+    public ClientMessage removeCommands() {
+        message = ClientCommands.removeCommands(message);
+        return this;
     }
 
     private Pattern getBotMentionPattern() {

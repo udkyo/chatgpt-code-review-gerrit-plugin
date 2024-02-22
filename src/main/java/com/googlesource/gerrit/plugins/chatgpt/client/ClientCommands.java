@@ -49,4 +49,9 @@ public class ClientCommands {
         return false;
     }
 
+    public static String removeCommands(String comment) {
+        Matcher reviewCommandMatcher = COMMAND_PATTERN.matcher(comment);
+        return reviewCommandMatcher.replaceAll("");
+    }
+
 }
