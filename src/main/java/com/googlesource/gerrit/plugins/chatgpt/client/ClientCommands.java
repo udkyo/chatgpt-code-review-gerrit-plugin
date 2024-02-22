@@ -40,9 +40,9 @@ public class ClientCommands {
                 log.debug("Forced review command detected in message {}", comment);
                 settings.setForcedReview(true);
             }
-            if (command == COMMAND_SET.REVIEW) {
-                log.debug("Forced review command applied to the whole Change Set");
-                settings.setForcedReviewChangeSet(true);
+            if (command == COMMAND_SET.REVIEW_LAST) {
+                log.debug("Forced review command applied to the last Patch Set");
+                settings.setForcedReviewLastPatchSet(true);
             }
             return true;
         }

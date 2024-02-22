@@ -18,10 +18,6 @@ public class Settings {
     @NonNull
     private Integer votingMaxScore;
     private Boolean forcedReview = false;
-    private Boolean forcedReviewChangeSet = false;
-
-    public Boolean getForcedReviewLastPatchSet() {
-        return forcedReview && !forcedReviewChangeSet;
-    }
+    private Boolean forcedReviewLastPatchSet = false;
 
 }

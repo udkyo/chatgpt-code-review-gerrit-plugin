@@ -42,7 +42,7 @@ public class GerritClientPatchSet extends GerritClientAccount {
     }
 
     private boolean isChangeSetBased(GerritChange change) {
-        return change.getIsCommentEvent() || DynamicSettings.getInstance(change).getForcedReviewChangeSet();
+        return !DynamicSettings.getInstance(change).getForcedReviewLastPatchSet();
     }
 
     private int retrieveRevisionBase(GerritChange change) throws Exception {
