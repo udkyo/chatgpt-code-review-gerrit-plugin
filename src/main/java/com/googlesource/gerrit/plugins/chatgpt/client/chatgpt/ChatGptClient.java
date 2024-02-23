@@ -115,11 +115,11 @@ public class ChatGptClient {
 
     private String createRequestBody(Configuration config, String changeId, String patchSet) {
         ChatGptPrompt chatGptPrompt = new ChatGptPrompt(config, isCommentEvent);
-        ChatGptRequest.Message systemMessage = ChatGptRequest.Message.builder()
+        ChatGptRequestMessage systemMessage = ChatGptRequestMessage.builder()
                 .role("system")
                 .content(chatGptPrompt.getGptSystemPrompt())
                 .build();
-        ChatGptRequest.Message userMessage = ChatGptRequest.Message.builder()
+        ChatGptRequestMessage userMessage = ChatGptRequestMessage.builder()
                 .role("user")
                 .content(chatGptPrompt.getGptUserPrompt(patchSet, changeId))
                 .build();

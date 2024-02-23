@@ -2,9 +2,12 @@ package com.googlesource.gerrit.plugins.chatgpt.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptHistoryItem;
+import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptMessageItem;
+import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptRequestMessage;
 import com.googlesource.gerrit.plugins.chatgpt.model.common.GerritClientData;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Slf4j
 public class ChatGptUserPromptRequests extends ChatGptUserPromptBase {
@@ -13,17 +16,22 @@ public class ChatGptUserPromptRequests extends ChatGptUserPromptBase {
         commentProperties = commentData.getCommentProperties();
     }
 
-    public void addHistoryItem(int i) {
-        ChatGptHistoryItem requestItem = getHistoryItem(i);
-        requestItem.setId(i);
-        historyItems.add(requestItem);
+    public void addMessageItem(int i) {
+        ChatGptMessageItem messageItem = getMessageItem(i);
+        messageItem.setId(i);
+        messageItems.add(messageItem);
     }
 
-    protected ChatGptHistoryItem getHistoryItem(int i) {
-        ChatGptHistoryItem requestItem = super.getHistoryItem(i);
-        requestItem.setRequest(gptMessageHistory.retrieveHistory(commentProperties.get(i)));
+    protected ChatGptMessageItem getMessageItem(int i) {
+        ChatGptMessageItem messageItem = super.getMessageItem(i);
+        List<ChatGptRequestMessage> messageHistories = gptMessageHistory.retrieveHistory(commentProperties.get(i));
+        ChatGptRequestMessage request = messageHistories.remove(messageHistories.size() -1);
+        messageItem.setRequest(request.getContent());
+        if (!messageHistories.isEmpty()) {
+            messageItem.setHistory(messageHistories);
+        }
 
-        return requestItem;
+        return messageItem;
     }
 
 }

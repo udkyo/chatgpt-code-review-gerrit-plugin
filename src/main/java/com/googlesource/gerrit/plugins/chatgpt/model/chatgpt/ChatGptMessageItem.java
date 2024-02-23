@@ -3,9 +3,11 @@ package com.googlesource.gerrit.plugins.chatgpt.model.chatgpt;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class ChatGptHistoryItem extends ChatGptDialogueItem {
+public class ChatGptMessageItem extends ChatGptDialogueItem {
     private String request;
-    private String message;
+    private List<ChatGptRequestMessage> history;
 }

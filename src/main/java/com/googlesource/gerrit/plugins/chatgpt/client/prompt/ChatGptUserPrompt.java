@@ -3,7 +3,7 @@ package com.googlesource.gerrit.plugins.chatgpt.client.prompt;
 import com.google.gson.Gson;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptHistoryItem;
+import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptMessageItem;
 import com.googlesource.gerrit.plugins.chatgpt.model.common.GerritClientData;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,10 +25,10 @@ public class ChatGptUserPrompt {
 
     public String buildPrompt() {
         for (int i = 0; i < chatGptUserPromptBase.getCommentProperties().size(); i++) {
-            chatGptUserPromptBase.addHistoryItem(i);
+            chatGptUserPromptBase.addMessageItem(i);
         }
-        List<ChatGptHistoryItem> historyItems = chatGptUserPromptBase.getHistoryItems();
-        return historyItems.isEmpty() ? "" : gson.toJson(historyItems);
+        List<ChatGptMessageItem> messageItems = chatGptUserPromptBase.getMessageItems();
+        return messageItems.isEmpty() ? "" : gson.toJson(messageItems);
     }
 
 }

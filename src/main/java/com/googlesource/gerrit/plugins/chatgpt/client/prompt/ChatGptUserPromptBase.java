@@ -4,7 +4,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.code.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptHistoryItem;
+import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptMessageItem;
 import com.googlesource.gerrit.plugins.chatgpt.model.common.CommentData;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.model.common.GerritClientData;
@@ -21,7 +21,7 @@ public abstract class ChatGptUserPromptBase {
     protected final HashMap<String, FileDiffProcessed> fileDiffsProcessed;
     protected final CommentData commentData;
     @Getter
-    protected final List<ChatGptHistoryItem> historyItems;
+    protected final List<ChatGptMessageItem> messageItems;
 
     protected ChatGptHistory gptMessageHistory;
     @Getter
@@ -32,23 +32,23 @@ public abstract class ChatGptUserPromptBase {
         fileDiffsProcessed = gerritClientData.getFileDiffsProcessed();
         commentData = gerritClientData.getCommentData();
         gptMessageHistory = new ChatGptHistory(config, change, gerritClientData);
-        historyItems = new ArrayList<>();
+        messageItems = new ArrayList<>();
     }
 
-    abstract void addHistoryItem(int i);
+    abstract void addMessageItem(int i);
 
-    protected ChatGptHistoryItem getHistoryItem(int i) {
-        ChatGptHistoryItem historyItem = new ChatGptHistoryItem();
+    protected ChatGptMessageItem getMessageItem(int i) {
+        ChatGptMessageItem messageItem = new ChatGptMessageItem();
         GerritComment commentProperty = commentProperties.get(i);
         if (commentProperty.getLine() != null || commentProperty.getRange() != null) {
             String filename = commentProperty.getFilename();
             InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));
-            historyItem.setFilename(filename);
-            historyItem.setLineNumber(commentProperty.getLine());
-            historyItem.setCodeSnippet(inlineCode.getInlineCode(commentProperty));
+            messageItem.setFilename(filename);
+            messageItem.setLineNumber(commentProperty.getLine());
+            messageItem.setCodeSnippet(inlineCode.getInlineCode(commentProperty));
         }
 
-        return historyItem;
+        return messageItem;
     }
 
 }

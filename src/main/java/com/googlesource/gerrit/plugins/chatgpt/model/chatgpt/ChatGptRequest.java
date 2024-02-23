@@ -13,19 +13,10 @@ public class ChatGptRequest {
     private boolean stream;
     private double temperature;
     private int seed;
-    private List<Message> messages;
+    private List<ChatGptRequestMessage> messages;
     private List<Tool> tools;
     @SerializedName("tool_choice")
     private ToolChoice toolChoice;
-
-    @Data
-    @Builder
-    public static class Message {
-        private String role;
-        private String content;
-        // PatchSet changeId passed in the request
-        private String changeId;
-    }
 
     @Data
     public static class Tool {
