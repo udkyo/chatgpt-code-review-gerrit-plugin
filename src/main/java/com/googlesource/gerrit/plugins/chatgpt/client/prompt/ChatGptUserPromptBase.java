@@ -42,7 +42,11 @@ public abstract class ChatGptUserPromptBase {
         GerritComment commentProperty = commentProperties.get(i);
         if (commentProperty.getLine() != null || commentProperty.getRange() != null) {
             String filename = commentProperty.getFilename();
-            InlineCode inlineCode = new InlineCode(fileDiffsProcessed.get(filename));
+            FileDiffProcessed fileDiffProcessed = fileDiffsProcessed.get(filename);
+            if (fileDiffProcessed == null) {
+                return messageItem;
+            }
+            InlineCode inlineCode = new InlineCode(fileDiffProcessed);
             messageItem.setFilename(filename);
             messageItem.setLineNumber(commentProperty.getLine());
             messageItem.setCodeSnippet(inlineCode.getInlineCode(commentProperty));
