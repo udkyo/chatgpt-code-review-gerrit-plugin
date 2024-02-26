@@ -159,8 +159,8 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `globalEnable`: Set to false by default, meaning the plugin will review only designated repositories. If enabled, the
   plugin will automatically review all pull requests by default (not recommended in production environments).
 - `enabledProjects`: The default value is an empty string. If globalEnable is set to false, the plugin will only run in
-  the repositories specified here. The value should be a comma-separated list of repository names, for example: "
-  project1,project2,project3".
+  the repositories specified here. The value should be a comma-separated list of repository names, for example:
+  "project1,project2,project3".
 
 #### Optional Parameters for Project Configuration only
 
@@ -173,6 +173,11 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
   it.
 - `/review_last`: when used in a comment directed at ChatGPT on any Change Set, triggers a review of the last Patch Set
   of the Change Set. Unlike `/review`, this command does not result in casting or updating votes.
+
+### Command Options
+
+- `--filter=[true/false]`: Controls the filtering of duplicate and conflicting comments, defaulting to "true" to apply
+  filters.
 
 ## Testing
 

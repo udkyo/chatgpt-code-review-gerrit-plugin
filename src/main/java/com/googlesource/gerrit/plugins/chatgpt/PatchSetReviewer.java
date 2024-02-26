@@ -86,8 +86,9 @@ public class PatchSetReviewer {
     }
 
     private void retrieveReviewBatches(ChatGptResponseContent reviewJson, GerritChange change) {
+        boolean shouldFilterReplies = DynamicSettings.getInstance(change).getForcedReviewFilter();
         for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
-            if (replyItem.isRepeated() || replyItem.isConflicting()) {
+            if (shouldFilterReplies && (replyItem.isRepeated() || replyItem.isConflicting())) {
                 continue;
             }
             ReviewBatch batchMap = new ReviewBatch();

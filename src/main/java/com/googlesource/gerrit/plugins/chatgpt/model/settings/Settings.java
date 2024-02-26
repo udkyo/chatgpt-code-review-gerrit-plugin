@@ -17,7 +17,10 @@ public class Settings {
     private Integer votingMinScore;
     @NonNull
     private Integer votingMaxScore;
+
+    // Command flags
     private Boolean forcedReview = false;
     private Boolean forcedReviewLastPatchSet = false;
+    private Boolean forcedReviewFilter = true;
 
 }
