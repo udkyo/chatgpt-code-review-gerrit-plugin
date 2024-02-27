@@ -27,9 +27,7 @@ public class ChatGptUserPromptRequests extends ChatGptUserPromptBase {
         List<ChatGptRequestMessage> messageHistories = gptMessageHistory.retrieveHistory(commentProperties.get(i));
         ChatGptRequestMessage request = messageHistories.remove(messageHistories.size() -1);
         messageItem.setRequest(request.getContent());
-        if (!messageHistories.isEmpty()) {
-            messageItem.setHistory(messageHistories);
-        }
+        setHistories(messageItem, messageHistories);
 
         return messageItem;
     }

@@ -18,13 +18,11 @@ import java.util.List;
 import java.util.Map;
 
 import static com.googlesource.gerrit.plugins.chatgpt.client.prompt.MessageSanitizer.sanitizeChatGptMessage;
+import static com.googlesource.gerrit.plugins.chatgpt.settings.StaticSettings.EMPTY_REVIEW_MESSAGE;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 @Slf4j
 public class GerritClientReview extends GerritClientAccount {
-    private static final String BULLET_POINT = "* ";
-    private static final String EMPTY_REVIEW_MESSAGE = "No review update for this Change Set";
-
     public GerritClientReview(Configuration config) {
         super(config);
     }
@@ -59,16 +57,8 @@ public class GerritClientReview extends GerritClientAccount {
         setReview(fullChangeId, reviewBatches, null);
     }
 
-    private String joinMessages(List<String> messages) {
-        if (messages.size() == 1) {
-            return messages.get(0);
-        }
-        return BULLET_POINT + String.join("\n\n" + BULLET_POINT, messages);
-    }
-
     private GerritReview buildReview(List<ReviewBatch> reviewBatches, Integer reviewScore) {
         GerritReview reviewMap = new GerritReview();
-        List<String> messages = new ArrayList<>();
         Map<String, List<GerritComment>> comments = new HashMap<>();
         for (ReviewBatch reviewBatch : reviewBatches) {
             String message = sanitizeChatGptMessage(reviewBatch.getContent());
@@ -76,30 +66,29 @@ public class GerritClientReview extends GerritClientAccount {
                 log.info("Empty message from review not submitted.");
                 continue;
             }
-            if (reviewBatch.getLine() != null || reviewBatch.getRange() != null ) {
-                String filename = reviewBatch.getFilename();
-                List<GerritComment> filenameComments = comments.getOrDefault(filename, new ArrayList<>());
-                GerritComment filenameComment = new GerritComment();
-                filenameComment.setMessage(message);
+            boolean unresolved;
+            String filename = reviewBatch.getFilename();
+            List<GerritComment> filenameComments = comments.getOrDefault(filename, new ArrayList<>());
+            GerritComment filenameComment = new GerritComment();
+            filenameComment.setMessage(message);
+            if (reviewBatch.getLine() != null || reviewBatch.getRange() != null) {
                 filenameComment.setLine(reviewBatch.getLine());
                 filenameComment.setRange(reviewBatch.getRange());
                 filenameComment.setInReplyTo(reviewBatch.getId());
-                filenameComment.setUnresolved(!config.getInlineCommentsAsResolved());
-                filenameComments.add(filenameComment);
-                comments.putIfAbsent(filename, filenameComments);
+                unresolved = !config.getInlineCommentsAsResolved();
             }
             else {
-                messages.add(message);
+                unresolved = !config.getPatchSetCommentsAsResolved();
             }
+            filenameComment.setUnresolved(unresolved);
+            filenameComments.add(filenameComment);
+            comments.putIfAbsent(filename, filenameComments);
         }
-        if (!messages.isEmpty()) {
-            reviewMap.setMessage(joinMessages(messages));
-        }
-        if (!comments.isEmpty()) {
-            reviewMap.setComments(comments);
-        }
-        if (messages.isEmpty() && comments.isEmpty()) {
+        if (comments.isEmpty()) {
             reviewMap.setMessage(EMPTY_REVIEW_MESSAGE);
+        }
+        else {
+            reviewMap.setComments(comments);
         }
         if (reviewScore != null) {
             reviewMap.setLabels(new GerritReview.Labels(reviewScore));

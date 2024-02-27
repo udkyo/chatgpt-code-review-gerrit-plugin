@@ -12,5 +12,5 @@ import java.util.List;
 public class CommentData {
     private List<GerritComment> commentProperties;
     private HashMap<String, GerritComment> commentMap;
-    private HashMap<String, GerritComment> commentGlobalMap;
+    private HashMap<String, GerritComment> patchSetCommentMap;
 }

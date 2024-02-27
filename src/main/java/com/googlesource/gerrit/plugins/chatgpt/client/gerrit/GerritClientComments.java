@@ -16,14 +16,14 @@ import java.net.URI;
 import java.util.*;
 
 import static com.googlesource.gerrit.plugins.chatgpt.utils.TimeUtils.getTimeStamp;
+import static com.googlesource.gerrit.plugins.chatgpt.settings.StaticSettings.GERRIT_PATCH_SET_FILENAME;
 
 @Slf4j
 public class GerritClientComments extends GerritClientAccount {
-    public static final String GLOBAL_MESSAGES_FILENAME = "/PATCHSET_LEVEL";
     private static final Integer MAX_SECS_GAP_BETWEEN_EVENT_AND_COMMENT = 2;
 
     private final HashMap<String, GerritComment> commentMap;
-    private final HashMap<String, GerritComment> commentGlobalMap;
+    private final HashMap<String, GerritComment> patchSetCommentMap;
 
     private String authorUsername;
     @Getter
@@ -33,11 +33,11 @@ public class GerritClientComments extends GerritClientAccount {
         super(config);
         commentProperties = new ArrayList<>();
         commentMap = new HashMap<>();
-        commentGlobalMap = new HashMap<>();
+        patchSetCommentMap = new HashMap<>();
     }
 
     public CommentData getCommentData() {
-        return new CommentData(commentProperties, commentMap, commentGlobalMap);
+        return new CommentData(commentProperties, commentMap, patchSetCommentMap);
     }
 
     public boolean retrieveLastComments(GerritChange change) {
@@ -94,8 +94,8 @@ public class GerritClientComments extends GerritClientAccount {
                 }
                 latestComments.computeIfAbsent(changeMessageId, k -> new ArrayList<>()).add(commentObject);
                 commentMap.put(commentId, commentObject);
-                if (filename.equals(GLOBAL_MESSAGES_FILENAME)) {
-                    commentGlobalMap.put(changeMessageId, commentObject);
+                if (filename.equals(GERRIT_PATCH_SET_FILENAME)) {
+                    patchSetCommentMap.put(changeMessageId, commentObject);
                 }
             }
         }

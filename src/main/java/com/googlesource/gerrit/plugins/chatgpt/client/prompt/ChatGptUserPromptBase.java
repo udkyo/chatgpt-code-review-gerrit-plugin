@@ -5,6 +5,7 @@ import com.googlesource.gerrit.plugins.chatgpt.client.patch.code.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.client.patch.diff.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptMessageItem;
+import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptRequestMessage;
 import com.googlesource.gerrit.plugins.chatgpt.model.common.CommentData;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.model.common.GerritClientData;
@@ -53,6 +54,12 @@ public abstract class ChatGptUserPromptBase {
         }
 
         return messageItem;
+    }
+
+    protected void setHistories(ChatGptMessageItem messageItem, List<ChatGptRequestMessage> messageHistories) {
+        if (!messageHistories.isEmpty()) {
+            messageItem.setHistory(messageHistories);
+        }
     }
 
 }

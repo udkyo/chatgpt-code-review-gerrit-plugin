@@ -149,8 +149,10 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
   .sh, .vb, .bat".
 - `enabledVoting`: Initially disabled (false). If set to true, allows ChatGPT to cast a vote on each reviewed Patch Set
   by assigning a score.
-- `inlineCommentsAsResolved`: By default, this is set to false, meaning ChatGPT inline comments will be marked as
-  unresolved, inviting further discussion. When enabled, comments made by ChatGPT will be marked as resolved.
+- `patchSetCommentsAsResolved`: Initially set to false, this option leaves ChatGPT's Patch Set comments as unresolved,
+  inviting further discussion. If activated, it marks ChatGPT's Patch Set comments as resolved.
+- `inlineCommentsAsResolved`: Initially set to false, this option leaves ChatGPT's inline comments as unresolved,
+  inviting further discussion. If activated, it marks ChatGPT's inline comments as resolved.
 - `votingMinScore`: The lowest possible score that can be given to a Patch Set (Default value: -1).
 - `votingMaxScore`: The highest possible score that can be given to a Patch Set (Default value: +1).
 
