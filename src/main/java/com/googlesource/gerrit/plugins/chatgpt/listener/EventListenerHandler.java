@@ -188,7 +188,7 @@ public class EventListenerHandler {
         log.debug("Flag `isCommentEvent` set to {}", isCommentEvent);
         change.setIsCommentEvent(isCommentEvent);
         if (!isCommentEvent) {
-            gerritClient.retrieveAllComments(change);
+            gerritClient.retrievePatchSetInfo(change);
         }
 
         return true;

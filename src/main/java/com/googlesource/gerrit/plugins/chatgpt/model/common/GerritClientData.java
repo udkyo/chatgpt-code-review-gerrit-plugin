@@ -14,9 +14,14 @@ public class GerritClientData {
     private HashMap<String, FileDiffProcessed> fileDiffsProcessed;
     private List<GerritComment> detailComments;
     private CommentData commentData;
+    private Integer revisionBase;
 
     public List<GerritComment> getCommentProperties() {
         return commentData.getCommentProperties();
+    }
+
+    public int getOneBasedRevisionBase() {
+        return revisionBase +1;
     }
 
 }

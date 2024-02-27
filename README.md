@@ -155,6 +155,12 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
   inviting further discussion. If activated, it marks ChatGPT's inline comments as resolved.
 - `votingMinScore`: The lowest possible score that can be given to a Patch Set (Default value: -1).
 - `votingMaxScore`: The highest possible score that can be given to a Patch Set (Default value: +1).
+- `ignoreResolvedChatGptComments`: Determines if resolved comments from ChatGPT should be disregarded. The default
+  setting is true, which means resolved ChatGPT comments are not used for generating new comments or identifying
+  duplicate content. If set to false, resolved ChatGPT comments are factored into these processes.
+- `ignoreOutdatedInlineComments`: Determines if inline comments made on non-latest Patch Sets should be disregarded. By
+  default, this is set to false, meaning all inline comments are used for generating new responses and identifying
+  repetitions. If enabled (true), inline comments from previous Patch Sets are excluded from these considerations.
 
 #### Optional Parameters for Global Configuration only
 

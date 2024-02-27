@@ -10,6 +10,7 @@ import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritPatchSetFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritReviewFileDiff;
 import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
@@ -22,14 +23,31 @@ public class GerritClientPatchSet extends GerritClientAccount {
             .create();
     private final List<String> diffs;
     private boolean isCommitMessage;
+    @Getter
+    private Integer revisionBase = 0;
 
     public GerritClientPatchSet(Configuration config) {
         super(config);
         diffs = new ArrayList<>();
     }
 
+    public void retrieveRevisionBase(GerritChange change) {
+        URI uri = URI.create(config.getGerritAuthBaseUrl()
+                + UriResourceLocator.gerritPatchSetRevisionsUri(change.getFullChangeId()));
+        log.debug("Retrieve Revision URI: '{}'", uri);
+        try {
+            JsonObject reviews = forwardGetRequestReturnJsonObject(uri);
+            Set<String> revisions = reviews.get("revisions").getAsJsonObject().keySet();
+            revisionBase = revisions.size() -1;
+        }
+        catch (Exception e) {
+            log.error("Could not retrieve revisions for PatchSet with fullChangeId: {}", change.getFullChangeId(), e);
+            revisionBase = 0;
+        }
+    }
+
     public String getPatchSet(GerritChange change) throws Exception {
-        int revisionBase = retrieveRevisionBase(change);
+        int revisionBase = getChangeSetRevisionBase(change);
         log.debug("Revision base: {}", revisionBase);
 
         List<String> files = getAffectedFiles(change.getFullChangeId(), revisionBase);
@@ -45,22 +63,8 @@ public class GerritClientPatchSet extends GerritClientAccount {
         return !DynamicSettings.getInstance(change).getForcedReviewLastPatchSet();
     }
 
-    private int retrieveRevisionBase(GerritChange change) throws Exception {
-        if (isChangeSetBased(change)) {
-            return 0;
-        }
-        URI uri = URI.create(config.getGerritAuthBaseUrl()
-                + UriResourceLocator.gerritPatchSetRevisionsUri(change.getFullChangeId()));
-        log.debug("Retrieve Revision URI: '{}'", uri);
-        JsonObject reviews = forwardGetRequestReturnJsonObject(uri);
-        try {
-            Set<String> revisions = reviews.get("revisions").getAsJsonObject().keySet();
-            return revisions.size() -1;
-        }
-        catch (Exception e) {
-            log.error("Could not retrieve revisions for PatchSet with fullChangeId: {}", change.getFullChangeId(), e);
-            throw e;
-        }
+    private int getChangeSetRevisionBase(GerritChange change) {
+        return isChangeSetBased(change) ? 0 : revisionBase;
     }
 
     private List<String> getAffectedFiles(String fullChangeId, int revisionBase) throws Exception {

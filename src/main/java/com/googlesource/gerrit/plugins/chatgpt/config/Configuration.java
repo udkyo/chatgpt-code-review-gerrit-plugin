@@ -67,6 +67,8 @@ public class Configuration {
     private static final int DEFAULT_VOTING_MAX_SCORE = 1;
     private static final boolean DEFAULT_INLINE_COMMENTS_AS_RESOLVED = false;
     private static final boolean DEFAULT_PATCH_SET_COMMENTS_AS_RESOLVED = false;
+    private static final boolean DEFAULT_IGNORE_OUTDATED_INLINE_COMMENTS = false;
+    private static final boolean DEFAULT_IGNORE_RESOLVED_CHAT_GPT_COMMENTS = true;
 
     // Config setting keys
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
@@ -99,6 +101,8 @@ public class Configuration {
     private static final String KEY_ENABLED_VOTING = "enabledVoting";
     private static final String KEY_INLINE_COMMENTS_AS_RESOLVED = "inlineCommentsAsResolved";
     private static final String KEY_PATCH_SET_COMMENTS_AS_RESOLVED = "patchSetCommentsAsResolved";
+    private static final String KEY_IGNORE_OUTDATED_INLINE_COMMENTS = "ignoreOutdatedInlineComments";
+    private static final String KEY_IGNORE_RESOLVED_CHAT_GPT_COMMENTS = "ignoreResolvedChatGptComments";
 
     @Getter
     private final PluginConfig globalConfig;
@@ -216,6 +220,14 @@ public class Configuration {
 
     public boolean getPatchSetCommentsAsResolved() {
         return getBoolean(KEY_PATCH_SET_COMMENTS_AS_RESOLVED, DEFAULT_PATCH_SET_COMMENTS_AS_RESOLVED);
+    }
+
+    public boolean getIgnoreResolvedChatGptComments() {
+        return getBoolean(KEY_IGNORE_RESOLVED_CHAT_GPT_COMMENTS, DEFAULT_IGNORE_RESOLVED_CHAT_GPT_COMMENTS);
+    }
+
+    public boolean getIgnoreOutdatedInlineComments() {
+        return getBoolean(KEY_IGNORE_OUTDATED_INLINE_COMMENTS, DEFAULT_IGNORE_OUTDATED_INLINE_COMMENTS);
     }
 
     public String getString(String key, String defaultValue) {

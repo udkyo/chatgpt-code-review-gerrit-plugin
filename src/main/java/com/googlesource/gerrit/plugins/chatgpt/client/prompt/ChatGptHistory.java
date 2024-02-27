@@ -26,6 +26,9 @@ public class ChatGptHistory extends ChatGptComment {
     private final HashMap<String, GerritComment> patchSetCommentMap;
     private final Set<String> patchSetCommentAdded;
     private final List<GerritComment> patchSetComments;
+    private final int revisionBase;
+
+    private boolean filterActive;
 
     public ChatGptHistory(Configuration config, GerritChange change, GerritClientData gerritClientData) {
         super(config, change);
@@ -33,16 +36,22 @@ public class ChatGptHistory extends ChatGptComment {
         commentMap = commentData.getCommentMap();
         patchSetCommentMap = commentData.getPatchSetCommentMap();
         patchSetComments = retrievePatchSetComments(gerritClientData);
+        revisionBase = gerritClientData.getOneBasedRevisionBase();
         patchSetCommentAdded = new HashSet<>();
     }
 
-    public List<ChatGptRequestMessage> retrieveHistory(GerritComment commentProperty) {
-        if (commentProperty.getFilename().equals(StaticSettings.GERRIT_PATCH_SET_FILENAME)) {
+    public List<ChatGptRequestMessage> retrieveHistory(GerritComment commentProperty, boolean filterActive) {
+        this.filterActive = filterActive;
+        if (commentProperty.isPatchSetComment()) {
             return retrievePatchSetMessageHistory();
         }
         else {
             return retrieveMessageHistory(commentProperty);
         }
+    }
+
+    public List<ChatGptRequestMessage> retrieveHistory(GerritComment commentProperty) {
+        return retrieveHistory(commentProperty, false);
     }
 
     private List<GerritComment> retrievePatchSetComments(GerritClientData gerritClientData) {
@@ -105,10 +114,17 @@ public class ChatGptHistory extends ChatGptComment {
         return messageHistory;
     }
 
+    private boolean isInactiveComment(GerritComment comment) {
+        return config.getIgnoreResolvedChatGptComments() && isFromAssistant(comment) && comment.isResolved() ||
+                config.getIgnoreOutdatedInlineComments() && comment.getOneBasedPatchSet() != revisionBase &&
+                        !comment.isPatchSetComment();
+    }
+
     private void addMessageToHistory(List<ChatGptRequestMessage> messageHistory, GerritComment comment) {
         String messageContent = getCleanedMessage(comment);
         if (messageContent.isEmpty() || MESSAGES_EXCLUDED_FROM_HISTORY.contains(messageContent)
-                || patchSetCommentAdded.contains(messageContent)) {
+                || patchSetCommentAdded.contains(messageContent)
+                || filterActive && isInactiveComment(comment)) {
             return;
         }
         patchSetCommentAdded.add(messageContent);

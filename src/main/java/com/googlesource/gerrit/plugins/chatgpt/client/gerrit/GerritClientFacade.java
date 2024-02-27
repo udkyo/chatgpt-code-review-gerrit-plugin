@@ -52,15 +52,17 @@ public class GerritClientFacade {
         return gerritClientComments.retrieveLastComments(change);
     }
 
-    public void retrieveAllComments(GerritChange change) {
+    public void retrievePatchSetInfo(GerritChange change) {
         gerritClientComments.retrieveAllComments(change);
+        gerritClientPatchSet.retrieveRevisionBase(change);
     }
 
     public GerritClientData getClientData(GerritChange change) {
         return new GerritClientData(
                 gerritClientPatchSet.getFileDiffsProcessed(),
                 gerritClientDetail.getMessages(change),
-                gerritClientComments.getCommentData()
+                gerritClientComments.getCommentData(),
+                gerritClientPatchSet.getRevisionBase()
         );
     }
 
