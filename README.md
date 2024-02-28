@@ -124,8 +124,8 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
   setting of 1.0.
 - `gptReviewPatchSet`: Set to true by default. When switched to false, it disables the automatic review of Patch Sets as
   they are created or updated.
-- `gptReviewCommitMessages`: The default value is false. When enabled by setting to true, this option also verifies if
-  the commit message matches with the content of the review.
+- `gptReviewCommitMessages`: The default value is true. When enabled, this option also verifies if the commit message
+  matches with the content of the Change Set.
 - `gptFullFileReview`: Enabled by default. Activating this option sends both unchanged lines and changes to ChatGPT for
   review, offering additional context information. Deactivating it (set to false) results in only the changed lines
   being submitted for review.
