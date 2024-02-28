@@ -28,6 +28,15 @@ public class StringUtils {
         return parseOutOfDelimiters(body, splitDelim, processMessage, splitDelim, splitDelim);
     }
 
+    public static String backslashEachChar(String body) {
+        StringBuilder slashedBody = new StringBuilder();
+
+        for (char ch : body.toCharArray()) {
+            slashedBody.append("\\\\").append(ch);
+        }
+        return slashedBody.toString();
+    }
+
     public static String concatenate(List<String> components) {
         return String.join("", components);
     }
