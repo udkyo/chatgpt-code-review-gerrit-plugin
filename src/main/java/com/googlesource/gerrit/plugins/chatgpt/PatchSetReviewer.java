@@ -27,6 +27,7 @@ public class PatchSetReviewer {
     private final GerritClient gerritClient;
     private final ChatGptClient chatGptClient;
 
+    private Configuration config;
     private GerritCommentRange gerritCommentRange;
     private List<ReviewBatch> reviewBatches;
     private List<GerritComment> commentProperties;
@@ -39,6 +40,7 @@ public class PatchSetReviewer {
     }
 
     public void review(Configuration config, GerritChange change) throws Exception {
+        this.config = config;
         reviewBatches = new ArrayList<>();
         reviewScores = new ArrayList<>();
         commentProperties = gerritClient.getClientData(change).getCommentProperties();
@@ -51,11 +53,11 @@ public class PatchSetReviewer {
         }
         DynamicSettings.update(config, change, gerritClient);
 
-        String reviewReply = getReviewReply(config, change, patchSet);
+        String reviewReply = getReviewReply(change, patchSet);
         log.debug("ChatGPT response: {}", reviewReply);
 
         retrieveReviewBatches(reviewReply, change);
-        gerritClientReview.setReview(change.getFullChangeId(), reviewBatches, getReviewScore(config));
+        gerritClientReview.setReview(change.getFullChangeId(), reviewBatches, getReviewScore());
     }
 
     private void setCommentBatchMap(ReviewBatch batchMap, Integer batchID) {
@@ -94,7 +96,9 @@ public class PatchSetReviewer {
             if (!replyItem.isConflicting() && score != null) {
                 reviewScores.add(score);
             }
-            if (shouldFilterReplies && (replyItem.isRepeated() || replyItem.isConflicting())) {
+            if (shouldFilterReplies && (replyItem.isRepeated() || replyItem.isConflicting() ||
+                    config.getFilterNegativeComments() && score != null &&
+                            score >= config.getFilterCommentsBelowScore())) {
                 continue;
             }
             ReviewBatch batchMap = new ReviewBatch();
@@ -109,7 +113,7 @@ public class PatchSetReviewer {
         }
     }
 
-    private String getReviewReply(Configuration config, GerritChange change, String patchSet) throws Exception {
+    private String getReviewReply(GerritChange change, String patchSet) throws Exception {
         List<String> patchLines = Arrays.asList(patchSet.split("\n"));
         if (patchLines.size() > config.getMaxReviewLines()) {
             log.warn("Patch set too large. Skipping review. changeId: {}", change.getFullChangeId());
@@ -118,7 +122,7 @@ public class PatchSetReviewer {
         return chatGptClient.ask(config, change, patchSet);
     }
 
-    private Integer getReviewScore(Configuration config) {
+    private Integer getReviewScore() {
         return config.isVotingEnabled() && !reviewScores.isEmpty() ? Collections.min(reviewScores) : null;
     }
 

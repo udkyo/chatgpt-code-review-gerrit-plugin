@@ -63,6 +63,8 @@ public class Configuration {
     private static final int DEFAULT_MAX_REVIEW_LINES = 1000;
     private static final int DEFAULT_MAX_REVIEW_FILE_SIZE = 10000;
     private static final boolean DEFAULT_ENABLED_VOTING = false;
+    private static final boolean DEFAULT_FILTER_NEGATIVE_COMMENTS = true;
+    private static final int DEFAULT_FILTER_COMMENTS_BELOW_SCORE = 0;
     private static final int DEFAULT_VOTING_MIN_SCORE = -1;
     private static final int DEFAULT_VOTING_MAX_SCORE = 1;
     private static final boolean DEFAULT_INLINE_COMMENTS_AS_RESOLVED = false;
@@ -99,6 +101,8 @@ public class Configuration {
     private static final String KEY_MAX_REVIEW_FILE_SIZE = "maxReviewFileSize";
     private static final String KEY_ENABLED_FILE_EXTENSIONS = "enabledFileExtensions";
     private static final String KEY_ENABLED_VOTING = "enabledVoting";
+    private static final String KEY_FILTER_NEGATIVE_COMMENTS = "filterNegativeComments";
+    private static final String KEY_FILTER_COMMENTS_BELOW_SCORE = "filterCommentsBelowScore";
     private static final String KEY_INLINE_COMMENTS_AS_RESOLVED = "inlineCommentsAsResolved";
     private static final String KEY_PATCH_SET_COMMENTS_AS_RESOLVED = "patchSetCommentsAsResolved";
     private static final String KEY_IGNORE_OUTDATED_INLINE_COMMENTS = "ignoreOutdatedInlineComments";
@@ -204,6 +208,14 @@ public class Configuration {
 
     public boolean isVotingEnabled() {
         return getBoolean(KEY_ENABLED_VOTING, DEFAULT_ENABLED_VOTING);
+    }
+
+    public boolean getFilterNegativeComments() {
+        return getBoolean(KEY_FILTER_NEGATIVE_COMMENTS, DEFAULT_FILTER_NEGATIVE_COMMENTS);
+    }
+
+    public int getFilterCommentsBelowScore() {
+        return getInt(KEY_FILTER_COMMENTS_BELOW_SCORE, DEFAULT_FILTER_COMMENTS_BELOW_SCORE);
     }
 
     public int getVotingMinScore() {

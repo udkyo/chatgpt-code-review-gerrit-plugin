@@ -149,6 +149,11 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
   .sh, .vb, .bat".
 - `enabledVoting`: Initially disabled (false). If set to true, allows ChatGPT to cast a vote on each reviewed Patch Set
   by assigning a score.
+- `filterNegativeComments`: Activated by default (true), ensuring only negative review comments (scored below the
+  `filterCommentsBelowScore` threshold outlined further) are displayed initially. Disabling this setting (false) will
+  also show positive and neutral comments.
+- `filterCommentsBelowScore`: With `filterNegativeComments` active, review comments with a score at or above this
+  setting's value are hidden (default is 0).
 - `patchSetCommentsAsResolved`: Initially set to false, this option leaves ChatGPT's Patch Set comments as unresolved,
   inviting further discussion. If activated, it marks ChatGPT's Patch Set comments as resolved.
 - `inlineCommentsAsResolved`: Initially set to false, this option leaves ChatGPT's inline comments as unresolved,

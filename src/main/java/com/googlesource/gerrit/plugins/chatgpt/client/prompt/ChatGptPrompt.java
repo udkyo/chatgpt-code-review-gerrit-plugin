@@ -83,7 +83,7 @@ public class ChatGptPrompt {
 
     public String getPatchSetReviewUserPrompt() {
         List<String> attributes = new ArrayList<>(PATCH_SET_REVIEW_REPLY_ATTRIBUTES);
-        if (config.isVotingEnabled()) {
+        if (config.isVotingEnabled() || config.getFilterNegativeComments()) {
             updateScoreDescription();
         }
         else {
