@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class StringUtils {
 
@@ -28,12 +26,6 @@ public class StringUtils {
 
     public static String parseOutOfDelimiters(String body, String splitDelim, Function<String, String> processMessage) {
         return parseOutOfDelimiters(body, splitDelim, processMessage, splitDelim, splitDelim);
-    }
-
-    public static List<String> getNumberedList(List<String> components) {
-        return IntStream.range(0, components.size())
-                .mapToObj(i -> (i + 1) + ". " + components.get(i))
-                .collect(Collectors.toList());
     }
 
     public static String concatenate(List<String> components) {

@@ -75,15 +75,12 @@ public class ChatGptReviewTest {
     private static final BranchNameKey BRANCH_NAME = BranchNameKey.create(PROJECT_NAME, "myBranchName");
     private static final boolean GPT_STREAM_OUTPUT = true;
     private static final long TEST_TIMESTAMP = 1699270812;
-    private static final int VOTING_MIN_SCORE = -1;
-    private static final int VOTING_MAX_SCORE = 1;
 
     private final Gson gson = new Gson();
 
     private String expectedResponseStreamed;
     private String expectedSystemPromptReview;
-    private String reviewUserPrompt;
-    private String reviewVoteUserPrompt;
+    private String promptTagReview;
     private String promptTagComments;
     private String diffContent;
     private String gerritPatchSetReview;
@@ -233,29 +230,10 @@ public class ChatGptReviewTest {
         gerritPatchSetReview = new String(Files.readAllBytes(basePath.resolve("__files/gerritPatchSetReview.json")));
         expectedResponseStreamed = new String(Files.readAllBytes(basePath.resolve(
                 "__files/chatGptExpectedResponseStreamed.json")));
-        String promptTagReview = new String(Files.readAllBytes(basePath.resolve(
+        promptTagReview = new String(Files.readAllBytes(basePath.resolve(
                 "__files/chatGptPromptTagReview.json")));
         promptTagComments = new String(Files.readAllBytes(basePath.resolve("__files/chatGptPromptTagRequests.json")));
         expectedSystemPromptReview = ChatGptPrompt.getDefaultGptReviewSystemPrompt();
-        reviewUserPrompt = joinWithNewLine(Arrays.asList(
-                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT,
-                "1. " + ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_REVIEW + " " + ChatGptPrompt.getPatchSetReviewUserPrompt(),
-                "2. " + ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES,
-                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_DIFF,
-                diffContent,
-                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_MESSAGE_HISTORY,
-                promptTagReview
-        ));
-        reviewVoteUserPrompt = joinWithNewLine(Arrays.asList(
-                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT,
-                "1. " + ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_REVIEW + " " + ChatGptPrompt.getPatchSetReviewUserPrompt(),
-                "2. " + ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES,
-                "3. " + String.format(ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_VOTING, VOTING_MIN_SCORE, VOTING_MAX_SCORE),
-                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_DIFF,
-                diffContent,
-                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_MESSAGE_HISTORY,
-                promptTagReview
-        ));
     }
 
     private AccountAttribute createTestAccountAttribute() {
@@ -280,6 +258,15 @@ public class ChatGptReviewTest {
         PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, chatGptClient);
         ConfigCreator mockConfigCreator = mock(ConfigCreator.class);
         when(mockConfigCreator.createConfig(ArgumentMatchers.any())).thenReturn(config);
+        String reviewUserPrompt = joinWithNewLine(Arrays.asList(
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT,
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_REVIEW + " " + chatGptPrompt.getPatchSetReviewUserPrompt(),
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES,
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_DIFF,
+                diffContent,
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_MESSAGE_HISTORY,
+                promptTagReview
+        ));
         chatGptPrompt.setCommentEvent(false);
 
         PatchSetCreatedEvent event = mock(PatchSetCreatedEvent.class);
@@ -321,6 +308,16 @@ public class ChatGptReviewTest {
         PatchSetReviewer patchSetReviewer = new PatchSetReviewer(gerritClient, chatGptClient);
         ConfigCreator mockConfigCreator = mock(ConfigCreator.class);
         when(mockConfigCreator.createConfig(ArgumentMatchers.any())).thenReturn(config);
+        String reviewVoteUserPrompt = joinWithNewLine(Arrays.asList(
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT,
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_REVIEW + " " + chatGptPrompt.getPatchSetReviewUserPrompt(),
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES,
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_DIFF,
+                diffContent,
+                ChatGptPrompt.DEFAULT_GPT_REVIEW_PROMPT_MESSAGE_HISTORY,
+                promptTagReview
+        ));
+
         chatGptPrompt.setCommentEvent(false);
         WireMock.stubFor(WireMock.post(WireMock.urlEqualTo(URI.create(config.getGptDomain()
                         + UriResourceLocator.chatCompletionsUri()).getPath()))

@@ -19,6 +19,9 @@
                   "reply": {
                     "type": "string"
                   },
+                  "score": {
+                    "type": "integer"
+                  },
                   "filename": {
                     "type": "string"
                   },
@@ -34,16 +37,12 @@
                 ]
               }
             },
-            "score": {
-              "type": "integer"
-            },
             "changeId": {
               "type": "string"
             }
           },
           "required": [
             "replies",
-            "score",
             "changeId"
           ]
         }

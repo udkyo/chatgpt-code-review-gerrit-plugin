@@ -38,7 +38,6 @@ public class ChatGptRequest {
                 @Data
                 public static class Properties {
                     private Property replies;
-                    private Field score;
                     // Field `changeId` expected in the response to correspond with the PatchSet changeId in the request
                     private Field changeId;
 
@@ -57,6 +56,7 @@ public class ChatGptRequest {
                             public static class ObjectProperties {
                                 private Field id;
                                 private Field reply;
+                                private Field score;
                                 private Field filename;
                                 private Field lineNumber;
                                 private Field codeSnippet;

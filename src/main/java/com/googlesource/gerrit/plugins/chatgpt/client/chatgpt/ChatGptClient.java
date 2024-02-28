@@ -33,7 +33,6 @@ public class ChatGptClient {
             .disableHtmlEscaping()
             .create();
     private final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
-    private ChatGptTools chatGptTools;
     private boolean isCommentEvent = false;
 
     public String ask(Configuration config, String changeId, String patchSet) throws Exception {
@@ -59,7 +58,6 @@ public class ChatGptClient {
 
     public String ask(Configuration config, GerritChange change, String patchSet) throws Exception {
         isCommentEvent = change.getIsCommentEvent();
-        chatGptTools = new ChatGptTools(config, isCommentEvent);
 
         return this.ask(config, change.getFullChangeId(), patchSet);
     }
@@ -125,7 +123,7 @@ public class ChatGptClient {
                 .build();
 
         ChatGptParameters chatGptParameters = new ChatGptParameters(config, isCommentEvent);
-        ChatGptRequest tools = chatGptTools.retrieveTools(changeId);
+        ChatGptRequest tools = ChatGptTools.retrieveTools();
         ChatGptRequest chatGptRequest = ChatGptRequest.builder()
                 .model(config.getGptModel())
                 .messages(List.of(systemMessage, userMessage))

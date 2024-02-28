@@ -24,8 +24,20 @@ public class ChatGptPrompt {
     public static final String SEMICOLON = "; ";
     public static final String DOT = ". ";
     public static final String BACKTICK = "`";
-    public static final String[] PATCH_SET_REVIEW_REPLIES_ATTRIBUTES = {"reply", "repeated", "conflicting"};
-    public static final String[] REQUEST_REPLIES_ATTRIBUTES = {"reply", "id", "changeId"};
+
+    // Reply attributes
+    public static final String ATTRIBUTE_ID = "id";
+    public static final String ATTRIBUTE_REPLY = "reply";
+    public static final String ATTRIBUTE_SCORE = "score";
+    public static final String ATTRIBUTE_REPEATED = "repeated";
+    public static final String ATTRIBUTE_CONFLICTING = "conflicting";
+    public static final String ATTRIBUTE_CHANGE_ID = "changeId";
+    public static final List<String> PATCH_SET_REVIEW_REPLY_ATTRIBUTES = new ArrayList<>(Arrays.asList(
+            ATTRIBUTE_REPLY, ATTRIBUTE_SCORE, ATTRIBUTE_REPEATED, ATTRIBUTE_CONFLICTING
+    ));
+    public static final List<String> REQUEST_REPLY_ATTRIBUTES = new ArrayList<>(Arrays.asList(
+            ATTRIBUTE_REPLY, ATTRIBUTE_ID, ATTRIBUTE_CHANGE_ID
+    ));
 
     // Prompt constants loaded from JSON file
     public static String DEFAULT_GPT_SYSTEM_PROMPT;
@@ -41,7 +53,6 @@ public class ChatGptPrompt {
     public static String DEFAULT_GPT_REQUEST_PROMPT_DIFF;
     public static String DEFAULT_GPT_REQUEST_PROMPT_REQUESTS;
     public static String DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES;
-    public static String DEFAULT_GPT_REVIEW_PROMPT_VOTING;
     public static Map<String, String> DEFAULT_GPT_REPLIES_ATTRIBUTES;
 
     private final Configuration config;
@@ -64,15 +75,22 @@ public class ChatGptPrompt {
                 DEFAULT_GPT_SYSTEM_PROMPT_INPUT_DESCRIPTION_REVIEW;
     }
 
-    public static String getPatchSetReviewUserPrompt() {
-        return buildFieldSpecifications(PATCH_SET_REVIEW_REPLIES_ATTRIBUTES) + SPACE +
-                DEFAULT_GPT_REPLIES_PROMPT_INLINE;
-    }
-
     public static String getCommentRequestUserPrompt(int commentPropertiesSize) {
-        return buildFieldSpecifications(REQUEST_REPLIES_ATTRIBUTES) + SPACE +
+        return buildFieldSpecifications(REQUEST_REPLY_ATTRIBUTES) + SPACE +
                 DEFAULT_GPT_REPLIES_PROMPT_INLINE + SPACE +
                 String.format(DEFAULT_GPT_REPLIES_PROMPT_ENFORCE_RESPONSE_CHECK, commentPropertiesSize);
+    }
+
+    public String getPatchSetReviewUserPrompt() {
+        List<String> attributes = new ArrayList<>(PATCH_SET_REVIEW_REPLY_ATTRIBUTES);
+        if (config.isVotingEnabled()) {
+            updateScoreDescription();
+        }
+        else {
+            attributes.remove(ATTRIBUTE_SCORE);
+        }
+        return buildFieldSpecifications(attributes) + SPACE +
+                DEFAULT_GPT_REPLIES_PROMPT_INLINE;
     }
 
     public String getGptSystemPrompt() {
@@ -114,8 +132,8 @@ public class ChatGptPrompt {
         return joinWithNewLine(prompt);
     }
 
-    private static String buildFieldSpecifications(String[] filterFields) {
-        Set<String> orderedFilterFields = new LinkedHashSet<>(Arrays.asList(filterFields));
+    private static String buildFieldSpecifications(List<String> filterFields) {
+        Set<String> orderedFilterFields = new LinkedHashSet<>(filterFields);
         Map<String, String> attributes = DEFAULT_GPT_REPLIES_ATTRIBUTES.entrySet().stream()
                 .filter(entry -> orderedFilterFields.contains(entry.getKey()))
                 .collect(Collectors.toMap(
@@ -140,11 +158,15 @@ public class ChatGptPrompt {
         if (config.getGptReviewCommitMessages()) {
             steps.add(DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES);
         }
-        if (config.isVotingEnabled()) {
-            steps.add(String.format(DEFAULT_GPT_REVIEW_PROMPT_VOTING, config.getVotingMinScore(),
-                    config.getVotingMaxScore()));
+        return steps;
+    }
+
+    private void updateScoreDescription() {
+        String scoreDescription = DEFAULT_GPT_REPLIES_ATTRIBUTES.get(ATTRIBUTE_SCORE);
+        if (scoreDescription.contains("%d")) {
+            scoreDescription = String.format(scoreDescription, config.getVotingMinScore(), config.getVotingMaxScore());
+            DEFAULT_GPT_REPLIES_ATTRIBUTES.put(ATTRIBUTE_SCORE, scoreDescription);
         }
-        return getNumberedList(steps);
     }
 
     private void loadPrompts() {

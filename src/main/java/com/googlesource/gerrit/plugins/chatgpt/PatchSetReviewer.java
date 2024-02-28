@@ -30,6 +30,7 @@ public class PatchSetReviewer {
     private GerritCommentRange gerritCommentRange;
     private List<ReviewBatch> reviewBatches;
     private List<GerritComment> commentProperties;
+    private List<Integer> reviewScores;
 
     @Inject
     PatchSetReviewer(GerritClient gerritClient, ChatGptClient chatGptClient) {
@@ -39,6 +40,7 @@ public class PatchSetReviewer {
 
     public void review(Configuration config, GerritChange change) throws Exception {
         reviewBatches = new ArrayList<>();
+        reviewScores = new ArrayList<>();
         commentProperties = gerritClient.getClientData(change).getCommentProperties();
         gerritCommentRange = new GerritCommentRange(gerritClient, change);
         GerritClientReview gerritClientReview = new GerritClientReview(config);
@@ -52,9 +54,8 @@ public class PatchSetReviewer {
         String reviewReply = getReviewReply(config, change, patchSet);
         log.debug("ChatGPT response: {}", reviewReply);
 
-        ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
-        retrieveReviewBatches(reviewJson, change);
-        gerritClientReview.setReview(change.getFullChangeId(), reviewBatches, reviewJson.getScore());
+        retrieveReviewBatches(reviewReply, change);
+        gerritClientReview.setReview(change.getFullChangeId(), reviewBatches, getReviewScore(config));
     }
 
     private void setCommentBatchMap(ReviewBatch batchMap, Integer batchID) {
@@ -85,9 +86,14 @@ public class PatchSetReviewer {
         }
     }
 
-    private void retrieveReviewBatches(ChatGptResponseContent reviewJson, GerritChange change) {
+    private void retrieveReviewBatches(String reviewReply, GerritChange change) {
+        ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
         boolean shouldFilterReplies = DynamicSettings.getInstance(change).getForcedReviewFilter();
         for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
+            Integer score = replyItem.getScore();
+            if (!replyItem.isConflicting() && score != null) {
+                reviewScores.add(score);
+            }
             if (shouldFilterReplies && (replyItem.isRepeated() || replyItem.isConflicting())) {
                 continue;
             }
@@ -110,6 +116,10 @@ public class PatchSetReviewer {
             return String.format(SPLIT_REVIEW_MSG, config.getMaxReviewLines());
         }
         return chatGptClient.ask(config, change, patchSet);
+    }
+
+    private Integer getReviewScore(Configuration config) {
+        return config.isVotingEnabled() && !reviewScores.isEmpty() ? Collections.min(reviewScores) : null;
     }
 
 }

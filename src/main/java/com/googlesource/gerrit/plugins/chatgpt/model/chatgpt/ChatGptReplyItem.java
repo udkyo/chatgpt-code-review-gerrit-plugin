@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 @Data
 public class ChatGptReplyItem extends ChatGptDialogueItem {
     private String reply;
+    private Integer score;
     private boolean repeated;
     private boolean conflicting;
 }
