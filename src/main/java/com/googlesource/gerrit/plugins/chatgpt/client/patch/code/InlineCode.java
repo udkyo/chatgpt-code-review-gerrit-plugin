@@ -33,7 +33,7 @@ public class InlineCode {
             return joinWithNewLine(codeByRange);
         }
         else {
-            return newContent.get(commentProperty.getLine());
+            return getLine(commentProperty);
         }
     }
 
@@ -64,6 +64,16 @@ public class InlineCode {
             log.info("Could not extract a slice from line \"{}\". The whole line is returned", line, e);
         }
         return line;
+    }
+
+    private String getLine(GerritComment commentProperty) {
+        try {
+            return newContent.get(commentProperty.getLine());
+        }
+        catch (IndexOutOfBoundsException e) {
+            log.warn("Could not extract line #{} from the code", commentProperty.getLine(), e);
+            return null;
+        }
     }
 
 }
