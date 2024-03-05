@@ -2,11 +2,12 @@
 
 ## Features
 
-1. This plugin allows you to use ChatGPT for code review in Gerrit conveniently. After submitting a Patch Set, OpenAI
-   will provide review feedback in the form of comments.
-2. You can continue to ask ChatGPT by @{gerritUserName} or @{gerritEmailAddress} (provided that `gerritEmailAddress` is
-   in the form "gerritUserName@<any_email_domain>") in the comments to further guide it in generating more targeted
-   review comments.
+This plugin allows you to use ChatGPT for code review in Gerrit conveniently. After submitting a Patch Set, OpenAI will
+provide review feedback in the form of comments and, optionally, a vote.
+You can continue to ask ChatGPT by @{gerritUserName} or @{gerritEmailAddress} (provided that `gerritEmailAddress` is in
+the form "gerritUserName@<any_email_domain>") in the comments to further guide it in generating more targeted review
+comments.
+Reviews can be also triggered by directing a comment with the `/review` command to ChatGPT.
 
 ## Getting Started
 
@@ -50,8 +51,24 @@
 
 ## Usage Examples
 
-Examples of ChatGPT's code reviews and inline discussions are available at
-https://wiki.amarulasolutions.com/opensource/chatgpt-gerrit.html
+### Auto review on Patch Set submission
+
+In the following example, a Patch Set receives a score of "-1" indicating a recommendation.
+
+![Example of Vote](images/chatgpt_vote.png?raw=true)
+
+**NOTE**: Voting is disabled by default. To use this feature, it needs to be activated either across all projects or on
+a per-project basis via the `enabledVoting` configuration option, as described below.
+
+### ChatGPT Score Adjustment Following User Interaction
+
+In the example below, ChatGPT initially posits a potential unintended behavior in the code, assigning a "-1" score.
+Upon receiving clarification, it resets the score to "0".
+
+![Example of Dialogue](images/chatgpt_changed_mind.png?raw=true)
+
+More examples of ChatGPT's code reviews and inline discussions are available at
+https://wiki.amarulasolutions.com/opensource/products/chatgpt-gerrit.html
 
 ## Configuration Parameters
 
