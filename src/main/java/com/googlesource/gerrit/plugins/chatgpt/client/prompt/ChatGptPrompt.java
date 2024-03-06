@@ -20,8 +20,6 @@ import static com.googlesource.gerrit.plugins.chatgpt.utils.StringUtils.*;
 @Slf4j
 public class ChatGptPrompt {
     public static final String SPACE = " ";
-    public static final String COMMA = ", ";
-    public static final String SEMICOLON = "; ";
     public static final String DOT = ". ";
     public static final String BACKTICK = "`";
 
@@ -46,6 +44,7 @@ public class ChatGptPrompt {
     public static String DEFAULT_GPT_REVIEW_PROMPT;
     public static String DEFAULT_GPT_REVIEW_PROMPT_REVIEW;
     public static String DEFAULT_GPT_REVIEW_PROMPT_MESSAGE_HISTORY;
+    public static String DEFAULT_GPT_REVIEW_PROMPT_DIRECTIVES;
     public static String DEFAULT_GPT_REVIEW_PROMPT_DIFF;
     public static String DEFAULT_GPT_REPLIES_PROMPT;
     public static String DEFAULT_GPT_REPLIES_PROMPT_INLINE;
@@ -128,6 +127,10 @@ public class ChatGptPrompt {
                 prompt.add(DEFAULT_GPT_REVIEW_PROMPT_MESSAGE_HISTORY);
                 prompt.add(gptRequestUserPrompt);
             }
+            if (!settings.getDirectives().isEmpty()) {
+                prompt.add(DEFAULT_GPT_REVIEW_PROMPT_DIRECTIVES);
+                prompt.add(getNumberedListString(new ArrayList<>(settings.getDirectives())));
+            }
         }
         return joinWithNewLine(prompt);
     }
@@ -147,8 +150,8 @@ public class ChatGptPrompt {
                 .collect(Collectors.toList());
 
         return String.format(DEFAULT_GPT_REPLIES_PROMPT,
-                String.join(COMMA, attributes.keySet()),
-                String.join(SEMICOLON, fieldDescription)
+                joinWithComma(attributes.keySet()),
+                joinWithSemicolon(fieldDescription)
         );
     }
 

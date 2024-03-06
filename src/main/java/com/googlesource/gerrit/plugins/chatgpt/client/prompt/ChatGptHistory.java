@@ -122,12 +122,19 @@ public class ChatGptHistory extends ChatGptComment {
 
     private void addMessageToHistory(List<ChatGptRequestMessage> messageHistory, GerritComment comment) {
         String messageContent = getCleanedMessage(comment);
-        if (messageContent.isEmpty() || MESSAGES_EXCLUDED_FROM_HISTORY.contains(messageContent)
-                || patchSetCommentAdded.contains(messageContent)
-                || filterActive && isInactiveComment(comment)) {
+        boolean shouldNotProcessComment = messageContent.isEmpty() ||
+                MESSAGES_EXCLUDED_FROM_HISTORY.contains(messageContent) ||
+                patchSetCommentAdded.contains(messageContent) ||
+                filterActive && isInactiveComment(comment);
+
+        if (shouldNotProcessComment && !commentMessage.isContainingHistoryCommand()) {
             return;
         }
         patchSetCommentAdded.add(messageContent);
+        if (commentMessage.isContainingHistoryCommand()) {
+            commentMessage.processHistoryCommand();
+            return;
+        }
         ChatGptRequestMessage message = ChatGptRequestMessage.builder()
                 .role(getRoleFromComment(comment))
                 .content(messageContent)

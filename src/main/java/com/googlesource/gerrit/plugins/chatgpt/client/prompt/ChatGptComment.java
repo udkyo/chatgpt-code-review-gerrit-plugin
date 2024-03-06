@@ -10,17 +10,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ChatGptComment extends ClientBase {
+    protected ClientMessage commentMessage;
+
     private final Integer gptAccountId;
+    private final GerritChange change;
 
     public ChatGptComment(Configuration config, GerritChange change) {
         super(config);
+        this.change = change;
         gptAccountId = DynamicSettings.getInstance(change).getGptAccountId();
     }
 
     protected String getCleanedMessage(GerritComment commentProperty) {
-        ClientMessage commentMessage = new ClientMessage(config, commentProperty.getMessage());
+        commentMessage = new ClientMessage(config, change, commentProperty.getMessage());
         if (!isFromAssistant(commentProperty)) {
-            commentMessage.removeCommands().removeMentions();
+            commentMessage.removeMentions().parseRemoveCommands();
         }
         return commentMessage.removeHeadings().getMessage();
     }

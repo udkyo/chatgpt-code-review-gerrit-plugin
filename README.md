@@ -198,6 +198,8 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 
 ## Commands
 
+- `/directive <DIRECTIVE_CONTENT>`: This command, when included in a comment with a subsequent directive description
+  "<DIRECTIVE_CONTENT>", specifies a directive that ChatGPT must adhere to while reviewing the Patch/Change Set.
 - `/review`: when used in a comment directed at ChatGPT on any Change Set, triggers a review of the full Change Set. A
   vote is cast on the Change Set if the voting feature is enabled and the ChatGPT Gerrit user is authorized to vote on
   it.

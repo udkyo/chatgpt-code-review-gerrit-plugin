@@ -10,6 +10,8 @@ import com.googlesource.gerrit.plugins.chatgpt.model.settings.Settings;
 import com.googlesource.gerrit.plugins.chatgpt.utils.SingletonManager;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashSet;
+
 @Slf4j
 public class DynamicSettings {
 
@@ -34,6 +36,7 @@ public class DynamicSettings {
         ChatGptUserPrompt chatGptUserPrompt = new ChatGptUserPrompt(config, change, gerritClientData);
 
         settings.setCommentPropertiesSize(gerritClientData.getCommentProperties().size());
+        settings.setDirectives(new HashSet<>());
         settings.setGptRequestUserPrompt(chatGptUserPrompt.buildPrompt());
         if (config.isVotingEnabled() && !change.getIsCommentEvent()) {
             GerritPermittedVotingRange permittedVotingRange = gerritClient.getPermittedVotingRange(change);

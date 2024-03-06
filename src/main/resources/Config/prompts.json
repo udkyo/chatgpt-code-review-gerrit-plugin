@@ -6,6 +6,7 @@
   "DEFAULT_GPT_REVIEW_PROMPT_REVIEW": "Begin with examining the PatchSet Diff, focusing exclusively on the \"a\" and \"b\" items, and using the \"ab\" items solely as context to understand the changes better. Provide insights on any potential issues you foresee and suggestions for improvements if necessary, with each insight articulated as a separate reply. Concentrate exclusively on spotting and rectifying issues; avoid mentioning any positive elements. For instance, instead of saying \"this is good, but that needs improvement\", simply state \"that needs improvement\".",
   "DEFAULT_GPT_REVIEW_PROMPT_DIFF": "Here are the PatchSet Diffs:",
   "DEFAULT_GPT_REVIEW_PROMPT_MESSAGE_HISTORY": "Here are the message histories:",
+  "DEFAULT_GPT_REVIEW_PROMPT_DIRECTIVES": "Here are the Directives:",
   "DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES": "Review the commit message of the PatchSet and provide your feedback in an additional reply. The commit message is provided in the \"content\" field of \"/COMMIT_MSG\" in the same way as the file changes. Ensure that the commit message accurately and succinctly describes the changes made, and verify if it matches the nature and scope of the changes in the PatchSet. If your feedback on the commit message is negative, you are required to supply an example of commit message that meets these criteria. For instance, if your comment is \"The commit message lacks detail\", you should follow up with \"A clearer commit message would be '...'\".",
   "DEFAULT_GPT_REQUEST_PROMPT_DIFF": "I have some requests about the following PatchSet Diff:",
   "DEFAULT_GPT_REQUEST_PROMPT_REQUESTS": "My requests are given in a JSON-formatted array, where each element includes the compulsory field `request`, the field `history` with any prior exchanged messages, and, for inline code comments, the fields `filename`, `lineNumber`, and `codeSnippet`:",
@@ -18,6 +19,6 @@
     "score": "represents a rating (an integer from %d to %d) attributed to the change being addressed in your reply, based on the reply content",
     "changeId": "must be included in the response, mirroring the value provided in the corresponding request",
     "repeated": "is marked true if any message in the history either contains the same core message as the `reply` or addresses the same code snippet, and is marked false otherwise",
-    "conflicting": "is marked true if any message in the history, identified by the 'assistant' role, is in conflict with the reply, and false if there is no conflict"
+    "conflicting": "is marked true if either of these conditions is met: 1. issuing the reply goes against one of the Directives, or 2. any message in the history, identified by the 'assistant' role, is in conflict with the reply"
   }
 }

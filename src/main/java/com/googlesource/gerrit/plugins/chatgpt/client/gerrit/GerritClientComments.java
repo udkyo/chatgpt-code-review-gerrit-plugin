@@ -2,7 +2,6 @@ package com.googlesource.gerrit.plugins.chatgpt.client.gerrit;
 
 import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gson.reflect.TypeToken;
-import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator;
 import com.googlesource.gerrit.plugins.chatgpt.client.common.ClientMessage;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
@@ -104,7 +103,7 @@ public class GerritClientComments extends GerritClientAccount {
     }
 
     private void addLastComments(GerritChange change) {
-        ClientMessage clientMessage = new ClientMessage(config);
+        ClientMessage clientMessage = new ClientMessage(config, change);
         try {
             List<GerritComment> latestComments = retrieveComments(change);
             if (latestComments == null) {
@@ -112,7 +111,10 @@ public class GerritClientComments extends GerritClientAccount {
             }
             for (GerritComment latestComment : latestComments) {
                 String commentMessage = latestComment.getMessage();
-                if (ClientCommands.parseCommands(change, commentMessage)) {
+                if (clientMessage.parseCommands(commentMessage, true)) {
+                    if (clientMessage.isContainingHistoryCommand()) {
+                        clientMessage.processHistoryCommand();
+                    }
                     commentProperties.clear();
                     return;
                 }

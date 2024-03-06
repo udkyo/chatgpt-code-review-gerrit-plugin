@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.common;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
+import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -14,17 +15,19 @@ public class ClientMessage extends ClientBase {
             "^(?:Patch Set \\d+:[^\\n]*\\s+(?:\\(\\d+ comments?\\)\\s*)?)+");
 
     private final Pattern botMentionPattern;
+    private final ClientCommands clientCommands;
 
     @Getter
     private String message;
 
-    public ClientMessage(Configuration config) {
+    public ClientMessage(Configuration config, GerritChange change) {
         super(config);
         botMentionPattern = getBotMentionPattern();
+        clientCommands = new ClientCommands(change);
     }
 
-    public ClientMessage(Configuration config, String message) {
-        this(config);
+    public ClientMessage(Configuration config, GerritChange change, String message) {
+        this(config, change);
         this.message = message;
     }
 
@@ -50,9 +53,21 @@ public class ClientMessage extends ClientBase {
         return this;
     }
 
-    public ClientMessage removeCommands() {
-        message = ClientCommands.removeCommands(message);
+    public ClientMessage parseRemoveCommands() {
+        message = clientCommands.parseRemoveCommands(message);
         return this;
+    }
+
+    public boolean isContainingHistoryCommand() {
+        return clientCommands.isContainingHistoryCommand();
+    }
+
+    public boolean parseCommands(String comment, boolean isNotHistory) {
+        return clientCommands.parseCommands(comment, isNotHistory);
+    }
+
+    public void processHistoryCommand() {
+        clientCommands.getDirectives().copyDirectiveToSettings();
     }
 
     private Pattern getBotMentionPattern() {
