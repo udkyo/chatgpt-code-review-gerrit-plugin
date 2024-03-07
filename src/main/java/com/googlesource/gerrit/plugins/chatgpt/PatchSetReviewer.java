@@ -123,7 +123,12 @@ public class PatchSetReviewer {
     }
 
     private Integer getReviewScore() {
-        return config.isVotingEnabled() && !reviewScores.isEmpty() ? Collections.min(reviewScores) : null;
+        if (config.isVotingEnabled()) {
+            return reviewScores.isEmpty() ? 0 : Collections.min(reviewScores);
+        }
+        else {
+            return null;
+        }
     }
 
 }
