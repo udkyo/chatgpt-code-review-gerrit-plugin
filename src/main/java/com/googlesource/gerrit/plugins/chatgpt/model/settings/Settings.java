@@ -24,7 +24,7 @@ public class Settings {
     // Command variables
     private Boolean forcedReview = false;
     private Boolean forcedReviewLastPatchSet = false;
-    private Boolean forcedReviewFilter = true;
+    private Boolean replyFilterEnabled = true;
     private Set<String> directives = new HashSet<>();
 
 }

@@ -106,8 +106,8 @@ public class ClientCommands {
             OPTION_SET option = OPTION_MAP.get(reviewOptionsMatcher.group(1));
             if (isNotHistory && REVIEW_COMMANDS.contains(command) && option == OPTION_SET.FILTER) {
                 boolean value = Boolean.parseBoolean(reviewOptionsMatcher.group(2));
-                log.info("Option 'filter' set to {}", value);
-                settings.setForcedReviewFilter(value);
+                log.info("Option 'replyFilterEnabled' set to {}", value);
+                settings.setReplyFilterEnabled(value);
             }
         }
     }

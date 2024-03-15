@@ -29,9 +29,10 @@ public class ChatGptPrompt {
     public static final String ATTRIBUTE_SCORE = "score";
     public static final String ATTRIBUTE_REPEATED = "repeated";
     public static final String ATTRIBUTE_CONFLICTING = "conflicting";
+    public static final String ATTRIBUTE_RELEVANCE = "relevance";
     public static final String ATTRIBUTE_CHANGE_ID = "changeId";
     public static final List<String> PATCH_SET_REVIEW_REPLY_ATTRIBUTES = new ArrayList<>(Arrays.asList(
-            ATTRIBUTE_REPLY, ATTRIBUTE_SCORE, ATTRIBUTE_REPEATED, ATTRIBUTE_CONFLICTING
+            ATTRIBUTE_REPLY, ATTRIBUTE_SCORE, ATTRIBUTE_REPEATED, ATTRIBUTE_CONFLICTING, ATTRIBUTE_RELEVANCE
     ));
     public static final List<String> REQUEST_REPLY_ATTRIBUTES = new ArrayList<>(Arrays.asList(
             ATTRIBUTE_REPLY, ATTRIBUTE_ID, ATTRIBUTE_CHANGE_ID
@@ -52,6 +53,7 @@ public class ChatGptPrompt {
     public static String DEFAULT_GPT_REQUEST_PROMPT_DIFF;
     public static String DEFAULT_GPT_REQUEST_PROMPT_REQUESTS;
     public static String DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES;
+    public static String DEFAULT_GPT_RELEVANCE_RULES;
     public static Map<String, String> DEFAULT_GPT_REPLIES_ATTRIBUTES;
 
     private final Configuration config;
@@ -88,6 +90,7 @@ public class ChatGptPrompt {
         else {
             attributes.remove(ATTRIBUTE_SCORE);
         }
+        updateRelevanceDescription();
         return buildFieldSpecifications(attributes) + SPACE +
                 DEFAULT_GPT_REPLIES_PROMPT_INLINE;
     }
@@ -169,6 +172,16 @@ public class ChatGptPrompt {
         if (scoreDescription.contains("%d")) {
             scoreDescription = String.format(scoreDescription, config.getVotingMinScore(), config.getVotingMaxScore());
             DEFAULT_GPT_REPLIES_ATTRIBUTES.put(ATTRIBUTE_SCORE, scoreDescription);
+        }
+    }
+
+    private void updateRelevanceDescription() {
+        String relevanceDescription = DEFAULT_GPT_REPLIES_ATTRIBUTES.get(ATTRIBUTE_RELEVANCE);
+        if (relevanceDescription.contains("%s")) {
+            String defaultGptRelevanceRules = config.getString(Configuration.KEY_GPT_RELEVANCE_RULES,
+                    DEFAULT_GPT_RELEVANCE_RULES);
+            relevanceDescription = String.format(relevanceDescription, defaultGptRelevanceRules);
+            DEFAULT_GPT_REPLIES_ATTRIBUTES.put(ATTRIBUTE_RELEVANCE, relevanceDescription);
         }
     }
 

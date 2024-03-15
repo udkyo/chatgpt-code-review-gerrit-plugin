@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class Configuration {
+    // Config Constants
     public static final String ENABLED_USERS_ALL = "ALL";
     public static final String ENABLED_GROUPS_ALL = "ALL";
     public static final String ENABLED_TOPICS_ALL = "ALL";
@@ -19,6 +20,7 @@ public class Configuration {
     public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
     public static final double DEFAULT_GPT_REVIEW_TEMPERATURE = 0.2;
     public static final double DEFAULT_GPT_COMMENT_TEMPERATURE = 1.0;
+
     private static final boolean DEFAULT_REVIEW_PATCH_SET = true;
     private static final boolean DEFAULT_REVIEW_COMMIT_MESSAGES = true;
     private static final boolean DEFAULT_FULL_FILE_REVIEW = true;
@@ -65,6 +67,8 @@ public class Configuration {
     private static final boolean DEFAULT_ENABLED_VOTING = false;
     private static final boolean DEFAULT_FILTER_NEGATIVE_COMMENTS = true;
     private static final int DEFAULT_FILTER_COMMENTS_BELOW_SCORE = 0;
+    private static final boolean DEFAULT_FILTER_RELEVANT_COMMENTS = true;
+    private static final double DEFAULT_FILTER_COMMENTS_RELEVANCE_THRESHOLD = 0.6;
     private static final int DEFAULT_VOTING_MIN_SCORE = -1;
     private static final int DEFAULT_VOTING_MAX_SCORE = 1;
     private static final boolean DEFAULT_INLINE_COMMENTS_AS_RESOLVED = false;
@@ -74,10 +78,12 @@ public class Configuration {
 
     // Config setting keys
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
-    public static final String KEY_VOTING_MIN_SCORE = "votingMinScore";
-    public static final String KEY_VOTING_MAX_SCORE = "votingMaxScore";
+    public static final String KEY_GPT_RELEVANCE_RULES = "gptRelevanceRules";
     public static final String KEY_GPT_REVIEW_TEMPERATURE = "gptReviewTemperature";
     public static final String KEY_GPT_COMMENT_TEMPERATURE = "gptCommentTemperature";
+    public static final String KEY_VOTING_MIN_SCORE = "votingMinScore";
+    public static final String KEY_VOTING_MAX_SCORE = "votingMaxScore";
+
     private static final String KEY_GPT_TOKEN = "gptToken";
     private static final String KEY_GERRIT_AUTH_BASE_URL = "gerritAuthBaseUrl";
     private static final String KEY_GERRIT_USERNAME = "gerritUserName";
@@ -103,6 +109,8 @@ public class Configuration {
     private static final String KEY_ENABLED_VOTING = "enabledVoting";
     private static final String KEY_FILTER_NEGATIVE_COMMENTS = "filterNegativeComments";
     private static final String KEY_FILTER_COMMENTS_BELOW_SCORE = "filterCommentsBelowScore";
+    private static final String KEY_FILTER_RELEVANT_COMMENTS = "filterRelevantComments";
+    private static final String KEY_FILTER_COMMENTS_RELEVANCE_THRESHOLD = "filterCommentsRelevanceThreshold";
     private static final String KEY_INLINE_COMMENTS_AS_RESOLVED = "inlineCommentsAsResolved";
     private static final String KEY_PATCH_SET_COMMENTS_AS_RESOLVED = "patchSetCommentsAsResolved";
     private static final String KEY_IGNORE_OUTDATED_INLINE_COMMENTS = "ignoreOutdatedInlineComments";
@@ -218,6 +226,14 @@ public class Configuration {
         return getInt(KEY_FILTER_COMMENTS_BELOW_SCORE, DEFAULT_FILTER_COMMENTS_BELOW_SCORE);
     }
 
+    public boolean getFilterRelevantComments() {
+        return getBoolean(KEY_FILTER_RELEVANT_COMMENTS, DEFAULT_FILTER_RELEVANT_COMMENTS);
+    }
+
+    public double getFilterCommentsRelevanceThreshold() {
+        return getDouble(KEY_FILTER_COMMENTS_RELEVANCE_THRESHOLD, DEFAULT_FILTER_COMMENTS_RELEVANCE_THRESHOLD);
+    }
+
     public int getVotingMinScore() {
         return getInt(KEY_VOTING_MIN_SCORE, DEFAULT_VOTING_MIN_SCORE);
     }
@@ -278,6 +294,10 @@ public class Configuration {
             return valueForProject;
         }
         return globalConfig.getBoolean(key, defaultValue);
+    }
+
+    private Double getDouble(String key, Double defaultValue) {
+        return Double.parseDouble(getString(key, String.valueOf(defaultValue)));
     }
 
     private List<String> splitConfig(String value) {

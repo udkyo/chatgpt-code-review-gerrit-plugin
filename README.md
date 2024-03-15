@@ -167,10 +167,16 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `enabledVoting`: Initially disabled (false). If set to true, allows ChatGPT to cast a vote on each reviewed Patch Set
   by assigning a score.
 - `filterNegativeComments`: Activated by default (true), ensuring only negative review comments (scored below the
-  `filterCommentsBelowScore` threshold outlined further) are displayed initially. Disabling this setting (false) will
+  `filterCommentsBelowScore` threshold outlined further) are displayed. Disabling this setting (false) will
   also show positive and neutral comments.
 - `filterCommentsBelowScore`: With `filterNegativeComments` active, review comments with a score at or above this
-  setting's value are hidden (default is 0).
+  setting's value will not be shown (default is 0).
+- `filterRelevantComments`: This setting is enabled by default (true) to display only those review comments considered
+  relevant by ChatGPT, which means they have a relevance index at or above the `filterCommentsRelevanceThreshold`
+  specified below. Turning off this option (false) allows the display of comments ChatGPT marks as irrelevant.
+- `filterCommentsRelevanceThreshold`: When `filterRelevantComments` is enabled, any review comment assigned a relevance
+  score by ChatGPT below this threshold will not be shown. The default threshold is set at 0.6.
+- `gptRelevanceRules`: This option allows customization of the rules ChatGPT uses to determine the relevance of a task.
 - `patchSetCommentsAsResolved`: Initially set to false, this option leaves ChatGPT's Patch Set comments as unresolved,
   inviting further discussion. If activated, it marks ChatGPT's Patch Set comments as resolved.
 - `inlineCommentsAsResolved`: Initially set to false, this option leaves ChatGPT's inline comments as unresolved,
@@ -208,8 +214,8 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 
 ### Command Options
 
-- `--filter=[true/false]`: Controls the filtering of duplicate and conflicting comments, defaulting to "true" to apply
-  filters.
+- `--filter=[true/false]`: Controls the filtering of duplicate, conflicting and irrelevant comments, defaulting to
+  "true" to apply filters.
 
 ## Testing
 

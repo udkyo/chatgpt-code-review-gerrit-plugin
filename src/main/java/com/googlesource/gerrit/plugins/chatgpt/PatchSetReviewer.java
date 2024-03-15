@@ -90,15 +90,16 @@ public class PatchSetReviewer {
 
     private void retrieveReviewBatches(String reviewReply, GerritChange change) {
         ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
-        boolean shouldFilterReplies = DynamicSettings.getInstance(change).getForcedReviewFilter();
+        boolean replyFilterEnabled = DynamicSettings.getInstance(change).getReplyFilterEnabled();
         for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
             Integer score = replyItem.getScore();
-            if (!replyItem.isConflicting() && score != null) {
+            boolean isNotNegative = isNotNegativeReply(score);
+            boolean isIrrelevant = isIrrelevantReply(replyItem);
+            if (!replyItem.isConflicting() && !isIrrelevant && score != null) {
                 reviewScores.add(score);
             }
-            if (shouldFilterReplies && (replyItem.isRepeated() || replyItem.isConflicting() ||
-                    config.getFilterNegativeComments() && score != null &&
-                            score >= config.getFilterCommentsBelowScore())) {
+            if (replyFilterEnabled && (replyItem.isRepeated() || replyItem.isConflicting() || isIrrelevant ||
+                    isNotNegative)) {
                 continue;
             }
             ReviewBatch batchMap = new ReviewBatch();
@@ -129,6 +130,18 @@ public class PatchSetReviewer {
         else {
             return null;
         }
+    }
+
+    private boolean isNotNegativeReply(Integer score) {
+        return score != null &&
+                config.getFilterNegativeComments() &&
+                score >= config.getFilterCommentsBelowScore();
+    }
+
+    private boolean isIrrelevantReply(ChatGptReplyItem replyItem) {
+        return config.getFilterRelevantComments() &&
+                replyItem.getRelevance() != null &&
+                replyItem.getRelevance() < config.getFilterCommentsRelevanceThreshold();
     }
 
 }
