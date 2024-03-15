@@ -22,6 +22,15 @@
                   "score": {
                     "type": "integer"
                   },
+                  "relevance": {
+                    "type": "number"
+                  },
+                  "repeated": {
+                    "type": "boolean"
+                  },
+                  "conflicting": {
+                    "type": "boolean"
+                  },
                   "filename": {
                     "type": "string"
                   },

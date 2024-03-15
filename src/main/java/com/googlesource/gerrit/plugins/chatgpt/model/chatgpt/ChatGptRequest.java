@@ -57,6 +57,9 @@ public class ChatGptRequest {
                                 private Field id;
                                 private Field reply;
                                 private Field score;
+                                private Field relevance;
+                                private Field repeated;
+                                private Field conflicting;
                                 private Field filename;
                                 private Field lineNumber;
                                 private Field codeSnippet;
