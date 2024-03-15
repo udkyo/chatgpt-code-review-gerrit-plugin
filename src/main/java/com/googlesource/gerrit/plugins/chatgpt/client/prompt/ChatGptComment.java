@@ -24,9 +24,9 @@ public class ChatGptComment extends ClientBase {
     protected String getCleanedMessage(GerritComment commentProperty) {
         commentMessage = new ClientMessage(config, change, commentProperty.getMessage());
         if (!isFromAssistant(commentProperty)) {
-            commentMessage.removeMentions().parseRemoveCommands();
+            commentMessage.removeMentions().parseRemoveCommands().removeHeadings();
         }
-        return commentMessage.removeHeadings().getMessage();
+        return commentMessage.getMessage();
     }
 
     protected boolean isFromAssistant(GerritComment commentProperty) {

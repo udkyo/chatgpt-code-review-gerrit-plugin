@@ -62,7 +62,7 @@
         "username": "gpt"
       },
       "date": "2024-02-13 07:47:15.000000000",
-      "message": "Patch Set 1: Code-Review-1\n\n(1 comment)\n\nThe commit message 'Minor Fixes' is too vague and does not provide enough context about the changes made. A more descriptive message that outlines the specific fixes or improvements would be beneficial.",
+      "message": "The commit message 'Minor Fixes' is too vague and does not provide enough context about the changes made. A more descriptive message that outlines the specific fixes or improvements would be beneficial.",
       "accounts_in_message": [],
       "_revision_number": 1
     },
@@ -90,7 +90,7 @@
         "username": "gpt"
       },
       "date": "2024-02-13 07:52:25.000000000",
-      "message": "Patch Set 1:\n\n(1 comment)\n\nHow about something like \"Corrected Indentation in Module-Class Retrieval Line\"?",
+      "message": "How about something like \"Corrected Indentation in Module-Class Retrieval Line\"?",
       "accounts_in_message": [],
       "_revision_number": 1
     }
