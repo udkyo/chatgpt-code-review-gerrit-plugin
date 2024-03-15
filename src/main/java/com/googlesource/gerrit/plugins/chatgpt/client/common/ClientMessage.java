@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.client.common;
 
 import com.googlesource.gerrit.plugins.chatgpt.client.ClientCommands;
+import com.googlesource.gerrit.plugins.chatgpt.client.DebugComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import lombok.Getter;
@@ -55,6 +56,11 @@ public class ClientMessage extends ClientBase {
 
     public ClientMessage parseRemoveCommands() {
         message = clientCommands.parseRemoveCommands(message);
+        return this;
+    }
+
+    public ClientMessage removeDebugMessages() {
+        message = DebugComment.removeDebugMessages(message);
         return this;
     }
 

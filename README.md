@@ -216,6 +216,8 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 
 - `--filter=[true/false]`: Controls the filtering of duplicate, conflicting and irrelevant comments, defaulting to
   "true" to apply filters.
+- `--debug`: When paired with `/review` or `/review_last` commands, this option displays useful debug information in
+  each ChatGPT reply, showing all replies as though the filter setting were disabled.
 
 ## Testing
 

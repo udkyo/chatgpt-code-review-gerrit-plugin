@@ -22,7 +22,8 @@ public class ClientCommands {
         DIRECTIVE
     }
     private enum OPTION_SET {
-        FILTER
+        FILTER,
+        DEBUG
     }
 
     private static final Map<String, COMMAND_SET> COMMAND_MAP = Map.of(
@@ -31,7 +32,8 @@ public class ClientCommands {
             "directive", COMMAND_SET.DIRECTIVE
     );
     private static final Map<String, OPTION_SET> OPTION_MAP = Map.of(
-            "filter", OPTION_SET.FILTER
+            "filter", OPTION_SET.FILTER,
+            "debug", OPTION_SET.DEBUG
     );
     private static final List<COMMAND_SET> REVIEW_COMMANDS = new ArrayList<>(List.of(
             COMMAND_SET.REVIEW,
@@ -104,10 +106,19 @@ public class ClientCommands {
         Matcher reviewOptionsMatcher = OPTIONS_PATTERN.matcher(reviewCommandMatcher.group(2));
         while (reviewOptionsMatcher.find()) {
             OPTION_SET option = OPTION_MAP.get(reviewOptionsMatcher.group(1));
-            if (isNotHistory && REVIEW_COMMANDS.contains(command) && option == OPTION_SET.FILTER) {
-                boolean value = Boolean.parseBoolean(reviewOptionsMatcher.group(2));
-                log.info("Option 'replyFilterEnabled' set to {}", value);
-                settings.setReplyFilterEnabled(value);
+            if (isNotHistory && REVIEW_COMMANDS.contains(command)) {
+                switch (option) {
+                    case FILTER:
+                        boolean value = Boolean.parseBoolean(reviewOptionsMatcher.group(2));
+                        log.info("Option 'replyFilterEnabled' set to {}", value);
+                        settings.setReplyFilterEnabled(value);
+                        break;
+                    case DEBUG:
+                        log.info("Response Mode set to Debug");
+                        settings.setDebugMode(true);
+                        settings.setReplyFilterEnabled(false);
+                        break;
+                }
             }
         }
     }

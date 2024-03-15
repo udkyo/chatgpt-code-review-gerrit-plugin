@@ -1,5 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.utils;
 
+import lombok.extern.slf4j.Slf4j;
+
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,6 +11,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@Slf4j
 public class StringUtils {
     private static final String COMMA = ", ";
     private static final String SEMICOLON = "; ";
@@ -66,6 +70,19 @@ public class StringUtils {
 
     public static String getNumberedListString(List<String> components) {
         return joinWithSemicolon(getNumberedList(components));
+    }
+
+    public static String prettyStringifyObject(Object object) {
+        List<String> lines = new ArrayList<>();
+        for (Field field : object.getClass().getDeclaredFields()) {
+            field.setAccessible(true);
+            try {
+                lines.add(field.getName() + ": " + field.get(object));
+            } catch (IllegalAccessException e) {
+                log.debug("Error while accessing field {} in {}", field.getName(), object, e);
+            }
+        }
+        return joinWithNewLine(lines);
     }
 
 }

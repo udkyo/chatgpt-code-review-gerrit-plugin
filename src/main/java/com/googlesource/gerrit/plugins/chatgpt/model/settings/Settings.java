@@ -25,6 +25,7 @@ public class Settings {
     private Boolean forcedReview = false;
     private Boolean forcedReviewLastPatchSet = false;
     private Boolean replyFilterEnabled = true;
+    private Boolean debugMode = false;
     private Set<String> directives = new HashSet<>();
 
 }

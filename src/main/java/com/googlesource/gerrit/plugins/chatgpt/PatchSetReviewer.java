@@ -2,6 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
+import com.googlesource.gerrit.plugins.chatgpt.client.DebugComment;
 import com.googlesource.gerrit.plugins.chatgpt.client.chatgpt.ChatGptClient;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.client.gerrit.GerritClient;
@@ -13,6 +14,7 @@ import com.googlesource.gerrit.plugins.chatgpt.model.chatgpt.ChatGptResponseCont
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritCodeRange;
 import com.googlesource.gerrit.plugins.chatgpt.model.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.model.review.ReviewBatch;
+import com.googlesource.gerrit.plugins.chatgpt.model.settings.Settings;
 import com.googlesource.gerrit.plugins.chatgpt.settings.DynamicSettings;
 import lombok.extern.slf4j.Slf4j;
 
@@ -90,20 +92,24 @@ public class PatchSetReviewer {
 
     private void retrieveReviewBatches(String reviewReply, GerritChange change) {
         ChatGptResponseContent reviewJson = gson.fromJson(reviewReply, ChatGptResponseContent.class);
-        boolean replyFilterEnabled = DynamicSettings.getInstance(change).getReplyFilterEnabled();
+        Settings settings = DynamicSettings.getInstance(change);
         for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
+            String reply = replyItem.getReply();
             Integer score = replyItem.getScore();
             boolean isNotNegative = isNotNegativeReply(score);
             boolean isIrrelevant = isIrrelevantReply(replyItem);
+            boolean isHidden = replyItem.isRepeated() || replyItem.isConflicting() || isIrrelevant || isNotNegative;
             if (!replyItem.isConflicting() && !isIrrelevant && score != null) {
                 reviewScores.add(score);
             }
-            if (replyFilterEnabled && (replyItem.isRepeated() || replyItem.isConflicting() || isIrrelevant ||
-                    isNotNegative)) {
+            if (settings.getReplyFilterEnabled() && isHidden) {
                 continue;
             }
+            if (settings.getDebugMode()) {
+                reply += DebugComment.getDebugMessage(replyItem, isHidden);
+            }
             ReviewBatch batchMap = new ReviewBatch();
-            batchMap.setContent(replyItem.getReply());
+            batchMap.setContent(reply);
             if (change.getIsCommentEvent() && replyItem.getId() != null) {
                 setCommentBatchMap(batchMap, replyItem.getId());
             }
