@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.googlesource.gerrit.plugins.chatgpt.utils.StringUtils.joinWithNewLine;
+import static com.googlesource.gerrit.plugins.chatgpt.utils.TextUtils.joinWithNewLine;
 
 @Slf4j
 public class InlineCode {

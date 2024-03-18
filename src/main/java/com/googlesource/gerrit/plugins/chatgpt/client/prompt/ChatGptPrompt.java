@@ -15,13 +15,12 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.googlesource.gerrit.plugins.chatgpt.utils.StringUtils.*;
+import static com.googlesource.gerrit.plugins.chatgpt.utils.TextUtils.*;
 
 @Slf4j
 public class ChatGptPrompt {
     public static final String SPACE = " ";
     public static final String DOT = ". ";
-    public static final String BACKTICK = "`";
 
     // Reply attributes
     public static final String ATTRIBUTE_ID = "id";
@@ -143,7 +142,7 @@ public class ChatGptPrompt {
         Map<String, String> attributes = DEFAULT_GPT_REPLIES_ATTRIBUTES.entrySet().stream()
                 .filter(entry -> orderedFilterFields.contains(entry.getKey()))
                 .collect(Collectors.toMap(
-                        entry -> BACKTICK + entry.getKey() + BACKTICK,
+                        entry -> INLINE_CODE_DELIMITER + entry.getKey() + INLINE_CODE_DELIMITER,
                         Map.Entry::getValue,
                         (oldValue, newValue) -> oldValue,
                         LinkedHashMap::new

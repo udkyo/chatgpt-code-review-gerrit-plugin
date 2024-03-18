@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
 
-import static com.googlesource.gerrit.plugins.chatgpt.utils.StringUtils.joinWithNewLine;
+import static com.googlesource.gerrit.plugins.chatgpt.utils.TextUtils.joinWithNewLine;
 
 @Slf4j
 public class FileDiffProcessed {

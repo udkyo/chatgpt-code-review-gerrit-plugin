@@ -50,7 +50,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.google.gerrit.extensions.client.ChangeKind.REWORK;
 import static com.googlesource.gerrit.plugins.chatgpt.client.UriResourceLocator.*;
-import static com.googlesource.gerrit.plugins.chatgpt.utils.StringUtils.joinWithNewLine;
+import static com.googlesource.gerrit.plugins.chatgpt.utils.TextUtils.joinWithNewLine;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
