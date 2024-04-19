@@ -25,8 +25,10 @@ public class GerritChange {
     private BranchNameKey branchNameKey;
     private Change.Key changeKey;
     private String fullChangeId;
+    // "Boolean" is used instead of "boolean" to have "getIsCommentEvent" instead of "isCommentEvent" as getter method
+    // (due to Lombok's magic naming convention)
     @Setter
-    private Boolean isCommentEvent;
+    private Boolean isCommentEvent = false;
 
     public GerritChange(Project.NameKey projectNameKey, BranchNameKey branchNameKey, Change.Key changeKey) {
         this.projectNameKey = projectNameKey;
@@ -58,6 +60,10 @@ public class GerritChange {
         catch (NullPointerException e) {
             return Optional.empty();
         }
+    }
+
+    public String getProjectName() {
+        return getProjectNameKey().toString();
     }
 
     private void buildFullChangeId() {
