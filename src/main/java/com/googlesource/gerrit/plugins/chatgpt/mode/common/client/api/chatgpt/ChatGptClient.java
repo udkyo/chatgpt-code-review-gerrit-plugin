@@ -19,7 +19,7 @@ abstract public class ChatGptClient {
     @Getter
     protected String requestBody;
 
-    protected String extractContent(Configuration config, String body) throws Exception {
+    protected ChatGptResponseContent extractContent(Configuration config, String body) throws Exception {
         if (config.getGptStreamOutput() && !isCommentEvent) {
             StringBuilder finalContent = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new StringReader(body))) {
@@ -28,7 +28,7 @@ abstract public class ChatGptClient {
                     extractContentFromLine(line).ifPresent(finalContent::append);
                 }
             }
-            return finalContent.toString();
+            return convertResponseContentFromJson(finalContent.toString());
         }
         else {
             ChatGptResponseUnstreamed chatGptResponseUnstreamed =
@@ -37,9 +37,7 @@ abstract public class ChatGptClient {
         }
     }
 
-    protected boolean validateResponse(String contentExtracted, String changeId, int attemptInd) {
-        ChatGptResponseContent chatGptResponseContent =
-                getGson().fromJson(contentExtracted, ChatGptResponseContent.class);
+    protected boolean validateResponse(ChatGptResponseContent chatGptResponseContent, String changeId, int attemptInd) {
         String returnedChangeId = chatGptResponseContent.getChangeId();
         // A response is considered valid if either no changeId is returned or the changeId returned matches the one
         // provided in the request
@@ -51,8 +49,12 @@ abstract public class ChatGptClient {
         return isValidated;
     }
 
-    protected String getResponseContent(List<ChatGptToolCall> toolCalls) {
-        return toolCalls.get(0).getFunction().getArguments();
+    protected ChatGptResponseContent getResponseContent(List<ChatGptToolCall> toolCalls) {
+        if (toolCalls.size() > 1) {
+            return mergeToolCalls(toolCalls);
+        } else {
+            return getArgumentAsResponse(toolCalls, 0);
+        }
     }
 
     protected Optional<String> extractContentFromLine(String line) {
@@ -67,8 +69,30 @@ abstract public class ChatGptClient {
         if (delta == null || delta.getToolCalls() == null) {
             return Optional.empty();
         }
-        String content = getResponseContent(delta.getToolCalls());
+        String content = getArgumentAsString(delta.getToolCalls(), 0);
         return Optional.ofNullable(content);
+    }
+
+    private ChatGptResponseContent convertResponseContentFromJson(String content) {
+        return getGson().fromJson(content, ChatGptResponseContent.class);
+    }
+
+    private String getArgumentAsString(List<ChatGptToolCall> toolCalls, int ind) {
+        return toolCalls.get(ind).getFunction().getArguments();
+    }
+
+    private ChatGptResponseContent getArgumentAsResponse(List<ChatGptToolCall> toolCalls, int ind) {
+        return convertResponseContentFromJson(getArgumentAsString(toolCalls, ind));
+    }
+
+    private ChatGptResponseContent mergeToolCalls(List<ChatGptToolCall> toolCalls) {
+        ChatGptResponseContent responseContent = getArgumentAsResponse(toolCalls, 0);
+        for (int ind = 1; ind < toolCalls.size(); ind++) {
+            responseContent.getReplies().addAll(
+                    getArgumentAsResponse(toolCalls, ind).getReplies()
+            );
+        }
+        return responseContent;
     }
 
 }

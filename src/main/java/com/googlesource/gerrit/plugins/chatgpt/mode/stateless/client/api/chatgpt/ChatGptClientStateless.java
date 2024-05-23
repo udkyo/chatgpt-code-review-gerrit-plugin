@@ -32,8 +32,8 @@ public class ChatGptClientStateless extends ChatGptClient implements IChatGptCli
 
     private final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
 
-    public String ask(Configuration config, ChangeSetData changeSetData, GerritChange change, String patchSet)
-            throws Exception {
+    public ChatGptResponseContent ask(Configuration config, ChangeSetData changeSetData, GerritChange change,
+                                      String patchSet) throws Exception {
         isCommentEvent = change.getIsCommentEvent();
         String changeId = change.getFullChangeId();
         log.info("Processing STATELESS ChatGPT Request with changeId: {}, Patch Set: {}", changeId, patchSet);
@@ -49,7 +49,7 @@ public class ChatGptClientStateless extends ChatGptClient implements IChatGptCli
                 throw new IOException("ChatGPT response body is null");
             }
 
-            String contentExtracted = extractContent(config, body);
+            ChatGptResponseContent contentExtracted = extractContent(config, body);
             if (validateResponse(contentExtracted, changeId, attemptInd)) {
                 return contentExtracted;
             }

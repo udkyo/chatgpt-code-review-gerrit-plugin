@@ -5,6 +5,7 @@ import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClientReview;
+import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptResponseContent;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.review.ReviewBatch;
 import com.googlesource.gerrit.plugins.chatgpt.mode.interfaces.client.api.chatgpt.IChatGptClient;
@@ -49,7 +50,7 @@ public class CodeReviewPluginIT {
         when(config.getGptModel()).thenReturn(Configuration.DEFAULT_GPT_MODEL);
         when(chatGptPromptStateless.getGptSystemPrompt()).thenReturn(ChatGptPromptStateless.DEFAULT_GPT_SYSTEM_PROMPT);
 
-        String answer = chatGptClient.ask(config, changeSetData, new GerritChange(""), "hello");
+        ChatGptResponseContent answer = chatGptClient.ask(config, changeSetData, new GerritChange(""), "hello");
         log.info("answer: {}", answer);
         assertNotNull(answer);
     }

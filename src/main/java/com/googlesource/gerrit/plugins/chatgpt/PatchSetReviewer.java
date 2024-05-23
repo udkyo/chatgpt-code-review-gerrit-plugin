@@ -21,8 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 
-import static com.googlesource.gerrit.plugins.chatgpt.utils.GsonUtils.getGson;
-
 @Slf4j
 public class PatchSetReviewer {
     private static final String SPLIT_REVIEW_MSG = "Too many changes. Please consider splitting into patches smaller " +
@@ -66,7 +64,7 @@ public class PatchSetReviewer {
         }
         ChangeSetDataHandler.update(config, change, gerritClient, changeSetData);
 
-        String reviewReply = getReviewReply(change, patchSet);
+        ChatGptResponseContent reviewReply = getReviewReply(change, patchSet);
         log.debug("ChatGPT response: {}", reviewReply);
 
         retrieveReviewBatches(reviewReply, change);
@@ -101,9 +99,8 @@ public class PatchSetReviewer {
         }
     }
 
-    private void retrieveReviewBatches(String reviewReply, GerritChange change) {
-        ChatGptResponseContent reviewJson = getGson().fromJson(reviewReply, ChatGptResponseContent.class);
-        for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
+    private void retrieveReviewBatches(ChatGptResponseContent reviewReply, GerritChange change) {
+        for (ChatGptReplyItem replyItem : reviewReply.getReplies()) {
             String reply = replyItem.getReply();
             Integer score = replyItem.getScore();
             boolean isNotNegative = isNotNegativeReply(score);
@@ -130,11 +127,11 @@ public class PatchSetReviewer {
         }
     }
 
-    private String getReviewReply(GerritChange change, String patchSet) throws Exception {
+    private ChatGptResponseContent getReviewReply(GerritChange change, String patchSet) throws Exception {
         List<String> patchLines = Arrays.asList(patchSet.split("\n"));
         if (patchLines.size() > config.getMaxReviewLines()) {
             log.warn("Patch set too large. Skipping review. changeId: {}", change.getFullChangeId());
-            return String.format(SPLIT_REVIEW_MSG, config.getMaxReviewLines());
+            return new ChatGptResponseContent(String.format(SPLIT_REVIEW_MSG, config.getMaxReviewLines()));
         }
 
         return chatGptClient.ask(config, changeSetData, change, patchSet);

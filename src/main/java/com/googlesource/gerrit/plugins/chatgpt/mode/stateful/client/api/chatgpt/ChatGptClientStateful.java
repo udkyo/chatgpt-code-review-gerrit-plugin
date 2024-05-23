@@ -7,6 +7,7 @@ import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandler;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.chatgpt.ChatGptClient;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
+import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptResponseContent;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import com.googlesource.gerrit.plugins.chatgpt.mode.interfaces.client.api.chatgpt.IChatGptClient;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class ChatGptClientStateful extends ChatGptClient implements IChatGptClie
         this.pluginDataHandler = pluginDataHandler;
     }
 
-    public String ask(Configuration config, ChangeSetData changeSetData, GerritChange change, String patchSet) {
+    public ChatGptResponseContent ask(Configuration config, ChangeSetData changeSetData, GerritChange change, String patchSet) {
         isCommentEvent = change.getIsCommentEvent();
         String changeId = change.getFullChangeId();
         log.info("Processing STATEFUL ChatGPT Request with changeId: {}, Patch Set: {}", changeId, patchSet);
