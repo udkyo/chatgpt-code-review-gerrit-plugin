@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import static com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt.MessageSanitizer.sanitizeChatGptMessage;
 import static com.googlesource.gerrit.plugins.chatgpt.settings.Settings.EMPTY_REVIEW_MESSAGE;
+import static com.googlesource.gerrit.plugins.chatgpt.settings.Settings.SYSTEM_MESSAGE_PREFIX;
 
 @Slf4j
 public class GerritClientReview extends GerritClientAccount {
@@ -81,7 +82,7 @@ public class GerritClientReview extends GerritClientAccount {
             }
         }
         if (comments.isEmpty()) {
-            reviewInput.message(systemMessage);
+            reviewInput.message(SYSTEM_MESSAGE_PREFIX + systemMessage);
         }
         else {
             reviewInput.comments = comments;
