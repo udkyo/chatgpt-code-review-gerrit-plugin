@@ -77,7 +77,7 @@ public class ChatGptPrompt {
     }
 
     protected void loadPrompts(String promptFilename) {
-        String promptFile = String.format("Config/%s.json", promptFilename);
+        String promptFile = String.format("config/%s.json", promptFilename);
         Class<? extends ChatGptPrompt> me = this.getClass();
         try (InputStreamReader reader = FileUtils.getInputStreamReader(promptFile)) {
             Map<String, Object> values = getGson().fromJson(reader, new TypeToken<Map<String, Object>>(){}.getType());
