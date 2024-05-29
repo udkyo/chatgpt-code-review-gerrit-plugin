@@ -1,7 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptMessageItem;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptRequestMessage;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
@@ -12,8 +11,12 @@ import java.util.List;
 
 @Slf4j
 public class ChatGptUserPromptRequests extends ChatGptUserPromptBase {
-    public ChatGptUserPromptRequests(Configuration config, ChangeSetData changeSetData, GerritChange change, GerritClientData gerritClientData) {
-        super(config, changeSetData, change, gerritClientData);
+    public ChatGptUserPromptRequests(
+            Configuration config,
+            ChangeSetData changeSetData,
+            GerritClientData gerritClientData
+    ) {
+        super(config, changeSetData, gerritClientData);
         commentProperties = commentData.getCommentProperties();
     }
 

@@ -182,6 +182,8 @@ Please ensure **strict control over the access permissions of `refs/meta/config`
 - `ignoreOutdatedInlineComments`: Determines if inline comments made on non-latest Patch Sets should be disregarded. By
   default, this is set to false, meaning all inline comments are used for generating new responses and identifying
   repetitions. If enabled (true), inline comments from previous Patch Sets are excluded from these considerations.
+- `enableMessageDebugging`: This setting controls the activation of debugging functionalities through messages (default
+  value is false). When set to true, it enables commands and options like `--debug` for users.
 
 #### Optional Parameters for Global Configuration only
 

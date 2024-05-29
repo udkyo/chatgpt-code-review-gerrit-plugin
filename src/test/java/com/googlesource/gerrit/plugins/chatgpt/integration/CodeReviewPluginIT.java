@@ -66,6 +66,7 @@ public class CodeReviewPluginIT {
 
     @Test
     public void setReview() throws Exception {
+        ChangeSetData changeSetData = new ChangeSetData(1, config.getVotingMinScore(), config.getMaxReviewFileSize());
         when(config.getGerritUserName()).thenReturn("Your Gerrit username");
 
         List<ReviewBatch> reviewBatches = new ArrayList<>();
@@ -73,6 +74,6 @@ public class CodeReviewPluginIT {
         reviewBatches.get(0).setContent("message");
 
         GerritClientReview gerritClientReview = new GerritClientReview(config, accountCache);
-        gerritClientReview.setReview(new GerritChange("Your changeId"), reviewBatches);
+        gerritClientReview.setReview(new GerritChange("Your changeId"), reviewBatches, changeSetData);
     }
 }

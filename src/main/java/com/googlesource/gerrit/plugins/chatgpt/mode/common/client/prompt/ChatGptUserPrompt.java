@@ -17,10 +17,10 @@ public class ChatGptUserPrompt {
 
     public ChatGptUserPrompt(Configuration config, ChangeSetData changeSetData, GerritChange change, GerritClientData gerritClientData) {
         if (change.getIsCommentEvent()) {
-            chatGptUserPromptBase = new ChatGptUserPromptRequests(config, changeSetData, change, gerritClientData);
+            chatGptUserPromptBase = new ChatGptUserPromptRequests(config, changeSetData, gerritClientData);
         }
         else {
-            chatGptUserPromptBase = new ChatGptUserPromptReview(config, changeSetData, change, gerritClientData);
+            chatGptUserPromptBase = new ChatGptUserPromptReview(config, changeSetData, gerritClientData);
         }
     }
 

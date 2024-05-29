@@ -27,5 +27,5 @@ public class ChangeSetData {
     private Boolean replyFilterEnabled = true;
     private Boolean debugMode = false;
     private Set<String> directives = new HashSet<>();
-
+    private String reviewSystemMessage;
 }

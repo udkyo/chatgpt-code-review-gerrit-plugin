@@ -2,7 +2,6 @@ package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.messages;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.ClientBase;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.commands.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import lombok.Getter;
@@ -22,14 +21,14 @@ public class ClientMessage extends ClientBase {
     @Getter
     private String message;
 
-    public ClientMessage(Configuration config, ChangeSetData changeSetData, GerritChange change) {
+    public ClientMessage(Configuration config, ChangeSetData changeSetData) {
         super(config);
         botMentionPattern = getBotMentionPattern();
-        clientCommands = new ClientCommands(changeSetData, change);
+        clientCommands = new ClientCommands(config, changeSetData);
     }
 
-    public ClientMessage(Configuration config, ChangeSetData changeSetData, GerritChange change, String message) {
-        this(config, changeSetData, change);
+    public ClientMessage(Configuration config, ChangeSetData changeSetData, String message) {
+        this(config, changeSetData);
         this.message = message;
     }
 

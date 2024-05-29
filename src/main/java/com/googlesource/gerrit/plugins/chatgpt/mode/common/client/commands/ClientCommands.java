@@ -1,7 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.commands;
 
-import com.googlesource.gerrit.plugins.chatgpt.data.ChangeSetDataHandler;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
+import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.ClientBase;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt.Directives;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import lombok.Getter;
@@ -13,9 +13,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.googlesource.gerrit.plugins.chatgpt.settings.Settings.MESSAGE_DEBUGGING_FUNCTIONALITIES_DISABLED;
+
 @Slf4j
 @Getter
-public class ClientCommands {
+public class ClientCommands extends ClientBase {
     private enum COMMAND_SET {
         REVIEW,
         REVIEW_LAST,
@@ -52,7 +54,8 @@ public class ClientCommands {
     @Getter
     private boolean containingHistoryCommand;
 
-    public ClientCommands(ChangeSetData changeSetData, GerritChange change) {
+    public ClientCommands(Configuration config, ChangeSetData changeSetData) {
+        super(config);
         this.changeSetData = changeSetData;
         directives = new Directives(changeSetData);
         containingHistoryCommand = false;
@@ -110,13 +113,20 @@ public class ClientCommands {
                 switch (option) {
                     case FILTER:
                         boolean value = Boolean.parseBoolean(reviewOptionsMatcher.group(2));
-                        log.info("Option 'replyFilterEnabled' set to {}", value);
+                        log.debug("Option 'replyFilterEnabled' set to {}", value);
                         changeSetData.setReplyFilterEnabled(value);
                         break;
                     case DEBUG:
-                        log.info("Response Mode set to Debug");
-                        changeSetData.setDebugMode(true);
-                        changeSetData.setReplyFilterEnabled(false);
+                        if (config.getEnableMessageDebugging()) {
+                            log.debug("Response Mode set to Debug");
+                            changeSetData.setDebugMode(true);
+                            changeSetData.setReplyFilterEnabled(false);
+                        }
+                        else {
+                            changeSetData.setReviewSystemMessage(MESSAGE_DEBUGGING_FUNCTIONALITIES_DISABLED);
+                            log.debug("Unable to set Response Mode to Debug: `enableMessageDebugging` config must be " +
+                                    "set to true");
+                        }
                         break;
                 }
             }

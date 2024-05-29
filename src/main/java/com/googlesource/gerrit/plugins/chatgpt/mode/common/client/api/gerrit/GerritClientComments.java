@@ -137,7 +137,7 @@ public class GerritClientComments extends GerritClientAccount {
     }
 
     private void addLastComments(GerritChange change) {
-        ClientMessage clientMessage = new ClientMessage(config, changeSetData, change);
+        ClientMessage clientMessage = new ClientMessage(config, changeSetData);
         try {
             List<GerritComment> latestComments = retrieveComments(change);
             if (latestComments == null) {

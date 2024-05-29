@@ -17,6 +17,8 @@ public class Settings {
     public static final String GERRIT_COMMIT_MESSAGE_PREFIX = "Subject: ";
 
     public static final String EMPTY_REVIEW_MESSAGE = "No update to show for this Change Set";
+    public static final String MESSAGE_DEBUGGING_FUNCTIONALITIES_DISABLED = "Message Debugging functionalities are " +
+            "disabled";
 
     public enum MODES {
         stateless,

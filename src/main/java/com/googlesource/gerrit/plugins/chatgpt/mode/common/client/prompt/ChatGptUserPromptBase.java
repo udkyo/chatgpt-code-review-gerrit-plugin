@@ -1,7 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.patch.code.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.patch.diff.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptMessageItem;
@@ -29,11 +28,11 @@ public abstract class ChatGptUserPromptBase {
     @Getter
     protected List<GerritComment> commentProperties;
 
-    public ChatGptUserPromptBase(Configuration config, ChangeSetData changeSetData, GerritChange change, GerritClientData gerritClientData) {
+    public ChatGptUserPromptBase(Configuration config, ChangeSetData changeSetData, GerritClientData gerritClientData) {
         this.gerritClientData = gerritClientData;
         fileDiffsProcessed = gerritClientData.getFileDiffsProcessed();
         commentData = gerritClientData.getCommentData();
-        gptMessageHistory = new ChatGptHistory(config, changeSetData, change, gerritClientData);
+        gptMessageHistory = new ChatGptHistory(config, changeSetData, gerritClientData);
         messageItems = new ArrayList<>();
     }
 

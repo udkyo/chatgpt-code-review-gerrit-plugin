@@ -64,11 +64,13 @@ public class PatchSetReviewer {
         }
         ChangeSetDataHandler.update(config, change, gerritClient, changeSetData);
 
-        ChatGptResponseContent reviewReply = getReviewReply(change, patchSet);
-        log.debug("ChatGPT response: {}", reviewReply);
+        if (changeSetData.getReviewSystemMessage() == null) {
+            ChatGptResponseContent reviewReply = getReviewReply(change, patchSet);
+            log.debug("ChatGPT response: {}", reviewReply);
 
-        retrieveReviewBatches(reviewReply, change);
-        clientReviewProvider.get().setReview(change, reviewBatches, getReviewScore());
+            retrieveReviewBatches(reviewReply, change);
+        }
+        clientReviewProvider.get().setReview(change, reviewBatches, changeSetData, getReviewScore());
     }
 
     private void setCommentBatchMap(ReviewBatch batchMap, Integer batchID) {
