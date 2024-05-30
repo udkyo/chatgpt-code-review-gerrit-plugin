@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptMessageItem;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
@@ -15,12 +16,18 @@ import static com.googlesource.gerrit.plugins.chatgpt.utils.GsonUtils.getGson;
 public class ChatGptUserPrompt {
     private final ChatGptUserPromptBase chatGptUserPromptBase;
 
-    public ChatGptUserPrompt(Configuration config, ChangeSetData changeSetData, GerritChange change, GerritClientData gerritClientData) {
+    public ChatGptUserPrompt(
+            Configuration config,
+            ChangeSetData changeSetData,
+            GerritChange change,
+            GerritClientData gerritClientData,
+            Localizer localizer
+    ) {
         if (change.getIsCommentEvent()) {
-            chatGptUserPromptBase = new ChatGptUserPromptRequests(config, changeSetData, gerritClientData);
+            chatGptUserPromptBase = new ChatGptUserPromptRequests(config, changeSetData, gerritClientData, localizer);
         }
         else {
-            chatGptUserPromptBase = new ChatGptUserPromptReview(config, changeSetData, gerritClientData);
+            chatGptUserPromptBase = new ChatGptUserPromptReview(config, changeSetData, gerritClientData, localizer);
         }
     }
 

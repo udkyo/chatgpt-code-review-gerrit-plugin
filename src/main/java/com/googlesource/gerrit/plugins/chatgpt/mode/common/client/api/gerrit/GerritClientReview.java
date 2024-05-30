@@ -11,6 +11,7 @@ import com.google.gerrit.server.account.AccountCache;
 import com.google.gerrit.server.util.ManualRequestContext;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.review.ReviewBatch;
 import lombok.extern.slf4j.Slf4j;
@@ -22,15 +23,16 @@ import java.util.Map;
 import java.util.Optional;
 
 import static com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt.MessageSanitizer.sanitizeChatGptMessage;
-import static com.googlesource.gerrit.plugins.chatgpt.settings.Settings.EMPTY_REVIEW_MESSAGE;
-import static com.googlesource.gerrit.plugins.chatgpt.settings.Settings.SYSTEM_MESSAGE_PREFIX;
 
 @Slf4j
 public class GerritClientReview extends GerritClientAccount {
+    private final Localizer localizer;
+
     @VisibleForTesting
     @Inject
-    public GerritClientReview(Configuration config, AccountCache accountCache) {
+    public GerritClientReview(Configuration config, AccountCache accountCache, Localizer localizer) {
         super(config, accountCache);
+        this.localizer = localizer;
     }
 
     public void setReview(
@@ -71,7 +73,7 @@ public class GerritClientReview extends GerritClientAccount {
     private ReviewInput buildReview(List<ReviewBatch> reviewBatches, ChangeSetData changeSetData, Integer reviewScore) {
         ReviewInput reviewInput = ReviewInput.create();
         Map<String, List<CommentInput>> comments = new HashMap<>();
-        String systemMessage = EMPTY_REVIEW_MESSAGE;
+        String systemMessage = localizer.getText("message.empty.review");
         if (changeSetData.getReviewSystemMessage() != null) {
             systemMessage = changeSetData.getReviewSystemMessage();
         }
@@ -82,7 +84,7 @@ public class GerritClientReview extends GerritClientAccount {
             }
         }
         if (comments.isEmpty()) {
-            reviewInput.message(SYSTEM_MESSAGE_PREFIX + systemMessage);
+            reviewInput.message(localizer.getText("system.message.prefix") + ' ' + systemMessage);
         }
         else {
             reviewInput.comments = comments;

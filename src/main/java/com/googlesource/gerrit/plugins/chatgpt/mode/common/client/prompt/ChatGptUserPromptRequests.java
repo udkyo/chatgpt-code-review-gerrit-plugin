@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptMessageItem;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptRequestMessage;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
@@ -14,9 +15,10 @@ public class ChatGptUserPromptRequests extends ChatGptUserPromptBase {
     public ChatGptUserPromptRequests(
             Configuration config,
             ChangeSetData changeSetData,
-            GerritClientData gerritClientData
+            GerritClientData gerritClientData,
+            Localizer localizer
     ) {
-        super(config, changeSetData, gerritClientData);
+        super(config, changeSetData, gerritClientData, localizer);
         commentProperties = commentData.getCommentProperties();
     }
 

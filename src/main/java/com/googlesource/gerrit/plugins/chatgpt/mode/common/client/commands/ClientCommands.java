@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.commands;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.ClientBase;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt.Directives;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
@@ -12,8 +13,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.googlesource.gerrit.plugins.chatgpt.settings.Settings.MESSAGE_DEBUGGING_FUNCTIONALITIES_DISABLED;
 
 @Slf4j
 @Getter
@@ -51,11 +50,14 @@ public class ClientCommands extends ClientBase {
     private final ChangeSetData changeSetData;
     @Getter
     private final Directives directives;
+    private final Localizer localizer;
+
     @Getter
     private boolean containingHistoryCommand;
 
-    public ClientCommands(Configuration config, ChangeSetData changeSetData) {
+    public ClientCommands(Configuration config, ChangeSetData changeSetData, Localizer localizer) {
         super(config);
+        this.localizer = localizer;
         this.changeSetData = changeSetData;
         directives = new Directives(changeSetData);
         containingHistoryCommand = false;
@@ -123,7 +125,9 @@ public class ClientCommands extends ClientBase {
                             changeSetData.setReplyFilterEnabled(false);
                         }
                         else {
-                            changeSetData.setReviewSystemMessage(MESSAGE_DEBUGGING_FUNCTIONALITIES_DISABLED);
+                            changeSetData.setReviewSystemMessage(localizer.getText(
+                                    "message.debugging.functionalities.disabled"
+                            ));
                             log.debug("Unable to set Response Mode to Debug: `enableMessageDebugging` config must be " +
                                     "set to true");
                         }

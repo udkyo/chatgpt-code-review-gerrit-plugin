@@ -36,6 +36,7 @@ import com.googlesource.gerrit.plugins.chatgpt.listener.EventHandlerTask;
 import com.googlesource.gerrit.plugins.chatgpt.listener.GerritEventContextModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Providers;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClientComments;
@@ -298,21 +299,28 @@ public class ChatGptReviewTestBase {
     }
 
     private void initTest() {
-        ChangeSetData changeSetData = new ChangeSetData(GPT_USER_ACCOUNT_ID, config.getVotingMinScore(), config.getMaxReviewFileSize());
+        ChangeSetData changeSetData = new ChangeSetData(
+                GPT_USER_ACCOUNT_ID,
+                config.getVotingMinScore(),
+                config.getMaxReviewFileSize()
+        );
+        Localizer localizer = new Localizer(config);
         gerritClient =
             new GerritClient(
                 new GerritClientFacade(
                     config,
                     changeSetData,
-                    new GerritClientComments(config, accountCacheMock, changeSetData),
+                    new GerritClientComments(config, accountCacheMock, changeSetData, localizer),
                     getGerritClientPatchSet()));
         patchSetReviewer =
             new PatchSetReviewer(
                 gerritClient,
                 config,
                 changeSetData,
-                Providers.of(new GerritClientReview(config, accountCacheMock)),
-                getChatGptClient());
+                Providers.of(new GerritClientReview(config, accountCacheMock, localizer)),
+                getChatGptClient(),
+                localizer
+            );
         mockConfigCreator = mock(ConfigCreator.class);
     }
 

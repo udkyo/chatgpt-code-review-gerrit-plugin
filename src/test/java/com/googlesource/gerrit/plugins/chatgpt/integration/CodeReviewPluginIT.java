@@ -2,6 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.integration;
 
 import com.google.gerrit.server.account.AccountCache;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClientReview;
@@ -67,13 +68,14 @@ public class CodeReviewPluginIT {
     @Test
     public void setReview() throws Exception {
         ChangeSetData changeSetData = new ChangeSetData(1, config.getVotingMinScore(), config.getMaxReviewFileSize());
+        Localizer localizer = new Localizer(config);
         when(config.getGerritUserName()).thenReturn("Your Gerrit username");
 
         List<ReviewBatch> reviewBatches = new ArrayList<>();
         reviewBatches.add(new ReviewBatch());
         reviewBatches.get(0).setContent("message");
 
-        GerritClientReview gerritClientReview = new GerritClientReview(config, accountCache);
+        GerritClientReview gerritClientReview = new GerritClientReview(config, accountCache, localizer);
         gerritClientReview.setReview(new GerritChange("Your changeId"), reviewBatches, changeSetData);
     }
 }

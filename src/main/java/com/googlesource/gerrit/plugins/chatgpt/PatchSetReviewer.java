@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.data.ChangeSetDataHandler;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClientReview;
@@ -32,6 +33,7 @@ public class PatchSetReviewer {
     private final Provider<GerritClientReview> clientReviewProvider;
     @Getter
     private final IChatGptClient chatGptClient;
+    private final Localizer localizer;
 
     private GerritCommentRange gerritCommentRange;
     private List<ReviewBatch> reviewBatches;
@@ -44,12 +46,15 @@ public class PatchSetReviewer {
             Configuration config,
             ChangeSetData changeSetData,
             Provider<GerritClientReview> clientReviewProvider,
-            IChatGptClient chatGptClient) {
+            IChatGptClient chatGptClient,
+            Localizer localizer
+    ) {
         this.config = config;
         this.gerritClient = gerritClient;
         this.changeSetData = changeSetData;
         this.clientReviewProvider = clientReviewProvider;
         this.chatGptClient = chatGptClient;
+        this.localizer = localizer;
     }
 
     public void review(GerritChange change) throws Exception {
@@ -62,7 +67,7 @@ public class PatchSetReviewer {
             log.info("No file to review has been found in the PatchSet");
             return;
         }
-        ChangeSetDataHandler.update(config, change, gerritClient, changeSetData);
+        ChangeSetDataHandler.update(config, change, gerritClient, changeSetData, localizer);
 
         if (changeSetData.getReviewSystemMessage() == null) {
             ChatGptResponseContent reviewReply = getReviewReply(change, patchSet);

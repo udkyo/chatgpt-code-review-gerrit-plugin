@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptRequestMessage;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
@@ -17,11 +18,8 @@ import java.util.stream.Stream;
 public class ChatGptHistory extends ChatGptComment {
     private static final String ROLE_USER = "user";
     private static final String ROLE_ASSISTANT = "assistant";
-    private static final Set<String> MESSAGES_EXCLUDED_FROM_HISTORY = new HashSet<>() {{
-        add(Settings.GERRIT_DEFAULT_MESSAGE_DONE);
-        add(Settings.EMPTY_REVIEW_MESSAGE);
-    }};
 
+    private final Set<String> messagesExcludedFromHistory;
     private final HashMap<String, GerritComment> commentMap;
     private final HashMap<String, GerritComment> patchSetCommentMap;
     private final Set<String> patchSetCommentAdded;
@@ -30,9 +28,18 @@ public class ChatGptHistory extends ChatGptComment {
 
     private boolean filterActive;
 
-    public ChatGptHistory(Configuration config, ChangeSetData changeSetData, GerritClientData gerritClientData) {
-        super(config, changeSetData);
+    public ChatGptHistory(
+            Configuration config,
+            ChangeSetData changeSetData,
+            GerritClientData gerritClientData,
+            Localizer localizer
+    ) {
+        super(config, changeSetData, localizer);
         CommentData commentData = gerritClientData.getCommentData();
+        messagesExcludedFromHistory = Set.of(
+            Settings.GERRIT_DEFAULT_MESSAGE_DONE,
+            localizer.getText("message.empty.review")
+        );
         commentMap = commentData.getCommentMap();
         patchSetCommentMap = commentData.getPatchSetCommentMap();
         patchSetComments = retrievePatchSetComments(gerritClientData);
@@ -123,7 +130,7 @@ public class ChatGptHistory extends ChatGptComment {
     private void addMessageToHistory(List<ChatGptRequestMessage> messageHistory, GerritComment comment) {
         String messageContent = getCleanedMessage(comment);
         boolean shouldNotProcessComment = messageContent.isEmpty() ||
-                MESSAGES_EXCLUDED_FROM_HISTORY.contains(messageContent) ||
+                messagesExcludedFromHistory.contains(messageContent) ||
                 patchSetCommentAdded.contains(messageContent) ||
                 filterActive && isInactiveComment(comment);
 

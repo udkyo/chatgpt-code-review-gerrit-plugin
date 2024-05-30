@@ -262,6 +262,10 @@ public class Configuration {
         return getDouble(KEY_FILTER_COMMENTS_RELEVANCE_THRESHOLD, DEFAULT_FILTER_COMMENTS_RELEVANCE_THRESHOLD);
     }
 
+    public Locale getLocaleDefault() {
+        return Locale.getDefault();
+    }
+
     public int getVotingMinScore() {
         return getInt(KEY_VOTING_MIN_SCORE, DEFAULT_VOTING_MIN_SCORE);
     }

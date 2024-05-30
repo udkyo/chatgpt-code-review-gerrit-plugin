@@ -7,6 +7,7 @@ import com.google.gerrit.server.events.CommentAddedEvent;
 import com.google.gerrit.server.util.ManualRequestContext;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.messages.ClientMessage;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.gerrit.GerritCodeRange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.gerrit.GerritComment;
@@ -31,6 +32,7 @@ public class GerritClientComments extends GerritClientAccount {
     private final ChangeSetData changeSetData;
     private final HashMap<String, GerritComment> commentMap;
     private final HashMap<String, GerritComment> patchSetCommentMap;
+    private final Localizer localizer;
 
     private String authorUsername;
     @Getter
@@ -38,9 +40,15 @@ public class GerritClientComments extends GerritClientAccount {
 
     @VisibleForTesting
     @Inject
-    public GerritClientComments(Configuration config, AccountCache accountCache, ChangeSetData changeSetData) {
+    public GerritClientComments(
+            Configuration config,
+            AccountCache accountCache,
+            ChangeSetData changeSetData,
+            Localizer localizer
+    ) {
         super(config, accountCache);
         this.changeSetData = changeSetData;
+        this.localizer = localizer;
         commentProperties = new ArrayList<>();
         commentMap = new HashMap<>();
         patchSetCommentMap = new HashMap<>();
@@ -137,7 +145,7 @@ public class GerritClientComments extends GerritClientAccount {
     }
 
     private void addLastComments(GerritChange change) {
-        ClientMessage clientMessage = new ClientMessage(config, changeSetData);
+        ClientMessage clientMessage = new ClientMessage(config, changeSetData, localizer);
         try {
             List<GerritComment> latestComments = retrieveComments(change);
             if (latestComments == null) {
