@@ -35,5 +35,4 @@ public class ChatGptComment extends ClientBase {
     protected boolean isFromAssistant(GerritComment commentProperty) {
         return commentProperty.getAuthor().getAccountId() == changeSetData.getGptAccountId();
     }
-
 }

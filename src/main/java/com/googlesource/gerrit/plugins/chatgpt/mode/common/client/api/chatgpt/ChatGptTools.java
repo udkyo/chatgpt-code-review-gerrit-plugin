@@ -29,5 +29,4 @@ public class ChatGptTools {
         }
         return toolChoice;
     }
-
 }

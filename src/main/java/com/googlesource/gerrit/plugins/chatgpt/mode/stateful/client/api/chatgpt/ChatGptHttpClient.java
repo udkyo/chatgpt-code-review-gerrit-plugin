@@ -11,5 +11,4 @@ public class ChatGptHttpClient extends HttpClient {
     public Request createRequestFromJson(String uri, String bearer, Object requestObject) {
         return createRequestFromJson(uri, bearer, requestObject, BETA_VERSION_HEADER);
     }
-
 }

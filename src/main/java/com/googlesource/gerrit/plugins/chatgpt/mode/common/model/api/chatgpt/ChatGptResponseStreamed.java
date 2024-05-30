@@ -16,5 +16,4 @@ public class ChatGptResponseStreamed {
         @SerializedName("finish_reason")
         protected String finishReason;
     }
-
 }

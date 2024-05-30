@@ -55,5 +55,4 @@ public class GerritListener implements EventListener {
             log.error("Project not found: {}", projectNameKey, e);
         }
     }
-
 }

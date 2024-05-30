@@ -35,5 +35,4 @@ public class ChatGptParameters extends ClientBase {
     private Double retrieveTemperature(String temperatureKey, Double defaultTemperature) {
         return Double.parseDouble(config.getString(temperatureKey, String.valueOf(defaultTemperature)));
     }
-
 }

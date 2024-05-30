@@ -148,5 +148,4 @@ public class ChatGptHistory extends ChatGptComment {
                 .build();
         messageHistory.add(message);
     }
-
 }

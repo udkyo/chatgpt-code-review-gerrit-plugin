@@ -28,5 +28,4 @@ public class DebugMessages {
         Matcher debugMessagematcher = DEBUG_MESSAGE_PATTERN.matcher(message);
         return debugMessagematcher.replaceAll("");
     }
-
 }

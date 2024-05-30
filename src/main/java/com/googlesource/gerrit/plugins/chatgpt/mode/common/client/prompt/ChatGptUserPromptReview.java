@@ -38,5 +38,4 @@ public class ChatGptUserPromptReview extends ChatGptUserPromptBase {
 
         return messageItem;
     }
-
 }

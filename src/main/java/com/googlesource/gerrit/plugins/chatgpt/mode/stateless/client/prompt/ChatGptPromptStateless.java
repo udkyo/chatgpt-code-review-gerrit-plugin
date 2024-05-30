@@ -95,5 +95,4 @@ public class ChatGptPromptStateless extends ChatGptPrompt {
         }
         return steps;
     }
-
 }

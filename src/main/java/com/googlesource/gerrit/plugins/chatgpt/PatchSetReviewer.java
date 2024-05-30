@@ -164,5 +164,4 @@ public class PatchSetReviewer {
                 replyItem.getRelevance() != null &&
                 replyItem.getRelevance() < config.getFilterCommentsRelevanceThreshold();
     }
-
 }

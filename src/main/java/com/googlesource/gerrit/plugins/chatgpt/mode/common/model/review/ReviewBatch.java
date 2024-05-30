@@ -16,5 +16,4 @@ public class ReviewBatch {
     public String getFilename() {
         return filename == null ? GERRIT_PATCH_SET_FILENAME : filename;
     }
-
 }

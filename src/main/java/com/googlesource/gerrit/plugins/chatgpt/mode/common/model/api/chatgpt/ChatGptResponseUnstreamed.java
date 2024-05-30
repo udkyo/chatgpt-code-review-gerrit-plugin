@@ -12,5 +12,4 @@ public class ChatGptResponseUnstreamed {
     public static class MessageChoice {
         private ChatGptResponseMessage message;
     }
-
 }

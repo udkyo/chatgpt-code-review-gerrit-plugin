@@ -195,5 +195,4 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
         String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
         Assert.assertEquals(commentUserPrompt, userPrompt);
     }
-
 }

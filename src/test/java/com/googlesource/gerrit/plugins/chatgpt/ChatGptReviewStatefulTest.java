@@ -185,5 +185,4 @@ public class ChatGptReviewStatefulTest extends ChatGptReviewTestBase {
                 captor.getAllValues().get(0).comments.get(GERRIT_PATCH_SET_FILENAME).get(0).message
         );
     }
-
 }

@@ -70,5 +70,4 @@ public class ChatGptThread {
 
         return httpClient.createRequestFromJson(uri.toString(), config.getGptToken(), addMessageRequestBody);
     }
-
 }

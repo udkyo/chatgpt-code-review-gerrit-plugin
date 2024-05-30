@@ -94,5 +94,4 @@ abstract public class ChatGptClient {
         }
         return responseContent;
     }
-
 }

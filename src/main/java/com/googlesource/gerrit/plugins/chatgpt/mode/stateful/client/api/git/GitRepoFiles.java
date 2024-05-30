@@ -67,5 +67,4 @@ public class GitRepoFiles {
                 .setMustExist(true)
                 .build();
     }
-
 }

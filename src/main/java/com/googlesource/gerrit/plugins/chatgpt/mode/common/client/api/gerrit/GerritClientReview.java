@@ -129,5 +129,4 @@ public class GerritClientReview extends GerritClientAccount {
         }
         return comments;
     }
-
 }

@@ -19,7 +19,6 @@ import java.util.Optional;
 @Singleton
 @Slf4j
 public class ConfigCreator {
-
     private final String pluginName;
 
     private final AccountCache accountCache;

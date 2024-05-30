@@ -100,5 +100,4 @@ public class ChatGptClientStateless extends ChatGptClient implements IChatGptCli
 
         return getNoEscapedGson().toJson(chatGptCompletionRequest);
     }
-
 }

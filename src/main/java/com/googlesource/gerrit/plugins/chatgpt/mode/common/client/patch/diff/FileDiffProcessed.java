@@ -130,5 +130,4 @@ public class FileDiffProcessed {
             log.error("Error while processing file difference (diff type: {})", patchSetDiffField.getName(), e);
         }
     }
-
 }

@@ -84,5 +84,4 @@ public class GerritClientAccount extends GerritClientBase {
                 && enabledGroups.stream().noneMatch(accountGroups::contains)
                 || disabledGroups.stream().anyMatch(accountGroups::contains);
     }
-
 }

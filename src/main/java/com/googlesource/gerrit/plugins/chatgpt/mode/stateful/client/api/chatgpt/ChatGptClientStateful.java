@@ -42,5 +42,4 @@ public class ChatGptClientStateful extends ChatGptClient implements IChatGptClie
 
         return getResponseContent(chatGptRun.getFirstStep());
     }
-
 }

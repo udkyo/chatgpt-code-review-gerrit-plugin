@@ -344,5 +344,4 @@ public class Configuration {
         Pattern separator=Pattern.compile("\\s*,\\s*");
         return Arrays.asList(separator.split(value));
     }
-
 }

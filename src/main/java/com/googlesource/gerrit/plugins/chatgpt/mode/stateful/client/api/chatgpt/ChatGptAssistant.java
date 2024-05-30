@@ -92,5 +92,4 @@ public class ChatGptAssistant extends ClientBase {
 
         return httpClient.createRequestFromJson(uri.toString(), config.getGptToken(), requestBody);
     }
-
 }

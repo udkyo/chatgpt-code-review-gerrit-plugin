@@ -42,5 +42,4 @@ public class ChatGptPromptStateful extends ChatGptPrompt {
     public String getDefaultGptThreadReviewMessage(String patchSet) {
         return String.format(DEFAULT_GPT_MESSAGE_REVIEW, patchSet);
     }
-
 }

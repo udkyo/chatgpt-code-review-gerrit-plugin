@@ -23,5 +23,4 @@ public class GerritClientData {
     public int getOneBasedRevisionBase() {
         return revisionBase +1;
     }
-
 }

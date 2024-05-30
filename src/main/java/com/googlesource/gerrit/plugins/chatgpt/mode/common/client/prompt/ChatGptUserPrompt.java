@@ -38,5 +38,4 @@ public class ChatGptUserPrompt {
         List<ChatGptMessageItem> messageItems = chatGptUserPromptBase.getMessageItems();
         return messageItems.isEmpty() ? "" : getGson().toJson(messageItems);
     }
-
 }

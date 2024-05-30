@@ -47,5 +47,4 @@ public class ChatGptFiles extends ClientBase {
 
         return httpClient.createRequest(uri.toString(), config.getGptToken(), requestBody, null);
     }
-
 }

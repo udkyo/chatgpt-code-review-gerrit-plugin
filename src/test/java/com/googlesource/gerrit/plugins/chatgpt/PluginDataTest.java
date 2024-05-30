@@ -17,7 +17,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class PluginDataTest {
-
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
@@ -75,5 +74,4 @@ public class PluginDataTest {
         // The constructor should create the file if it doesn't exist
         assertTrue("The config file should exist after initializing the handler.", Files.exists(realPluginDataPath));
     }
-
 }

@@ -76,5 +76,4 @@ public class TextUtils extends StringUtils {
         }
         return joinWithNewLine(lines);
     }
-
 }

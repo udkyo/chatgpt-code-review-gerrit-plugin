@@ -13,5 +13,4 @@ public class ChatGptToolCall {
         private String name;
         private String arguments;
     }
-
 }

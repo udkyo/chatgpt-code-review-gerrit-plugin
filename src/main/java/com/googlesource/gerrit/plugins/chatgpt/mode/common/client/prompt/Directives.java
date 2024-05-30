@@ -19,5 +19,4 @@ public class Directives {
             changeSetData.getDirectives().add(directive);
         }
     }
-
 }

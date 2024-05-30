@@ -54,5 +54,4 @@ public class GerritComment {
     public int getOneBasedPatchSet() {
         return patchSet == null ? 1 : Math.max(patchSet, 1);
     }
-
 }

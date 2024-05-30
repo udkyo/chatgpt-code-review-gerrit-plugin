@@ -12,7 +12,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class TemporaryFileTest {
-
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
@@ -33,5 +32,4 @@ public class TemporaryFileTest {
         String fileContent = Files.readString(tempFile);
         assertEquals("File content should match", content, fileContent);
     }
-
 }

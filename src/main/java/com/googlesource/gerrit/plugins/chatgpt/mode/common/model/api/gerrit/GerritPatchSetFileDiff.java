@@ -16,5 +16,4 @@ public class GerritPatchSetFileDiff extends GerritFileDiff {
         public List<String> b;
         public List<String> ab;
     }
-
 }

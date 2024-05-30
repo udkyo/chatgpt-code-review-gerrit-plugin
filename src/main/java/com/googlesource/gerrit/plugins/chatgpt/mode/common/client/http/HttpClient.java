@@ -61,5 +61,4 @@ public class HttpClient {
             return createRequest(uri, bearer, null, additionalHeaders);
         }
     }
-
 }

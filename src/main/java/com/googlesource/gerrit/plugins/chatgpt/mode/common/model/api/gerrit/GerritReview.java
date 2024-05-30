@@ -19,5 +19,4 @@ public class GerritReview {
         @SerializedName("Code-Review")
         private int codeReview;
     }
-
 }

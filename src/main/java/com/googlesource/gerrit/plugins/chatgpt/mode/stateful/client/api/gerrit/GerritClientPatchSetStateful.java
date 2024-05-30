@@ -110,5 +110,4 @@ public class GerritClientPatchSetStateful extends GerritClientPatchSet implement
         }
         return files;
     }
-
 }

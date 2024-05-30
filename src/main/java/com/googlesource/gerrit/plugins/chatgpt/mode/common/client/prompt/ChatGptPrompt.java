@@ -148,5 +148,4 @@ public class ChatGptPrompt {
             DEFAULT_GPT_REPLIES_ATTRIBUTES.put(ATTRIBUTE_RELEVANCE, relevanceDescription);
         }
     }
-
 }

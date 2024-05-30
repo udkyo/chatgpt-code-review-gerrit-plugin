@@ -105,5 +105,4 @@ public class ChatGptRun extends ClientBase {
     private Request getRunPollRequest(URI uri) {
         return httpClient.createRequestFromJson(uri.toString(), config.getGptToken(), null);
     }
-
 }
