@@ -18,6 +18,7 @@ public class ClientMessage extends ClientBase {
 
     private final Pattern botMentionPattern;
     private final ClientCommands clientCommands;
+    private final DebugCodeBlocksReview debugCodeBlocksReview;
 
     @Getter
     private String message;
@@ -26,6 +27,7 @@ public class ClientMessage extends ClientBase {
         super(config);
         botMentionPattern = getBotMentionPattern();
         clientCommands = new ClientCommands(config, changeSetData, localizer);
+        debugCodeBlocksReview = new DebugCodeBlocksReview(localizer);
     }
 
     public ClientMessage(Configuration config, ChangeSetData changeSetData, String message, Localizer localizer) {
@@ -60,8 +62,8 @@ public class ClientMessage extends ClientBase {
         return this;
     }
 
-    public ClientMessage removeDebugMessages() {
-        message = DebugMessages.removeDebugMessages(message);
+    public ClientMessage removeDebugCodeBlocks() {
+        message = debugCodeBlocksReview.removeDebugCodeBlocks(message);
         return this;
     }
 

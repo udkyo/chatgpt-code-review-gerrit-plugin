@@ -8,7 +8,7 @@ import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClientReview;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.messages.DebugMessages;
+import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.messages.DebugCodeBlocksReview;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.patch.comment.GerritCommentRange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptReplyItem;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptResponseContent;
@@ -34,6 +34,7 @@ public class PatchSetReviewer {
     @Getter
     private final IChatGptClient chatGptClient;
     private final Localizer localizer;
+    private final DebugCodeBlocksReview debugCodeBlocksReview;
 
     private GerritCommentRange gerritCommentRange;
     private List<ReviewBatch> reviewBatches;
@@ -55,6 +56,7 @@ public class PatchSetReviewer {
         this.clientReviewProvider = clientReviewProvider;
         this.chatGptClient = chatGptClient;
         this.localizer = localizer;
+        debugCodeBlocksReview = new DebugCodeBlocksReview(localizer);
     }
 
     public void review(GerritChange change) throws Exception {
@@ -120,7 +122,7 @@ public class PatchSetReviewer {
                 continue;
             }
             if (changeSetData.getDebugMode()) {
-                reply += DebugMessages.getDebugMessage(replyItem, isHidden);
+                reply += debugCodeBlocksReview.getDebugCodeBlock(replyItem, isHidden);
             }
             ReviewBatch batchMap = new ReviewBatch();
             batchMap.setContent(reply);
