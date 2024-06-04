@@ -8,6 +8,7 @@ import com.google.gerrit.extensions.common.DiffInfo;
 import com.google.gerrit.extensions.restapi.BinaryResult;
 import com.google.gerrit.extensions.restapi.RestApiException;
 import com.google.gson.JsonObject;
+import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandler;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptResponseContent;
 import com.googlesource.gerrit.plugins.chatgpt.mode.stateful.client.api.UriResourceLocatorStateful;
 import com.googlesource.gerrit.plugins.chatgpt.mode.stateful.client.prompt.ChatGptPromptStateful;
@@ -19,6 +20,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -49,6 +51,9 @@ public class ChatGptReviewStatefulTest extends ChatGptReviewTestBase {
     private ChatGptPromptStateful chatGptPromptStateful;
     private JsonObject threadMessage;
 
+    @Mock
+    protected PluginDataHandler pluginDataHandler;
+
     public ChatGptReviewStatefulTest() {
         MockitoAnnotations.openMocks(this);
     }
@@ -59,6 +64,9 @@ public class ChatGptReviewStatefulTest extends ChatGptReviewTestBase {
         // Mock the Global Config values that differ from the ones provided by Default
         when(globalConfig.getString(Mockito.eq("gptMode"), Mockito.anyString()))
                 .thenReturn(MODES.stateful.name());
+
+        // Mock the pluginDataHandlerProvider to return the mocked pluginDataHandler
+        when(pluginDataHandlerProvider.get()).thenReturn(pluginDataHandler);
     }
 
     protected void initConfig() {

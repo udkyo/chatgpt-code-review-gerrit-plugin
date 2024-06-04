@@ -5,7 +5,7 @@ import com.google.gerrit.server.account.AccountCache;
 import com.google.gerrit.server.util.ManualRequestContext;
 import com.google.inject.Inject;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandler;
+import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandlerProvider;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import com.googlesource.gerrit.plugins.chatgpt.mode.stateful.client.api.chatgpt.ChatGptAssistant;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
@@ -28,7 +28,7 @@ public class GerritClientPatchSetStateful extends GerritClientPatchSet implement
             Pattern.MULTILINE);
 
     private final GitRepoFiles gitRepoFiles;
-    private final PluginDataHandler pluginDataHandler;
+    private final PluginDataHandlerProvider pluginDataHandlerProvider;
 
     private GerritChange change;
 
@@ -38,15 +38,15 @@ public class GerritClientPatchSetStateful extends GerritClientPatchSet implement
             Configuration config,
             AccountCache accountCache,
             GitRepoFiles gitRepoFiles,
-            PluginDataHandler pluginDataHandler) {
+            PluginDataHandlerProvider pluginDataHandlerProvider) {
         super(config, accountCache);
         this.gitRepoFiles = gitRepoFiles;
-        this.pluginDataHandler = pluginDataHandler;
+        this.pluginDataHandlerProvider = pluginDataHandlerProvider;
     }
 
     public String getPatchSet(ChangeSetData changeSetData, GerritChange change) throws Exception {
         this.change = change;
-        ChatGptAssistant chatGptAssistant = new ChatGptAssistant(config, change, gitRepoFiles, pluginDataHandler);
+        ChatGptAssistant chatGptAssistant = new ChatGptAssistant(config, change, gitRepoFiles, pluginDataHandlerProvider);
         chatGptAssistant.setupAssistant();
 
         String formattedPatch = getPatchFromGerrit();

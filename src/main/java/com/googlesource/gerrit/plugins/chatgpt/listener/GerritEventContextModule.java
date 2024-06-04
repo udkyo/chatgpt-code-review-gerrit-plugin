@@ -2,8 +2,11 @@ package com.googlesource.gerrit.plugins.chatgpt.listener;
 
 import com.google.gerrit.extensions.config.FactoryModule;
 import com.google.gerrit.server.events.Event;
+import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.data.ChangeSetDataProvider;
+import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandler;
+import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandlerProvider;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import com.googlesource.gerrit.plugins.chatgpt.mode.interfaces.client.api.chatgpt.IChatGptClient;
@@ -32,6 +35,7 @@ public class GerritEventContextModule extends FactoryModule {
         bind(Configuration.class).toInstance(config);
         bind(GerritChange.class).toInstance(new GerritChange(event));
         bind(ChangeSetData.class).toProvider(ChangeSetDataProvider.class).in(SINGLETON);
+        bind(PluginDataHandler.class).toProvider(PluginDataHandlerProvider.class).in(Singleton.class);
     }
 
     private Class<? extends IChatGptClient> getChatGptMode() {

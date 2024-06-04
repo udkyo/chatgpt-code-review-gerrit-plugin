@@ -2,6 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.mode.stateful.client.api.chatgpt
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandler;
+import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandlerProvider;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.ClientBase;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptToolCall;
 import com.googlesource.gerrit.plugins.chatgpt.mode.stateful.client.api.UriResourceLocatorStateful;
@@ -32,10 +33,10 @@ public class ChatGptRun extends ClientBase {
     private ChatGptResponse runResponse;
     private ChatGptListResponse stepResponse;
 
-    public ChatGptRun(String threadId, Configuration config, PluginDataHandler pluginDataHandler) {
+    public ChatGptRun(String threadId, Configuration config, PluginDataHandlerProvider pluginDataHandlerProvider) {
         super(config);
         this.threadId = threadId;
-        this.pluginDataHandler = pluginDataHandler;
+        this.pluginDataHandler = pluginDataHandlerProvider.get();
     }
 
     public void createRun() {

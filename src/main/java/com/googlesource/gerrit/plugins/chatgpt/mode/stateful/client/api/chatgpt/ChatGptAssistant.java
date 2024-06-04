@@ -2,6 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt.mode.stateful.client.api.chatgpt
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandler;
+import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandlerProvider;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.ClientBase;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.chatgpt.ChatGptParameters;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.chatgpt.ChatGptTools;
@@ -30,12 +31,16 @@ public class ChatGptAssistant extends ClientBase {
     private final GitRepoFiles gitRepoFiles;
     private final PluginDataHandler pluginDataHandler;
 
-    public ChatGptAssistant(Configuration config, GerritChange change, GitRepoFiles gitRepoFiles,
-                            PluginDataHandler pluginDataHandler) {
+    public ChatGptAssistant(
+            Configuration config,
+            GerritChange change,
+            GitRepoFiles gitRepoFiles,
+            PluginDataHandlerProvider pluginDataHandlerProvider
+    ) {
         super(config);
         this.change = change;
         this.gitRepoFiles = gitRepoFiles;
-        this.pluginDataHandler = pluginDataHandler;
+        this.pluginDataHandler = pluginDataHandlerProvider.get();
     }
 
     public void setupAssistant() {

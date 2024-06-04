@@ -29,13 +29,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
-import com.googlesource.gerrit.plugins.chatgpt.config.ConfigCreator;
-import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandler;
-import com.googlesource.gerrit.plugins.chatgpt.listener.EventHandlerTask;
-import com.googlesource.gerrit.plugins.chatgpt.listener.GerritEventContextModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Providers;
+import com.googlesource.gerrit.plugins.chatgpt.config.ConfigCreator;
+import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandlerProvider;
+import com.googlesource.gerrit.plugins.chatgpt.listener.EventHandlerTask;
 import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClient;
@@ -102,7 +101,7 @@ public class ChatGptReviewTestBase {
     protected GitRepoFiles gitRepoFiles;
 
     @Mock
-    protected PluginDataHandler pluginDataHandler;
+    protected PluginDataHandlerProvider pluginDataHandlerProvider;
 
     @Mock
     protected OneOffRequestContext context;
@@ -278,13 +277,13 @@ public class ChatGptReviewTestBase {
         EventHandlerTask task = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
-                install(new GerritEventContextModule(config, event));
+                install(new TestGerritEventContextModule(config, event));
 
                 bind(GerritClient.class).toInstance(gerritClient);
                 bind(GitRepoFiles.class).toInstance(gitRepoFiles);
                 bind(ConfigCreator.class).toInstance(mockConfigCreator);
                 bind(PatchSetReviewer.class).toInstance(patchSetReviewer);
-                bind(PluginDataHandler.class).toInstance(pluginDataHandler);
+                bind(PluginDataHandlerProvider.class).toInstance(pluginDataHandlerProvider);
                 bind(AccountCache.class).toInstance(mockAccountCache());
             }
         }).getInstance(EventHandlerTask.class);
@@ -378,14 +377,14 @@ public class ChatGptReviewTestBase {
 
     private IChatGptClient getChatGptClient() {
         return switch (config.getGptMode()) {
-            case stateful -> new ChatGptClientStateful(pluginDataHandler);
+            case stateful -> new ChatGptClientStateful(pluginDataHandlerProvider);
             case stateless -> new ChatGptClientStateless();
         };
     }
 
     private IGerritClientPatchSet getGerritClientPatchSet() {
         return switch (config.getGptMode()) {
-            case stateful -> new GerritClientPatchSetStateful(config, accountCacheMock, gitRepoFiles, pluginDataHandler);
+            case stateful -> new GerritClientPatchSetStateful(config, accountCacheMock, gitRepoFiles, pluginDataHandlerProvider);
             case stateless -> new GerritClientPatchSetStateless(config, accountCacheMock);
         };
     }

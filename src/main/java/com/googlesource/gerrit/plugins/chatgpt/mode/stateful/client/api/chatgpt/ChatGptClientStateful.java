@@ -4,7 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandler;
+import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandlerProvider;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.chatgpt.ChatGptClient;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptResponseContent;
@@ -15,13 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class ChatGptClientStateful extends ChatGptClient implements IChatGptClient {
-    private final PluginDataHandler pluginDataHandler;
+    private final PluginDataHandlerProvider pluginDataHandlerProvider;
 
     @VisibleForTesting
     @Inject
-    public ChatGptClientStateful(PluginDataHandler pluginDataHandler) {
+    public ChatGptClientStateful(PluginDataHandlerProvider pluginDataHandlerProvider) {
         super();
-        this.pluginDataHandler = pluginDataHandler;
+        this.pluginDataHandlerProvider = pluginDataHandlerProvider;
     }
 
     public ChatGptResponseContent ask(Configuration config, ChangeSetData changeSetData, GerritChange change, String patchSet) {
@@ -33,7 +33,7 @@ public class ChatGptClientStateful extends ChatGptClient implements IChatGptClie
         String threadId = chatGptThread.createThread();
         chatGptThread.addMessage();
 
-        ChatGptRun chatGptRun = new ChatGptRun(threadId, config, pluginDataHandler);
+        ChatGptRun chatGptRun = new ChatGptRun(threadId, config, pluginDataHandlerProvider);
         chatGptRun.createRun();
         chatGptRun.pollRun();
         // Attribute `requestBody` is valued for testing purposes

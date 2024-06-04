@@ -14,8 +14,8 @@ public class PluginDataHandler {
     private final Properties configProperties = new Properties();
 
     @Inject
-    public PluginDataHandler(@com.google.gerrit.extensions.annotations.PluginData Path pluginDataDir) {
-        this.configFile = pluginDataDir.resolve("plugin.config");
+    public PluginDataHandler(Path configFilePath) {
+        this.configFile = configFilePath;
         try {
             loadOrCreateProperties();
         } catch (IOException e) {

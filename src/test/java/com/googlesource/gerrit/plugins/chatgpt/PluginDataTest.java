@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandler;
+import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandlerProvider;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,7 +37,8 @@ public class PluginDataTest {
 
     @Test
     public void testValueSetAndGet() {
-        PluginDataHandler handler = new PluginDataHandler(mockPluginDataPath);
+        PluginDataHandlerProvider provider = new PluginDataHandlerProvider(mockPluginDataPath);
+        PluginDataHandler handler = provider.get();
 
         String key = "testKey";
         String value = "testValue";
@@ -50,7 +52,8 @@ public class PluginDataTest {
 
     @Test
     public void testRemoveValue() {
-        PluginDataHandler handler = new PluginDataHandler(mockPluginDataPath);
+        PluginDataHandlerProvider provider = new PluginDataHandlerProvider(mockPluginDataPath);
+        PluginDataHandler handler = provider.get();
 
         String key = "testKey";
         String value = "testValue";
@@ -69,7 +72,8 @@ public class PluginDataTest {
         // Ensure the file doesn't exist before creating the handler
         Files.deleteIfExists(realPluginDataPath);
 
-        new PluginDataHandler(mockPluginDataPath);
+        PluginDataHandlerProvider provider = new PluginDataHandlerProvider(mockPluginDataPath);
+        provider.get();
 
         // The constructor should create the file if it doesn't exist
         assertTrue("The config file should exist after initializing the handler.", Files.exists(realPluginDataPath));
