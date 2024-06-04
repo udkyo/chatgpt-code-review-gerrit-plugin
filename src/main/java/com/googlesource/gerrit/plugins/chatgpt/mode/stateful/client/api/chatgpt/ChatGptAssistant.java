@@ -29,7 +29,7 @@ public class ChatGptAssistant extends ClientBase {
     private final ChatGptHttpClient httpClient = new ChatGptHttpClient();
     private final GerritChange change;
     private final GitRepoFiles gitRepoFiles;
-    private final PluginDataHandler pluginDataHandler;
+    private final PluginDataHandler projectDataHandler;
 
     public ChatGptAssistant(
             Configuration config,
@@ -40,16 +40,16 @@ public class ChatGptAssistant extends ClientBase {
         super(config);
         this.change = change;
         this.gitRepoFiles = gitRepoFiles;
-        this.pluginDataHandler = pluginDataHandlerProvider.get();
+        this.projectDataHandler = pluginDataHandlerProvider.getProjectScope();
     }
 
     public void setupAssistant() {
-        String assistantId = pluginDataHandler.getValue(KEY_ASSISTANT_ID);
+        String assistantId = projectDataHandler.getValue(KEY_ASSISTANT_ID);
         if (assistantId == null || config.getForceCreateAssistant()) {
             String fileId = uploadRepoFiles();
-            pluginDataHandler.setValue(KEY_FILE_ID, fileId);
+            projectDataHandler.setValue(KEY_FILE_ID, fileId);
             assistantId = createAssistant(fileId);
-            pluginDataHandler.setValue(KEY_ASSISTANT_ID, assistantId);
+            projectDataHandler.setValue(KEY_ASSISTANT_ID, assistantId);
             log.info("Project assistant created with ID: {}", assistantId);
         }
         else {

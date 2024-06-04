@@ -28,7 +28,7 @@ public class ChatGptRun extends ClientBase {
 
     private final ChatGptHttpClient httpClient = new ChatGptHttpClient();
     private final String threadId;
-    private final PluginDataHandler pluginDataHandler;
+    private final PluginDataHandler projectDataHandler;
 
     private ChatGptResponse runResponse;
     private ChatGptListResponse stepResponse;
@@ -36,7 +36,7 @@ public class ChatGptRun extends ClientBase {
     public ChatGptRun(String threadId, Configuration config, PluginDataHandlerProvider pluginDataHandlerProvider) {
         super(config);
         this.threadId = threadId;
-        this.pluginDataHandler = pluginDataHandlerProvider.get();
+        this.projectDataHandler = pluginDataHandlerProvider.getProjectScope();
     }
 
     public void createRun() {
@@ -81,7 +81,7 @@ public class ChatGptRun extends ClientBase {
         log.debug("ChatGPT Create Run request URI: {}", uri);
 
         ChatGptCreateRunRequest requestBody = ChatGptCreateRunRequest.builder()
-                .assistantId(pluginDataHandler.getValue(KEY_ASSISTANT_ID))
+                .assistantId(projectDataHandler.getValue(KEY_ASSISTANT_ID))
                 .build();
 
         return httpClient.createRequestFromJson(uri.toString(), config.getGptToken(), requestBody);

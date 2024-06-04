@@ -2,9 +2,6 @@ package com.googlesource.gerrit.plugins.chatgpt;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.gerrit.entities.Account;
-import com.google.gerrit.entities.BranchNameKey;
-import com.google.gerrit.entities.Change;
-import com.google.gerrit.entities.Project;
 import com.google.gerrit.server.account.AccountCache;
 import com.google.gerrit.server.account.AccountState;
 import com.google.gerrit.extensions.api.GerritApi;
@@ -36,7 +33,6 @@ import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandlerProvider;
 import com.googlesource.gerrit.plugins.chatgpt.listener.EventHandlerTask;
 import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClientComments;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClientFacade;
@@ -76,7 +72,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class ChatGptReviewTestBase {
+public class ChatGptReviewTestBase extends ChatGptTestBase {
     protected static final Path basePath = Paths.get("src/test/resources");
     protected static final int GERRIT_GPT_ACCOUNT_ID = 1000000;
     protected static final String GERRIT_GPT_USERNAME = "gpt";
@@ -87,9 +83,6 @@ public class ChatGptReviewTestBase {
     protected static final String GERRIT_USER_GROUP = "Test";
     protected static final String GPT_TOKEN = "tk-test";
     protected static final String GPT_DOMAIN = "http://localhost:9527";
-    protected static final Project.NameKey PROJECT_NAME = Project.NameKey.parse("myProject");
-    protected static final Change.Key CHANGE_ID = Change.Key.parse("myChangeId");
-    protected static final BranchNameKey BRANCH_NAME = BranchNameKey.create(PROJECT_NAME, "myBranchName");
     protected static final boolean GPT_STREAM_OUTPUT = true;
     protected static final long TEST_TIMESTAMP = 1699270812;
     private static  final int GPT_USER_ACCOUNT_ID = 1000000;
@@ -137,10 +130,6 @@ public class ChatGptReviewTestBase {
         initTest();
     }
 
-    protected GerritChange getGerritChange() {
-        return new GerritChange(PROJECT_NAME, BRANCH_NAME, CHANGE_ID);
-    }
-
     protected void initGlobalAndProjectConfig() {
         globalConfig = mock(PluginConfig.class);
         Answer<Object> returnDefaultArgument = invocation -> {
@@ -160,7 +149,6 @@ public class ChatGptReviewTestBase {
         when(globalConfig.getString(Mockito.eq("gptDomain"), Mockito.anyString()))
                 .thenReturn(GPT_DOMAIN);
         when(globalConfig.getString("gerritUserName")).thenReturn(GERRIT_GPT_USERNAME);
-
 
         projectConfig = mock(PluginConfig.class);
 

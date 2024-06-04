@@ -17,7 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class PluginDataTest {
+public class PluginDataTest extends ChatGptTestBase {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
@@ -29,31 +29,36 @@ public class PluginDataTest {
     @Before
     public void setUp() {
         // Setup temporary folder for tests
-        realPluginDataPath = tempFolder.getRoot().toPath().resolve("plugin.config");
+        realPluginDataPath = tempFolder.getRoot().toPath().resolve("global.data");
+        Path realProjectDataPath = tempFolder.getRoot().toPath().resolve(PROJECT_NAME + ".data");
 
         // Mock the PluginData annotation behavior
-        when(mockPluginDataPath.resolve("plugin.config")).thenReturn(realPluginDataPath);
+        when(mockPluginDataPath.resolve("global.data")).thenReturn(realPluginDataPath);
+        when(mockPluginDataPath.resolve(PROJECT_NAME + ".data")).thenReturn(realProjectDataPath);
     }
 
     @Test
     public void testValueSetAndGet() {
-        PluginDataHandlerProvider provider = new PluginDataHandlerProvider(mockPluginDataPath);
-        PluginDataHandler handler = provider.get();
+        PluginDataHandlerProvider provider = new PluginDataHandlerProvider(mockPluginDataPath, getGerritChange());
+        PluginDataHandler globalHandler = provider.getGlobalScope();
+        PluginDataHandler projectHandler = provider.getProjectScope();
 
         String key = "testKey";
         String value = "testValue";
 
         // Test set value
-        handler.setValue(key, value);
+        globalHandler.setValue(key, value);
+        projectHandler.setValue(key, value);
 
         // Test get value
-        assertEquals("The value retrieved should match the value set.", value, handler.getValue(key));
+        assertEquals("The value retrieved should match the value set.", value, globalHandler.getValue(key));
+        assertEquals("The value retrieved should match the value set.", value, projectHandler.getValue(key));
     }
 
     @Test
     public void testRemoveValue() {
-        PluginDataHandlerProvider provider = new PluginDataHandlerProvider(mockPluginDataPath);
-        PluginDataHandler handler = provider.get();
+        PluginDataHandlerProvider provider = new PluginDataHandlerProvider(mockPluginDataPath, getGerritChange());
+        PluginDataHandler handler = provider.getGlobalScope();
 
         String key = "testKey";
         String value = "testValue";
@@ -72,8 +77,8 @@ public class PluginDataTest {
         // Ensure the file doesn't exist before creating the handler
         Files.deleteIfExists(realPluginDataPath);
 
-        PluginDataHandlerProvider provider = new PluginDataHandlerProvider(mockPluginDataPath);
-        provider.get();
+        PluginDataHandlerProvider provider = new PluginDataHandlerProvider(mockPluginDataPath, getGerritChange());
+        provider.getGlobalScope();
 
         // The constructor should create the file if it doesn't exist
         assertTrue("The config file should exist after initializing the handler.", Files.exists(realPluginDataPath));
