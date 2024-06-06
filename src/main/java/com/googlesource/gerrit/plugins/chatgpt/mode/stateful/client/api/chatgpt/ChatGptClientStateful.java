@@ -24,12 +24,17 @@ public class ChatGptClientStateful extends ChatGptClient implements IChatGptClie
         this.pluginDataHandlerProvider = pluginDataHandlerProvider;
     }
 
-    public ChatGptResponseContent ask(Configuration config, ChangeSetData changeSetData, GerritChange change, String patchSet) {
+    public ChatGptResponseContent ask(
+            Configuration config,
+            ChangeSetData changeSetData,
+            GerritChange change,
+            String patchSet
+    ) {
         isCommentEvent = change.getIsCommentEvent();
         String changeId = change.getFullChangeId();
         log.info("Processing STATEFUL ChatGPT Request with changeId: {}, Patch Set: {}", changeId, patchSet);
 
-        ChatGptThread chatGptThread = new ChatGptThread(config, change, patchSet);
+        ChatGptThread chatGptThread = new ChatGptThread(config, change, patchSet, pluginDataHandlerProvider);
         String threadId = chatGptThread.createThread();
         chatGptThread.addMessage();
 
