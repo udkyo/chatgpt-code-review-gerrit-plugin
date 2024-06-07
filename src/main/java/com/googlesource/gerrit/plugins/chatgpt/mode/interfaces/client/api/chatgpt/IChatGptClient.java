@@ -6,7 +6,7 @@ import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.Cha
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 
 public interface IChatGptClient {
-    ChatGptResponseContent ask(Configuration config, ChangeSetData changeSetData, GerritChange change, String patchSet)
+    ChatGptResponseContent ask(ChangeSetData changeSetData, GerritChange change, String patchSet)
             throws Exception;
     String getRequestBody();
 }

@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.chatgpt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.ClientBase;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.*;
 
 import lombok.Getter;
@@ -14,10 +15,14 @@ import java.util.Optional;
 import static com.googlesource.gerrit.plugins.chatgpt.utils.GsonUtils.getGson;
 
 @Slf4j
-abstract public class ChatGptClient {
+abstract public class ChatGptClient extends ClientBase {
     protected boolean isCommentEvent = false;
     @Getter
     protected String requestBody;
+
+    public ChatGptClient(Configuration config) {
+        super(config);
+    }
 
     protected ChatGptResponseContent extractContent(Configuration config, String body) throws Exception {
         if (config.getGptStreamOutput() && !isCommentEvent) {

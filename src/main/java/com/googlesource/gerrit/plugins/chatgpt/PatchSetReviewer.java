@@ -142,7 +142,7 @@ public class PatchSetReviewer {
             return new ChatGptResponseContent(String.format(SPLIT_REVIEW_MSG, config.getMaxReviewLines()));
         }
 
-        return chatGptClient.ask(config, changeSetData, change, patchSet);
+        return chatGptClient.ask(changeSetData, change, patchSet);
     }
 
     private Integer getReviewScore() {

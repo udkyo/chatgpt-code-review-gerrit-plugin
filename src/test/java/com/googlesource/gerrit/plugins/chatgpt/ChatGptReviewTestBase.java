@@ -385,8 +385,8 @@ public class ChatGptReviewTestBase extends ChatGptTestBase {
 
     private IChatGptClient getChatGptClient() {
         return switch (config.getGptMode()) {
-            case stateful -> new ChatGptClientStateful(pluginDataHandlerProvider);
-            case stateless -> new ChatGptClientStateless();
+            case stateful -> new ChatGptClientStateful(config, pluginDataHandlerProvider);
+            case stateless -> new ChatGptClientStateless(config);
         };
     }
 

@@ -1,6 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.stateless.client.api.chatgpt;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.net.HttpHeaders;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.chatgpt.ChatGptClient;
@@ -32,8 +34,14 @@ public class ChatGptClientStateless extends ChatGptClient implements IChatGptCli
 
     private final HttpClientWithRetry httpClientWithRetry = new HttpClientWithRetry();
 
-    public ChatGptResponseContent ask(Configuration config, ChangeSetData changeSetData, GerritChange change,
-                                      String patchSet) throws Exception {
+    @VisibleForTesting
+    @Inject
+    public ChatGptClientStateless(Configuration config) {
+        super(config);
+    }
+
+    public ChatGptResponseContent ask(ChangeSetData changeSetData, GerritChange change, String patchSet)
+            throws Exception {
         isCommentEvent = change.getIsCommentEvent();
         String changeId = change.getFullChangeId();
         log.info("Processing STATELESS ChatGPT Request with changeId: {}, Patch Set: {}", changeId, patchSet);
