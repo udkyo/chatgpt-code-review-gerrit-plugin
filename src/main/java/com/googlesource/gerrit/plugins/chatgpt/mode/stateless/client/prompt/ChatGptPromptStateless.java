@@ -54,7 +54,7 @@ public class ChatGptPromptStateless extends ChatGptPrompt {
         String gptRequestUserPrompt = changeSetData.getGptRequestUserPrompt();
         boolean isValidRequestUserPrompt = gptRequestUserPrompt != null && !gptRequestUserPrompt.isEmpty();
         if (isCommentEvent && isValidRequestUserPrompt) {
-            log.debug("ConfigsDynamically value found: {}", gptRequestUserPrompt);
+            log.debug("Request User Prompt retrieved: {}", gptRequestUserPrompt);
             prompt.addAll(Arrays.asList(
                     DEFAULT_GPT_REQUEST_PROMPT_DIFF,
                     patchSet,

@@ -10,6 +10,7 @@ import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.gerrit.Gerr
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.CommentData;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.GerritClientData;
+import com.googlesource.gerrit.plugins.chatgpt.mode.interfaces.client.prompt.IChatGptUserPrompt;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
-public abstract class ChatGptUserPromptBase {
+public abstract class ChatGptUserPromptBase implements IChatGptUserPrompt {
     protected final GerritClientData gerritClientData;
     protected final HashMap<String, FileDiffProcessed> fileDiffsProcessed;
     protected final CommentData commentData;
@@ -42,7 +43,7 @@ public abstract class ChatGptUserPromptBase {
         messageItems = new ArrayList<>();
     }
 
-    abstract void addMessageItem(int i);
+    public abstract void addMessageItem(int i);
 
     protected ChatGptMessageItem getMessageItem(int i) {
         ChatGptMessageItem messageItem = new ChatGptMessageItem();

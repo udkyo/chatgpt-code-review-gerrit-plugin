@@ -39,7 +39,6 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
     private ReviewInput expectedResponseStreamed;
     private String expectedSystemPromptReview;
     private String promptTagReview;
-    private String promptTagComments;
     private String diffContent;
     private ReviewInput gerritPatchSetReview;
     private JsonArray prompts;
@@ -179,7 +178,7 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .withBodyFile("chatGptResponseRequests.json")));
+                        .withBodyFile("chatGptResponseRequestStateless.json")));
 
         handleEventBasedOnType(true);
         int commentPropertiesSize = gerritClient.getClientData(getGerritChange()).getCommentProperties().size();

@@ -6,6 +6,7 @@ import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.Ger
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptMessageItem;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.GerritClientData;
+import com.googlesource.gerrit.plugins.chatgpt.mode.interfaces.client.prompt.IChatGptUserPrompt;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -14,7 +15,7 @@ import static com.googlesource.gerrit.plugins.chatgpt.utils.GsonUtils.getGson;
 
 @Slf4j
 public class ChatGptUserPrompt {
-    private final ChatGptUserPromptBase chatGptUserPromptBase;
+    private final IChatGptUserPrompt chatGptUserPromptHandler;
 
     public ChatGptUserPrompt(
             Configuration config,
@@ -23,19 +24,20 @@ public class ChatGptUserPrompt {
             GerritClientData gerritClientData,
             Localizer localizer
     ) {
-        if (change.getIsCommentEvent()) {
-            chatGptUserPromptBase = new ChatGptUserPromptRequests(config, changeSetData, gerritClientData, localizer);
-        }
-        else {
-            chatGptUserPromptBase = new ChatGptUserPromptReview(config, changeSetData, gerritClientData, localizer);
-        }
+        chatGptUserPromptHandler = ChatGptUserPromptFactory.getChatGptUserPrompt(
+                config,
+                changeSetData,
+                change,
+                gerritClientData,
+                localizer
+        );
     }
 
     public String buildPrompt() {
-        for (int i = 0; i < chatGptUserPromptBase.getCommentProperties().size(); i++) {
-            chatGptUserPromptBase.addMessageItem(i);
+        for (int i = 0; i < chatGptUserPromptHandler.getCommentProperties().size(); i++) {
+            chatGptUserPromptHandler.addMessageItem(i);
         }
-        List<ChatGptMessageItem> messageItems = chatGptUserPromptBase.getMessageItems();
+        List<ChatGptMessageItem> messageItems = chatGptUserPromptHandler.getMessageItems();
         return messageItems.isEmpty() ? "" : getGson().toJson(messageItems);
     }
 }

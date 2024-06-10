@@ -7,7 +7,6 @@ import com.google.gerrit.extensions.api.changes.ReviewInput;
 import com.google.gerrit.extensions.common.DiffInfo;
 import com.google.gerrit.extensions.restapi.BinaryResult;
 import com.google.gerrit.extensions.restapi.RestApiException;
-import com.google.gson.JsonObject;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptResponseContent;
 import com.googlesource.gerrit.plugins.chatgpt.mode.stateful.client.api.UriResourceLocatorStateful;
 import com.googlesource.gerrit.plugins.chatgpt.mode.stateful.client.prompt.ChatGptPromptStateful;
@@ -44,10 +43,8 @@ public class ChatGptReviewStatefulTest extends ChatGptReviewTestBase {
     private static final String CHAT_GPT_RUN_ID = "run_TEST_RUN_ID";
 
     private String formattedPatchContent;
-    private String reviewMessageCode;
-    private String reviewMessageCommitMessage;
     private ChatGptPromptStateful chatGptPromptStateful;
-    private JsonObject threadMessage;
+    private String requestContent;
 
     public ChatGptReviewStatefulTest() {
         MockitoAnnotations.openMocks(this);
@@ -151,41 +148,58 @@ public class ChatGptReviewStatefulTest extends ChatGptReviewTestBase {
     protected void initComparisonContent() {
         super.initComparisonContent();
 
-        reviewMessageCode = getReviewMessage(0);
-        reviewMessageCommitMessage = getReviewMessage(1);
+        promptTagComments = readTestFile("__files/stateful/chatGptPromptTagRequests.json");
     }
 
     protected ArgumentCaptor<ReviewInput> testRequestSent() throws RestApiException {
         ArgumentCaptor<ReviewInput> reviewInputCaptor = super.testRequestSent();
-        threadMessage = gptRequestBody.getAsJsonObject();
+        requestContent = gptRequestBody.getAsJsonObject().get("content").getAsString();
         return reviewInputCaptor;
     }
 
-    private String getReviewMessage(int tollCallId) {
-        ChatGptListResponse reviewResponse = getGson().fromJson(readTestFile(
-                "__files/chatGptRunStepsResponse.json"
-        ), ChatGptListResponse.class);
-        String reviewJsonResponse = reviewResponse.getData().get(0).getStepDetails().getToolCalls().get(tollCallId)
+    private String getReviewMessage(String responseFile, int tollCallId) {
+        ChatGptListResponse responseContent = getGson().fromJson(readTestFile(responseFile), ChatGptListResponse.class);
+        String reviewJsonResponse = responseContent.getData().get(0).getStepDetails().getToolCalls().get(tollCallId)
                 .getFunction().getArguments();
         return getGson().fromJson(reviewJsonResponse, ChatGptResponseContent.class).getReplies().get(0).getReply();
     }
 
+    private String getCapturedMessage(ArgumentCaptor<ReviewInput> captor, String filename) {
+        return captor.getAllValues().get(0).comments.get(filename).get(0).message;
+    }
+
     @Test
     public void patchSetCreatedOrUpdated() throws Exception {
+        String reviewMessageCode = getReviewMessage( "__files/chatGptRunStepsResponse.json", 0);
+        String reviewMessageCommitMessage = getReviewMessage( "__files/chatGptRunStepsResponse.json", 1);
+
         String reviewUserPrompt = chatGptPromptStateful.getDefaultGptThreadReviewMessage(formattedPatchContent);
 
         handleEventBasedOnType(false);
 
         ArgumentCaptor<ReviewInput> captor = testRequestSent();
-        String userPrompt = threadMessage.get("content").getAsString();
-        Assert.assertEquals(reviewUserPrompt, userPrompt);
-        Assert.assertEquals(
-                reviewMessageCode,
-                captor.getAllValues().get(0).comments.get("test_file_1.py").get(0).message
-        );
-        Assert.assertEquals(
-                reviewMessageCommitMessage,
-                captor.getAllValues().get(0).comments.get(GERRIT_PATCH_SET_FILENAME).get(0).message
-        );
+        Assert.assertEquals(reviewUserPrompt, requestContent);
+        Assert.assertEquals(reviewMessageCode, getCapturedMessage(captor, "test_file_1.py"));
+        Assert.assertEquals(reviewMessageCommitMessage, getCapturedMessage(captor, GERRIT_PATCH_SET_FILENAME));
+    }
+
+    @Test
+    public void gptMentionedInComment() throws RestApiException {
+        String reviewMessageCommitMessage = getReviewMessage("__files/chatGptResponseRequestStateful.json", 0);
+
+        chatGptPromptStateful.setCommentEvent(true);
+        // Mock the behavior of the ChatGPT retrieve-run-steps request
+        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo(URI.create(config.getGptDomain()
+                        + UriResourceLocatorStateful.runStepsUri(CHAT_GPT_THREAD_ID, CHAT_GPT_RUN_ID)).getPath()))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(HTTP_OK)
+                        .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
+                        .withBodyFile("chatGptResponseRequestStateful.json")));
+
+        handleEventBasedOnType(true);
+
+        ArgumentCaptor<ReviewInput> captor = testRequestSent();
+        Assert.assertEquals(promptTagComments, requestContent);
+        Assert.assertEquals(reviewMessageCommitMessage, getCapturedMessage(captor, GERRIT_PATCH_SET_FILENAME));
     }
 }

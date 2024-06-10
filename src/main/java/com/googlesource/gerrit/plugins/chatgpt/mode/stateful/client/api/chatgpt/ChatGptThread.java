@@ -5,6 +5,7 @@ import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandler;
 import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandlerProvider;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptRequestMessage;
+import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import com.googlesource.gerrit.plugins.chatgpt.mode.stateful.client.api.UriResourceLocatorStateful;
 import com.googlesource.gerrit.plugins.chatgpt.mode.stateful.client.prompt.ChatGptPromptStateful;
 import com.googlesource.gerrit.plugins.chatgpt.mode.stateful.model.api.chatgpt.*;
@@ -21,6 +22,7 @@ public class ChatGptThread {
 
     private final ChatGptHttpClient httpClient = new ChatGptHttpClient();
     private final Configuration config;
+    private final ChangeSetData changeSetData;
     private final GerritChange change;
     private final String patchSet;
     private final PluginDataHandler changeDataHandler;
@@ -30,11 +32,13 @@ public class ChatGptThread {
 
     public ChatGptThread(
             Configuration config,
+            ChangeSetData changeSetData,
             GerritChange change,
             String patchSet,
             PluginDataHandlerProvider pluginDataHandlerProvider
     ) {
         this.config = config;
+        this.changeSetData = changeSetData;
         this.change = change;
         this.patchSet = patchSet;
         this.changeDataHandler = pluginDataHandlerProvider.getChangeScope();
@@ -79,7 +83,7 @@ public class ChatGptThread {
     private Request addMessageRequest() {
         URI uri = URI.create(config.getGptDomain() + UriResourceLocatorStateful.threadMessagesUri(threadId));
         log.debug("ChatGPT Add Message request URI: {}", uri);
-        ChatGptPromptStateful chatGptPromptStateful = new ChatGptPromptStateful(config, change);
+        ChatGptPromptStateful chatGptPromptStateful = new ChatGptPromptStateful(config, changeSetData, change);
         addMessageRequestBody = ChatGptRequestMessage.builder()
                 .role("user")
                 .content(chatGptPromptStateful.getDefaultGptThreadReviewMessage(patchSet))

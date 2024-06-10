@@ -124,6 +124,7 @@ public class ChatGptReviewTestBase extends ChatGptTestBase {
     protected PatchSetReviewer patchSetReviewer;
     protected ConfigCreator mockConfigCreator;
     protected JsonObject gptRequestBody;
+    protected String promptTagComments;
 
     @Before
     public void before() throws RestApiException {

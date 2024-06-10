@@ -12,6 +12,9 @@ import java.util.List;
 
 @Slf4j
 public class ChatGptUserPromptRequests extends ChatGptUserPromptBase {
+    protected ChatGptMessageItem messageItem;
+    protected List<ChatGptRequestMessage> messageHistories;
+
     public ChatGptUserPromptRequests(
             Configuration config,
             ChangeSetData changeSetData,
@@ -29,11 +32,10 @@ public class ChatGptUserPromptRequests extends ChatGptUserPromptBase {
     }
 
     protected ChatGptMessageItem getMessageItem(int i) {
-        ChatGptMessageItem messageItem = super.getMessageItem(i);
-        List<ChatGptRequestMessage> messageHistories = gptMessageHistory.retrieveHistory(commentProperties.get(i));
+        messageItem = super.getMessageItem(i);
+        messageHistories = gptMessageHistory.retrieveHistory(commentProperties.get(i));
         ChatGptRequestMessage request = messageHistories.remove(messageHistories.size() -1);
         messageItem.setRequest(request.getContent());
-        setHistories(messageItem, messageHistories);
 
         return messageItem;
     }
