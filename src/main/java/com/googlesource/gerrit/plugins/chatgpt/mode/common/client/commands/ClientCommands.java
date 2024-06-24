@@ -127,7 +127,6 @@ public class ClientCommands extends ClientBase {
             else if (command == COMMAND_SET.CONFIGURE) {
                 if (config.getEnableMessageDebugging()) {
                     changeSetData.setHideChatGptReview(true);
-                    changeSetData.setForceDisplaySystemMessage(true);
                     dynamicConfiguration.updateConfiguration(modifiedDynamicConfig, shouldResetDynamicConfig);
                 }
                 else {
