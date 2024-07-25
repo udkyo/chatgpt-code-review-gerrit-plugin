@@ -76,13 +76,19 @@ public class GerritClientAccount extends GerritClientBase {
         if (accountId.isEmpty()) {
             return false;
         }
+
         List<String> accountGroups = getAccountGroups(accountId.orElse(-1));
         if (accountGroups == null || accountGroups.isEmpty()) {
-            return false;
+            // disable if the user isn't in any groups, and enabledGroups
+            // is non-empty (default = ['ALL'])
+            return !enabledGroups.equals(List.of("ALL"));
         }
-        return !enabledGroups.contains(Configuration.ENABLED_GROUPS_ALL)
-                && enabledGroups.stream().noneMatch(accountGroups::contains)
-                || disabledGroups.stream().anyMatch(accountGroups::contains);
+
+        boolean inEnabledGroup = enabledGroups.contains(Configuration.ENABLED_GROUPS_ALL)
+                                 || enabledGroups.stream().anyMatch(accountGroups::contains);
+        boolean inDisabledGroup = disabledGroups.stream().anyMatch(accountGroups::contains);
+
+        return !inEnabledGroup || inDisabledGroup;
     }
 
 }
