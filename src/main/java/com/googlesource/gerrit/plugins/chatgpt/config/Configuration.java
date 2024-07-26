@@ -42,8 +42,11 @@ public class Configuration {
     private static final String DEFAULT_ENABLED_TOPIC_FILTER = ENABLED_TOPICS_ALL;
     private static final String DEFAULT_ENABLED_PROJECTS = "";
     private static final String DEFAULT_ENABLED_FILE_EXTENSIONS = String.join(",", new String[]{
-            ".bat"
+            ".bat",
             ".c",
+            ".cmake",
+            ".cmd",
+            ".conf",
             ".cpp",
             ".cs",
             ".css",
@@ -51,14 +54,20 @@ public class Configuration {
             ".go",
             ".h",
             ".html",
+            ".in",
+            ".ini",
             ".java",
             ".jl",
             ".js",
+            ".json",
+            ".jsonc",
             ".kt",
             ".lua",
+            ".md",
             ".php",
             ".pl",
             ".pm",
+            ".ps1",
             ".py",
             ".r",
             ".rb",
@@ -66,8 +75,12 @@ public class Configuration {
             ".scala",
             ".swift",
             ".sh",
+            ".tf",
             ".ts",
+            ".txt",
             ".vb",
+            ".yaml",
+            ".yml",
     });
     private static final boolean DEFAULT_PROJECT_ENABLE = false;
     private static final int DEFAULT_MAX_REVIEW_LINES = 1000;
