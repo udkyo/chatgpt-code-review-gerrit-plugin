@@ -1,6 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.interfaces.mode.common.client.prompt.IChatGptUserPrompt;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptMessageItem;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
@@ -13,23 +15,29 @@ import static com.googlesource.gerrit.plugins.chatgpt.utils.GsonUtils.getGson;
 
 @Slf4j
 public class ChatGptUserPrompt {
-    private final ChatGptUserPromptBase chatGptUserPromptBase;
+    private final IChatGptUserPrompt chatGptUserPromptHandler;
 
-    public ChatGptUserPrompt(Configuration config, ChangeSetData changeSetData, GerritChange change, GerritClientData gerritClientData) {
-        if (change.getIsCommentEvent()) {
-            chatGptUserPromptBase = new ChatGptUserPromptRequests(config, changeSetData, change, gerritClientData);
-        }
-        else {
-            chatGptUserPromptBase = new ChatGptUserPromptReview(config, changeSetData, change, gerritClientData);
-        }
+    public ChatGptUserPrompt(
+            Configuration config,
+            ChangeSetData changeSetData,
+            GerritChange change,
+            GerritClientData gerritClientData,
+            Localizer localizer
+    ) {
+        chatGptUserPromptHandler = ChatGptUserPromptFactory.getChatGptUserPrompt(
+                config,
+                changeSetData,
+                change,
+                gerritClientData,
+                localizer
+        );
     }
 
     public String buildPrompt() {
-        for (int i = 0; i < chatGptUserPromptBase.getCommentProperties().size(); i++) {
-            chatGptUserPromptBase.addMessageItem(i);
+        for (int i = 0; i < chatGptUserPromptHandler.getCommentProperties().size(); i++) {
+            chatGptUserPromptHandler.addMessageItem(i);
         }
-        List<ChatGptMessageItem> messageItems = chatGptUserPromptBase.getMessageItems();
+        List<ChatGptMessageItem> messageItems = chatGptUserPromptHandler.getMessageItems();
         return messageItems.isEmpty() ? "" : getGson().toJson(messageItems);
     }
-
 }

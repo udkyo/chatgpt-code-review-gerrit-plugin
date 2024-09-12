@@ -10,5 +10,4 @@ public class TimeUtils {
         LocalDateTime updatedDateTime = LocalDateTime.parse(updatedString, formatter);
         return updatedDateTime.toInstant(ZoneOffset.UTC).getEpochSecond();
     }
-
 }

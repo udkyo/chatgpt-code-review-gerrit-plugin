@@ -1,7 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
+import com.googlesource.gerrit.plugins.chatgpt.interfaces.mode.common.client.prompt.IChatGptUserPrompt;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.patch.code.InlineCode;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.patch.diff.FileDiffProcessed;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptMessageItem;
@@ -18,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @Slf4j
-public abstract class ChatGptUserPromptBase {
+public abstract class ChatGptUserPromptBase implements IChatGptUserPrompt {
     protected final GerritClientData gerritClientData;
     protected final HashMap<String, FileDiffProcessed> fileDiffsProcessed;
     protected final CommentData commentData;
@@ -29,15 +30,20 @@ public abstract class ChatGptUserPromptBase {
     @Getter
     protected List<GerritComment> commentProperties;
 
-    public ChatGptUserPromptBase(Configuration config, ChangeSetData changeSetData, GerritChange change, GerritClientData gerritClientData) {
+    public ChatGptUserPromptBase(
+            Configuration config,
+            ChangeSetData changeSetData,
+            GerritClientData gerritClientData,
+            Localizer localizer
+    ) {
         this.gerritClientData = gerritClientData;
         fileDiffsProcessed = gerritClientData.getFileDiffsProcessed();
         commentData = gerritClientData.getCommentData();
-        gptMessageHistory = new ChatGptHistory(config, changeSetData, change, gerritClientData);
+        gptMessageHistory = new ChatGptHistory(config, changeSetData, gerritClientData, localizer);
         messageItems = new ArrayList<>();
     }
 
-    abstract void addMessageItem(int i);
+    public abstract void addMessageItem(int i);
 
     protected ChatGptMessageItem getMessageItem(int i) {
         ChatGptMessageItem messageItem = new ChatGptMessageItem();
@@ -57,10 +63,9 @@ public abstract class ChatGptUserPromptBase {
         return messageItem;
     }
 
-    protected void setHistories(ChatGptMessageItem messageItem, List<ChatGptRequestMessage> messageHistories) {
-        if (!messageHistories.isEmpty()) {
-            messageItem.setHistory(messageHistories);
+    protected void setHistory(ChatGptMessageItem messageItem, List<ChatGptRequestMessage> messageHistory) {
+        if (!messageHistory.isEmpty()) {
+            messageItem.setHistory(messageHistory);
         }
     }
-
 }

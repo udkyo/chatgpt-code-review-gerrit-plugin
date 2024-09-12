@@ -12,7 +12,7 @@ import static com.googlesource.gerrit.plugins.chatgpt.utils.GsonUtils.getGson;
 public class ChatGptTools {
     public static ChatGptTool retrieveFormatRepliesTool() {
         ChatGptTool tools;
-        try (InputStreamReader reader = FileUtils.getInputStreamReader("Config/formatRepliesTool.json")) {
+        try (InputStreamReader reader = FileUtils.getInputStreamReader("config/formatRepliesTool.json")) {
             tools = getGson().fromJson(reader, ChatGptTool.class);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load data for ChatGPT `format_replies` tool", e);
@@ -22,12 +22,11 @@ public class ChatGptTools {
 
     public static ChatGptToolChoice retrieveFormatRepliesToolChoice() {
         ChatGptToolChoice toolChoice;
-        try (InputStreamReader reader = FileUtils.getInputStreamReader("Config/formatRepliesToolChoice.json")) {
+        try (InputStreamReader reader = FileUtils.getInputStreamReader("config/formatRepliesToolChoice.json")) {
             toolChoice = getGson().fromJson(reader, ChatGptToolChoice.class);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load data for ChatGPT `format_replies` tool choice", e);
         }
         return toolChoice;
     }
-
 }

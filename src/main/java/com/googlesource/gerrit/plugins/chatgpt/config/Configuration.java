@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static com.googlesource.gerrit.plugins.chatgpt.settings.Settings.MODES;
+import static com.googlesource.gerrit.plugins.chatgpt.settings.Settings.Modes;
 
 @Slf4j
 public class Configuration {
@@ -24,7 +24,7 @@ public class Configuration {
 
     // Default Config values
     public static final String OPENAI_DOMAIN = "https://api.openai.com";
-    public static final String DEFAULT_GPT_MODEL = "gpt-3.5-turbo";
+    public static final String DEFAULT_GPT_MODEL = "gpt-4o";
     public static final double DEFAULT_GPT_REVIEW_TEMPERATURE = 0.2;
     public static final double DEFAULT_GPT_COMMENT_TEMPERATURE = 1.0;
 
@@ -96,6 +96,8 @@ public class Configuration {
     private static final boolean DEFAULT_PATCH_SET_COMMENTS_AS_RESOLVED = false;
     private static final boolean DEFAULT_IGNORE_OUTDATED_INLINE_COMMENTS = false;
     private static final boolean DEFAULT_IGNORE_RESOLVED_CHAT_GPT_COMMENTS = true;
+    private static final boolean DEFAULT_FORCE_CREATE_ASSISTANT = false;
+    private static final boolean DEFAULT_ENABLE_MESSAGE_DEBUGGING = false;
 
     // Config setting keys
     public static final String KEY_GPT_SYSTEM_PROMPT = "gptSystemPrompt";
@@ -135,6 +137,8 @@ public class Configuration {
     private static final String KEY_PATCH_SET_COMMENTS_AS_RESOLVED = "patchSetCommentsAsResolved";
     private static final String KEY_IGNORE_OUTDATED_INLINE_COMMENTS = "ignoreOutdatedInlineComments";
     private static final String KEY_IGNORE_RESOLVED_CHAT_GPT_COMMENTS = "ignoreResolvedChatGptComments";
+    private static final String KEY_FORCE_CREATE_ASSISTANT = "forceCreateAssistant";
+    private static final String KEY_ENABLE_MESSAGE_DEBUGGING = "enableMessageDebugging";
 
     private final OneOffRequestContext context;
     @Getter
@@ -182,10 +186,10 @@ public class Configuration {
         return getBoolean(KEY_REVIEW_PATCH_SET, DEFAULT_REVIEW_PATCH_SET);
     }
 
-    public MODES getGptMode() {
+    public Modes getGptMode() {
         String mode = getString(KEY_GPT_MODE, DEFAULT_GPT_MODE);
         try {
-            return Enum.valueOf(MODES.class, mode);
+            return Enum.valueOf(Modes.class, mode);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Illegal mode: " + mode, e);
         }
@@ -271,6 +275,10 @@ public class Configuration {
         return getDouble(KEY_FILTER_COMMENTS_RELEVANCE_THRESHOLD, DEFAULT_FILTER_COMMENTS_RELEVANCE_THRESHOLD);
     }
 
+    public Locale getLocaleDefault() {
+        return Locale.getDefault();
+    }
+
     public int getVotingMinScore() {
         return getInt(KEY_VOTING_MIN_SCORE, DEFAULT_VOTING_MIN_SCORE);
     }
@@ -289,6 +297,14 @@ public class Configuration {
 
     public boolean getIgnoreResolvedChatGptComments() {
         return getBoolean(KEY_IGNORE_RESOLVED_CHAT_GPT_COMMENTS, DEFAULT_IGNORE_RESOLVED_CHAT_GPT_COMMENTS);
+    }
+
+    public boolean getForceCreateAssistant() {
+        return getBoolean(KEY_FORCE_CREATE_ASSISTANT, DEFAULT_FORCE_CREATE_ASSISTANT);
+    }
+
+    public boolean getEnableMessageDebugging() {
+        return getBoolean(KEY_ENABLE_MESSAGE_DEBUGGING, DEFAULT_ENABLE_MESSAGE_DEBUGGING);
     }
 
     public boolean getIgnoreOutdatedInlineComments() {
@@ -341,5 +357,4 @@ public class Configuration {
         Pattern separator=Pattern.compile("\\s*,\\s*");
         return Arrays.asList(separator.split(value));
     }
-
 }

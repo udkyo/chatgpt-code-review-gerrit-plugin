@@ -17,9 +17,6 @@ import static com.googlesource.gerrit.plugins.chatgpt.utils.TextUtils.*;
 
 @Slf4j
 public class ChatGptPrompt {
-    public static final String SPACE = " ";
-    public static final String DOT = ". ";
-
     // Reply attributes
     public static final String ATTRIBUTE_ID = "id";
     public static final String ATTRIBUTE_REPLY = "reply";
@@ -38,13 +35,15 @@ public class ChatGptPrompt {
     // Prompt constants loaded from JSON file
     public static String DEFAULT_GPT_SYSTEM_PROMPT;
     public static String DEFAULT_GPT_REVIEW_PROMPT_DIRECTIVES;
-    public static String DEFAULT_GPT_REPLIES_PROMPT;
+    public static String DEFAULT_GPT_PROMPT_FORCE_JSON_FORMAT;
+    public static String DEFAULT_GPT_REPLIES_PROMPT_SPECS;
     public static String DEFAULT_GPT_REPLIES_PROMPT_INLINE;
     public static String DEFAULT_GPT_REPLIES_PROMPT_ENFORCE_RESPONSE_CHECK;
     public static String DEFAULT_GPT_REQUEST_PROMPT_DIFF;
     public static String DEFAULT_GPT_REQUEST_PROMPT_REQUESTS;
     public static String DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES;
     public static String DEFAULT_GPT_RELEVANCE_RULES;
+    public static String DEFAULT_GPT_HOW_TO_FIND_COMMIT_MESSAGE;
     public static Map<String, String> DEFAULT_GPT_REPLIES_ATTRIBUTES;
 
     protected final Configuration config;
@@ -66,13 +65,20 @@ public class ChatGptPrompt {
     }
 
     public static String getCommentRequestUserPrompt(int commentPropertiesSize) {
-        return buildFieldSpecifications(REQUEST_REPLY_ATTRIBUTES) + SPACE +
-                DEFAULT_GPT_REPLIES_PROMPT_INLINE + SPACE +
-                String.format(DEFAULT_GPT_REPLIES_PROMPT_ENFORCE_RESPONSE_CHECK, commentPropertiesSize);
+        return joinWithSpace(new ArrayList<>(List.of(
+                DEFAULT_GPT_PROMPT_FORCE_JSON_FORMAT,
+                buildFieldSpecifications(REQUEST_REPLY_ATTRIBUTES),
+                DEFAULT_GPT_REPLIES_PROMPT_INLINE,
+                String.format(DEFAULT_GPT_REPLIES_PROMPT_ENFORCE_RESPONSE_CHECK, commentPropertiesSize)
+        )));
+    }
+
+    public static String getReviewPromptCommitMessages() {
+        return String.format(DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES, DEFAULT_GPT_HOW_TO_FIND_COMMIT_MESSAGE);
     }
 
     protected void loadPrompts(String promptFilename) {
-        String promptFile = String.format("Config/%s.json", promptFilename);
+        String promptFile = String.format("config/%s.json", promptFilename);
         Class<? extends ChatGptPrompt> me = this.getClass();
         try (InputStreamReader reader = FileUtils.getInputStreamReader(promptFile)) {
             Map<String, Object> values = getGson().fromJson(reader, new TypeToken<Map<String, Object>>(){}.getType());
@@ -107,7 +113,7 @@ public class ChatGptPrompt {
                 .map(entry -> entry.getKey() + SPACE + entry.getValue())
                 .collect(Collectors.toList());
 
-        return String.format(DEFAULT_GPT_REPLIES_PROMPT,
+        return String.format(DEFAULT_GPT_REPLIES_PROMPT_SPECS,
                 joinWithComma(attributes.keySet()),
                 joinWithSemicolon(fieldDescription)
         );
@@ -122,10 +128,8 @@ public class ChatGptPrompt {
             attributes.remove(ATTRIBUTE_SCORE);
         }
         updateRelevanceDescription();
-        return buildFieldSpecifications(attributes) + SPACE +
-                DEFAULT_GPT_REPLIES_PROMPT_INLINE;
+        return buildFieldSpecifications(attributes) + SPACE + DEFAULT_GPT_REPLIES_PROMPT_INLINE;
     }
-
 
     private void updateScoreDescription() {
         String scoreDescription = DEFAULT_GPT_REPLIES_ATTRIBUTES.get(ATTRIBUTE_SCORE);
@@ -144,5 +148,4 @@ public class ChatGptPrompt {
             DEFAULT_GPT_REPLIES_ATTRIBUTES.put(ATTRIBUTE_RELEVANCE, relevanceDescription);
         }
     }
-
 }

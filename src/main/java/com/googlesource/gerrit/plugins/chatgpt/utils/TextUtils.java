@@ -3,10 +3,7 @@ package com.googlesource.gerrit.plugins.chatgpt.utils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -17,9 +14,11 @@ public class TextUtils extends StringUtils {
     public static final String CODE_DELIMITER = "```";
     public static final String CODE_DELIMITER_BEGIN ="\n\n" + CODE_DELIMITER + "\n";
     public static final String CODE_DELIMITER_END ="\n" + CODE_DELIMITER + "\n";
-
-    private static final String COMMA = ", ";
-    private static final String SEMICOLON = "; ";
+    public static final String SPACE = " ";
+    public static final String DOT = ".";
+    public static final String COMMA_SPACE = ", ";
+    public static final String COLON_SPACE = ": ";
+    public static final String SEMICOLON_SPACE = "; ";
 
     public static String parseOutOfDelimiters(String body, String splitDelim, Function<String, String> processMessage,
                                               String leftDelimReplacement, String rightDelimReplacement) {
@@ -46,22 +45,34 @@ public class TextUtils extends StringUtils {
         return String.join("\n", components);
     }
 
+    public static String joinWithDoubleNewLine(List<String> components) {
+        return String.join("\n\n", components);
+    }
+
+    public static String joinWithSpace(List<String> components) {
+        return String.join(SPACE, components);
+    }
+
     public static String joinWithComma(Set<String> components) {
-        return String.join(COMMA, components);
+        return String.join(COMMA_SPACE, components);
     }
 
     public static String joinWithSemicolon(List<String> components) {
-        return String.join(SEMICOLON, components);
+        return String.join(SEMICOLON_SPACE, components);
     }
 
-    public static List<String> getNumberedList(List<String> components) {
+    public static List<String> getNumberedList(List<String> components, String prefix, String postfix) {
         return IntStream.range(0, components.size())
-                .mapToObj(i -> (i + 1) + ". " + components.get(i))
+                .mapToObj(i -> Optional.ofNullable(prefix).orElse("") +
+                        (i + 1) +
+                        Optional.ofNullable(postfix).orElse(". ") +
+                        components.get(i)
+                )
                 .collect(Collectors.toList());
     }
 
-    public static String getNumberedListString(List<String> components) {
-        return joinWithSemicolon(getNumberedList(components));
+    public static String getNumberedListString(List<String> components, String prefix, String postfix) {
+        return joinWithSemicolon(getNumberedList(components, prefix, postfix));
     }
 
     public static String prettyStringifyObject(Object object) {
@@ -77,4 +88,11 @@ public class TextUtils extends StringUtils {
         return joinWithNewLine(lines);
     }
 
+    public static String prettyStringifyMap(Map<String, String> map) {
+        return joinWithNewLine(
+                map.entrySet().stream()
+                        .map(entry -> entry.getKey() + ": " + entry.getValue())
+                        .collect(Collectors.toList())
+        );
+    }
 }

@@ -33,7 +33,7 @@ public class ChatGptFiles extends ClientBase {
     }
 
     private Request createUploadFileRequest(Path repoPath) {
-        URI uri = URI.create(config.getGptDomain() + UriResourceLocatorStateful.chatCreateFilesUri());
+        URI uri = URI.create(config.getGptDomain() + UriResourceLocatorStateful.filesCreateUri());
         log.debug("ChatGPT Upload Files request URI: {}", uri);
         File file = repoPath.toFile();
         RequestBody requestBody = new MultipartBody.Builder()
@@ -43,7 +43,6 @@ public class ChatGptFiles extends ClientBase {
                         RequestBody.create(file, MediaType.parse("application/json")))
                 .build();
 
-        return httpClient.createRequest(uri.toString(), config.getGptToken(), requestBody);
+        return httpClient.createRequest(uri.toString(), config.getGptToken(), requestBody, null);
     }
-
 }

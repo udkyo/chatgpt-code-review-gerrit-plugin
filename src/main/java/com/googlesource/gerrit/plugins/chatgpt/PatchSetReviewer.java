@@ -4,10 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
 import com.googlesource.gerrit.plugins.chatgpt.data.ChangeSetDataHandler;
+import com.googlesource.gerrit.plugins.chatgpt.interfaces.mode.common.client.api.chatgpt.IChatGptClient;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClientReview;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.messages.DebugMessages;
+import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.messages.DebugCodeBlocksReview;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.patch.comment.GerritCommentRange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptReplyItem;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptResponseContent;
@@ -15,13 +17,11 @@ import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.gerrit.Gerr
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.review.ReviewBatch;
-import com.googlesource.gerrit.plugins.chatgpt.mode.interfaces.client.api.chatgpt.IChatGptClient;
+import com.googlesource.gerrit.plugins.chatgpt.settings.Settings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
-
-import static com.googlesource.gerrit.plugins.chatgpt.utils.GsonUtils.getGson;
 
 @Slf4j
 public class PatchSetReviewer {
@@ -34,6 +34,8 @@ public class PatchSetReviewer {
     private final Provider<GerritClientReview> clientReviewProvider;
     @Getter
     private final IChatGptClient chatGptClient;
+    private final Localizer localizer;
+    private final DebugCodeBlocksReview debugCodeBlocksReview;
 
     private GerritCommentRange gerritCommentRange;
     private List<ReviewBatch> reviewBatches;
@@ -46,12 +48,16 @@ public class PatchSetReviewer {
             Configuration config,
             ChangeSetData changeSetData,
             Provider<GerritClientReview> clientReviewProvider,
-            IChatGptClient chatGptClient) {
+            IChatGptClient chatGptClient,
+            Localizer localizer
+    ) {
         this.config = config;
         this.gerritClient = gerritClient;
         this.changeSetData = changeSetData;
         this.clientReviewProvider = clientReviewProvider;
         this.chatGptClient = chatGptClient;
+        this.localizer = localizer;
+        debugCodeBlocksReview = new DebugCodeBlocksReview(localizer);
     }
 
     public void review(GerritChange change) throws Exception {
@@ -60,17 +66,19 @@ public class PatchSetReviewer {
         commentProperties = gerritClient.getClientData(change).getCommentProperties();
         gerritCommentRange = new GerritCommentRange(gerritClient, change);
         String patchSet = gerritClient.getPatchSet(change);
-        if (patchSet.isEmpty()) {
+        if (patchSet.isEmpty() && config.getGptMode() == Settings.Modes.stateless) {
             log.info("No file to review has been found in the PatchSet");
             return;
         }
-        ChangeSetDataHandler.update(config, change, gerritClient, changeSetData);
+        ChangeSetDataHandler.update(config, change, gerritClient, changeSetData, localizer);
 
-        String reviewReply = getReviewReply(change, patchSet);
-        log.debug("ChatGPT response: {}", reviewReply);
+        if (changeSetData.shouldRequestChatGptReview()) {
+            ChatGptResponseContent reviewReply = getReviewReply(change, patchSet);
+            log.debug("ChatGPT response: {}", reviewReply);
 
-        retrieveReviewBatches(reviewReply, change);
-        clientReviewProvider.get().setReview(change, reviewBatches, getReviewScore());
+            retrieveReviewBatches(reviewReply, change);
+        }
+        clientReviewProvider.get().setReview(change, reviewBatches, changeSetData, getReviewScore(change));
     }
 
     private void setCommentBatchMap(ReviewBatch batchMap, Integer batchID) {
@@ -101,25 +109,28 @@ public class PatchSetReviewer {
         }
     }
 
-    private void retrieveReviewBatches(String reviewReply, GerritChange change) {
-        ChatGptResponseContent reviewJson = getGson().fromJson(reviewReply, ChatGptResponseContent.class);
-        for (ChatGptReplyItem replyItem : reviewJson.getReplies()) {
+    private void retrieveReviewBatches(ChatGptResponseContent reviewReply, GerritChange change) {
+        if (reviewReply.getMessageContent() != null && !reviewReply.getMessageContent().isEmpty()) {
+            reviewBatches.add(new ReviewBatch(reviewReply.getMessageContent()));
+            return;
+        }
+        for (ChatGptReplyItem replyItem : reviewReply.getReplies()) {
             String reply = replyItem.getReply();
             Integer score = replyItem.getScore();
             boolean isNotNegative = isNotNegativeReply(score);
             boolean isIrrelevant = isIrrelevantReply(replyItem);
             boolean isHidden = replyItem.isRepeated() || replyItem.isConflicting() || isIrrelevant || isNotNegative;
             if (!replyItem.isConflicting() && !isIrrelevant && score != null) {
+                log.debug("Score added: {}", score);
                 reviewScores.add(score);
             }
             if (changeSetData.getReplyFilterEnabled() && isHidden) {
                 continue;
             }
-            if (changeSetData.getDebugMode()) {
-                reply += DebugMessages.getDebugMessage(replyItem, isHidden);
+            if (changeSetData.getDebugReviewMode()) {
+                reply += debugCodeBlocksReview.getDebugCodeBlock(replyItem, isHidden);
             }
-            ReviewBatch batchMap = new ReviewBatch();
-            batchMap.setContent(reply);
+            ReviewBatch batchMap = new ReviewBatch(reply);
             if (change.getIsCommentEvent() && replyItem.getId() != null) {
                 setCommentBatchMap(batchMap, replyItem.getId());
             }
@@ -130,19 +141,21 @@ public class PatchSetReviewer {
         }
     }
 
-    private String getReviewReply(GerritChange change, String patchSet) throws Exception {
+    private ChatGptResponseContent getReviewReply(GerritChange change, String patchSet) throws Exception {
         List<String> patchLines = Arrays.asList(patchSet.split("\n"));
         if (patchLines.size() > config.getMaxReviewLines()) {
             log.warn("Patch set too large. Skipping review. changeId: {}", change.getFullChangeId());
-            return String.format(SPLIT_REVIEW_MSG, config.getMaxReviewLines());
+            return new ChatGptResponseContent(String.format(SPLIT_REVIEW_MSG, config.getMaxReviewLines()));
         }
 
-        return chatGptClient.ask(config, changeSetData, change, patchSet);
+        return chatGptClient.ask(changeSetData, change, patchSet);
     }
 
-    private Integer getReviewScore() {
+    private Integer getReviewScore(GerritChange change) {
         if (config.isVotingEnabled()) {
-            return reviewScores.isEmpty() ? 0 : Collections.min(reviewScores);
+            return reviewScores.isEmpty() ?
+                    (change.getIsCommentEvent() ? null : 0) :
+                    Collections.min(reviewScores);
         }
         else {
             return null;
@@ -160,5 +173,4 @@ public class PatchSetReviewer {
                 replyItem.getRelevance() != null &&
                 replyItem.getRelevance() < config.getFilterCommentsRelevanceThreshold();
     }
-
 }

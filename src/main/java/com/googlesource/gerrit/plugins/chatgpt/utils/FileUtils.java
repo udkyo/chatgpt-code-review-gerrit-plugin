@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 public class FileUtils {
@@ -26,4 +27,13 @@ public class FileUtils {
         return tempFile;
     }
 
+    public static boolean matchesExtensionList(String filename, List<String> extensions) {
+        int extIndex = filename.lastIndexOf('.');
+        return extIndex >= 1 && extensions.contains(filename.substring(extIndex));
+    }
+
+    public static String sanitizeFilename (String filename) {
+        // Replace any characters that are invalid in filenames (especially slashes) with a "+"
+        return filename.replaceAll("[^-_a-zA-Z0-9]", "+");
+    }
 }

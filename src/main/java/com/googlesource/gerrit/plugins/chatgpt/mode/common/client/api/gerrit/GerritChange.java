@@ -70,5 +70,4 @@ public class GerritChange {
         fullChangeId = String.join("~", URLEncoder.encode(projectNameKey.get(), StandardCharsets.UTF_8),
                 branchNameKey.shortName(), changeKey.get());
     }
-
 }

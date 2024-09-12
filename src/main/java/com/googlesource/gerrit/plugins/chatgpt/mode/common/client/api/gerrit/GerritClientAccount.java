@@ -90,5 +90,4 @@ public class GerritClientAccount extends GerritClientBase {
 
         return !inEnabledGroup || inDisabledGroup;
     }
-
 }

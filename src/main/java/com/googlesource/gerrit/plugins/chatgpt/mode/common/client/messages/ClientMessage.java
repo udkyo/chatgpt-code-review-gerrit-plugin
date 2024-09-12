@@ -1,8 +1,9 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.messages;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.data.PluginDataHandlerProvider;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.ClientBase;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.commands.ClientCommands;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import lombok.Getter;
@@ -18,18 +19,27 @@ public class ClientMessage extends ClientBase {
 
     private final Pattern botMentionPattern;
     private final ClientCommands clientCommands;
+    private final DebugCodeBlocksReview debugCodeBlocksReview;
+    private final DebugCodeBlocksDynamicSettings debugCodeBlocksDynamicSettings;
 
     @Getter
     private String message;
 
-    public ClientMessage(Configuration config, ChangeSetData changeSetData, GerritChange change) {
+    public ClientMessage(
+            Configuration config,
+            ChangeSetData changeSetData,
+            PluginDataHandlerProvider pluginDataHandlerProvider,
+            Localizer localizer
+    ) {
         super(config);
         botMentionPattern = getBotMentionPattern();
-        clientCommands = new ClientCommands(changeSetData, change);
+        clientCommands = new ClientCommands(config, changeSetData, pluginDataHandlerProvider, localizer);
+        debugCodeBlocksReview = new DebugCodeBlocksReview(localizer);
+        debugCodeBlocksDynamicSettings = new DebugCodeBlocksDynamicSettings(localizer);
     }
 
-    public ClientMessage(Configuration config, ChangeSetData changeSetData, GerritChange change, String message) {
-        this(config, changeSetData, change);
+    public ClientMessage(Configuration config, ChangeSetData changeSetData, String message, Localizer localizer) {
+        this(config, changeSetData, (PluginDataHandlerProvider) null, localizer);
         this.message = message;
     }
 
@@ -60,8 +70,13 @@ public class ClientMessage extends ClientBase {
         return this;
     }
 
-    public ClientMessage removeDebugMessages() {
-        message = DebugMessages.removeDebugMessages(message);
+    public ClientMessage removeDebugCodeBlocksReview() {
+        message = debugCodeBlocksReview.removeDebugCodeBlocks(message);
+        return this;
+    }
+
+    public ClientMessage removeDebugCodeBlocksDynamicSettings() {
+        message = debugCodeBlocksDynamicSettings.removeDebugCodeBlocks(message);
         return this;
     }
 
@@ -78,8 +93,8 @@ public class ClientMessage extends ClientBase {
     }
 
     private Pattern getBotMentionPattern() {
-        String emailRegex = "@" + getUserNameOrEmail() + "\\b";
-        return Pattern.compile(emailRegex);
+        String emailRegex = "^(?!>).*?(?:@" + getUserNameOrEmail() + ")\\b";
+        return Pattern.compile(emailRegex, Pattern.MULTILINE);
     }
 
     private String getUserNameOrEmail() {

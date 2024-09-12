@@ -1,6 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.data;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritClient;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt.ChatGptUserPrompt;
@@ -17,13 +18,20 @@ public class ChangeSetDataHandler {
             Configuration config,
             GerritChange change,
             GerritClient gerritClient,
-            ChangeSetData changeSetData
+            ChangeSetData changeSetData,
+            Localizer localizer
     ) {
         GerritClientData gerritClientData = gerritClient.getClientData(change);
-        ChatGptUserPrompt chatGptUserPrompt = new ChatGptUserPrompt(config, changeSetData, change, gerritClientData);
+        ChatGptUserPrompt chatGptUserPrompt = new ChatGptUserPrompt(
+                config,
+                changeSetData,
+                change,
+                gerritClientData,
+                localizer);
 
         changeSetData.setCommentPropertiesSize(gerritClientData.getCommentProperties().size());
         changeSetData.setDirectives(new HashSet<>());
+        changeSetData.setReviewSystemMessage(null);
         changeSetData.setGptRequestUserPrompt(chatGptUserPrompt.buildPrompt());
         if (config.isVotingEnabled() && !change.getIsCommentEvent()) {
             GerritPermittedVotingRange permittedVotingRange = gerritClient.getPermittedVotingRange(change);

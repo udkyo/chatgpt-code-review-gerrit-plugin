@@ -33,5 +33,4 @@ public class GerritPatchSetDetail {
         @SerializedName("_account_id")
         private int accountId;
     }
-
 }

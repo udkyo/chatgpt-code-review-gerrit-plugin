@@ -16,5 +16,4 @@ public abstract class GerritFileDiff {
         @SerializedName("content_type")
         String contentType;
     }
-
 }

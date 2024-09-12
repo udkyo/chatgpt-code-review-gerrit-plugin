@@ -2,6 +2,7 @@ package com.googlesource.gerrit.plugins.chatgpt;
 
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.google.common.net.HttpHeaders;
+import com.google.gson.JsonArray;
 import com.googlesource.gerrit.plugins.chatgpt.listener.EventHandlerTask;
 import com.google.gerrit.extensions.api.changes.FileApi;
 import com.google.gerrit.extensions.api.changes.ReviewInput;
@@ -27,6 +28,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Map;
 
+import static com.googlesource.gerrit.plugins.chatgpt.listener.EventHandlerTask.SupportedEvents;
 import static com.googlesource.gerrit.plugins.chatgpt.utils.TextUtils.joinWithNewLine;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.mockito.Mockito.mock;
@@ -38,9 +40,9 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
     private ReviewInput expectedResponseStreamed;
     private String expectedSystemPromptReview;
     private String promptTagReview;
-    private String promptTagComments;
     private String diffContent;
     private ReviewInput gerritPatchSetReview;
+    private JsonArray prompts;
 
     private ChatGptPromptStateless chatGptPromptStateless;
 
@@ -51,7 +53,6 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
                 .thenReturn(GPT_STREAM_OUTPUT);
         when(globalConfig.getBoolean(Mockito.eq("gptReviewCommitMessages"), Mockito.anyBoolean()))
                 .thenReturn(true);
-        when(globalConfig.getString("gerritUserName")).thenReturn(GERRIT_GPT_USERNAME);
 
         super.initConfig();
 
@@ -62,24 +63,21 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
     protected void setupMockRequests() throws RestApiException {
         super.setupMockRequests();
 
-        // Mock the GerritApi's revision API
-        when(changeApiMock.current()).thenReturn(revisionApiMock);
-
         // Mock the behavior of the gerritPatchSetFiles request
-        Map<String, FileInfo> files =
-            readTestFileToType(
-                "__files/gerritPatchSetFiles.json",
-                new TypeLiteral<Map<String, FileInfo>>() {}.getType());
+        Map<String, FileInfo> files = readTestFileToType(
+                "__files/stateless/gerritPatchSetFiles.json",
+                new TypeLiteral<Map<String, FileInfo>>() {}.getType()
+        );
         when(revisionApiMock.files(0)).thenReturn(files);
 
         // Mock the behavior of the gerritPatchSet diff requests
         FileApi commitMsgFileMock = mock(FileApi.class);
         when(revisionApiMock.file("/COMMIT_MSG")).thenReturn(commitMsgFileMock);
-        DiffInfo commitMsgFileDiff = readTestFileToClass("__files/gerritPatchSetDiffCommitMsg.json", DiffInfo.class);
+        DiffInfo commitMsgFileDiff = readTestFileToClass("__files/stateless/gerritPatchSetDiffCommitMsg.json", DiffInfo.class);
         when(commitMsgFileMock.diff(0)).thenReturn(commitMsgFileDiff);
         FileApi testFileMock = mock(FileApi.class);
         when(revisionApiMock.file("test_file.py")).thenReturn(testFileMock);
-        DiffInfo testFileDiff = readTestFileToClass("__files/gerritPatchSetDiffTestFile.json", DiffInfo.class);
+        DiffInfo testFileDiff = readTestFileToClass("__files/stateless/gerritPatchSetDiffTestFile.json", DiffInfo.class);
         when(testFileMock.diff(0)).thenReturn(testFileDiff);
 
         // Mock the behavior of the askGpt request
@@ -95,19 +93,26 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
         super.initComparisonContent();
 
         diffContent = readTestFile("reducePatchSet/patchSetDiffOutput.json");
-        gerritPatchSetReview = readTestFileToClass("__files/gerritPatchSetReview.json", ReviewInput.class);
-        expectedResponseStreamed = readTestFileToClass("__files/chatGptExpectedResponseStreamed.json", ReviewInput.class);
-        promptTagReview = readTestFile("__files/chatGptPromptTagReview.json");
-        promptTagComments = readTestFile("__files/chatGptPromptTagRequests.json");
+        gerritPatchSetReview = readTestFileToClass("__files/stateless/gerritPatchSetReview.json", ReviewInput.class);
+        expectedResponseStreamed = readTestFileToClass("__files/stateless/chatGptExpectedResponseStreamed.json", ReviewInput.class);
+        promptTagReview = readTestFile("__files/stateless/chatGptPromptTagReview.json");
+        promptTagComments = readTestFile("__files/stateless/chatGptPromptTagRequests.json");
         expectedSystemPromptReview = ChatGptPromptStateless.getDefaultGptReviewSystemPrompt();
+    }
+
+    protected ArgumentCaptor<ReviewInput> testRequestSent() throws RestApiException {
+        ArgumentCaptor<ReviewInput> reviewInputCaptor = super.testRequestSent();
+        prompts = gptRequestBody.get("messages").getAsJsonArray();
+        return reviewInputCaptor;
     }
 
     private String getReviewUserPrompt() {
         return joinWithNewLine(Arrays.asList(
                 ChatGptPromptStateless.DEFAULT_GPT_REVIEW_PROMPT,
                 ChatGptPromptStateless.DEFAULT_GPT_REVIEW_PROMPT_REVIEW + " " +
+                        ChatGptPromptStateless.DEFAULT_GPT_PROMPT_FORCE_JSON_FORMAT + " " +
                         chatGptPromptStateless.getPatchSetReviewUserPrompt(),
-                ChatGptPromptStateless.DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES,
+                ChatGptPromptStateless.getReviewPromptCommitMessages(),
                 ChatGptPromptStateless.DEFAULT_GPT_REVIEW_PROMPT_DIFF,
                 diffContent,
                 ChatGptPromptStateless.DEFAULT_GPT_REVIEW_PROMPT_MESSAGE_HISTORY,
@@ -120,7 +125,7 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
         String reviewUserPrompt = getReviewUserPrompt();
         chatGptPromptStateless.setCommentEvent(false);
 
-        handleEventBasedOnType(false);
+        handleEventBasedOnType(SupportedEvents.PATCH_SET_CREATED);
 
         ArgumentCaptor<ReviewInput> captor = testRequestSent();
         String systemPrompt = prompts.get(0).getAsJsonObject().get("content").getAsString();
@@ -148,7 +153,7 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
                         .withBodyFile("chatGptResponseReview.json")));
 
-        handleEventBasedOnType(false);
+        handleEventBasedOnType(SupportedEvents.PATCH_SET_CREATED);
 
         ArgumentCaptor<ReviewInput> captor = testRequestSent();
         String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
@@ -163,7 +168,7 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
         when(globalConfig.getString(Mockito.eq("disabledGroups"), Mockito.anyString()))
                 .thenReturn(GERRIT_USER_GROUP);
 
-        Assert.assertEquals(EventHandlerTask.Result.NOT_SUPPORTED, handleEventBasedOnType(false));
+        Assert.assertEquals(EventHandlerTask.Result.NOT_SUPPORTED, handleEventBasedOnType(SupportedEvents.PATCH_SET_CREATED));
     }
 
     @Test
@@ -175,21 +180,20 @@ public class ChatGptReviewStatelessTest extends ChatGptReviewTestBase {
                 .willReturn(WireMock.aResponse()
                         .withStatus(HTTP_OK)
                         .withHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.toString())
-                        .withBodyFile("chatGptResponseRequests.json")));
+                        .withBodyFile("chatGptResponseRequestStateless.json")));
 
-        handleEventBasedOnType(true);
+        handleEventBasedOnType(SupportedEvents.COMMENT_ADDED);
         int commentPropertiesSize = gerritClient.getClientData(getGerritChange()).getCommentProperties().size();
 
         String commentUserPrompt = joinWithNewLine(Arrays.asList(
                 ChatGptPromptStateless.DEFAULT_GPT_REQUEST_PROMPT_DIFF,
                 diffContent,
                 ChatGptPromptStateless.DEFAULT_GPT_REQUEST_PROMPT_REQUESTS,
-                promptTagComments,
+                readTestFile("__files/stateless/chatGptExpectedRequestMessage.json"),
                 ChatGptPromptStateless.getCommentRequestUserPrompt(commentPropertiesSize)
         ));
         testRequestSent();
         String userPrompt = prompts.get(1).getAsJsonObject().get("content").getAsString();
         Assert.assertEquals(commentUserPrompt, userPrompt);
     }
-
 }

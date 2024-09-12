@@ -86,5 +86,4 @@ public class InlineCode {
         }
         return line;
     }
-
 }

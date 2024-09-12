@@ -1,8 +1,8 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.ClientBase;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.messages.ClientMessage;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.gerrit.GerritComment;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
@@ -12,19 +12,19 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatGptComment extends ClientBase {
     protected ClientMessage commentMessage;
 
-    private final GerritChange change;
     private final ChangeSetData changeSetData;
+    private final Localizer localizer;
 
-    public ChatGptComment(Configuration config, ChangeSetData changeSetData, GerritChange change) {
+    public ChatGptComment(Configuration config, ChangeSetData changeSetData, Localizer localizer) {
         super(config);
-        this.change = change;
         this.changeSetData = changeSetData;
+        this.localizer = localizer;
     }
 
     protected String getCleanedMessage(GerritComment commentProperty) {
-        commentMessage = new ClientMessage(config, changeSetData, change, commentProperty.getMessage());
+        commentMessage = new ClientMessage(config, changeSetData, commentProperty.getMessage(), localizer);
         if (isFromAssistant(commentProperty)) {
-            commentMessage.removeDebugMessages();
+            commentMessage.removeDebugCodeBlocksReview().removeDebugCodeBlocksDynamicSettings();
         }
         else {
             commentMessage.removeMentions().parseRemoveCommands();
@@ -35,5 +35,4 @@ public class ChatGptComment extends ClientBase {
     protected boolean isFromAssistant(GerritComment commentProperty) {
         return commentProperty.getAuthor().getAccountId() == changeSetData.getGptAccountId();
     }
-
 }

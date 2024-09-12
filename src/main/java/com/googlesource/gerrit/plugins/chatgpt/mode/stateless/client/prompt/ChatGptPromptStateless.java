@@ -1,7 +1,6 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.stateless.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.data.ChangeSetDataHandler;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt.ChatGptPrompt;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
 import lombok.extern.slf4j.Slf4j;
@@ -10,9 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.googlesource.gerrit.plugins.chatgpt.utils.StringUtils.concatenate;
-import static com.googlesource.gerrit.plugins.chatgpt.utils.TextUtils.getNumberedListString;
-import static com.googlesource.gerrit.plugins.chatgpt.utils.TextUtils.joinWithNewLine;
+import static com.googlesource.gerrit.plugins.chatgpt.utils.TextUtils.*;
 
 @Slf4j
 public class ChatGptPromptStateless extends ChatGptPrompt {
@@ -34,20 +31,22 @@ public class ChatGptPromptStateless extends ChatGptPrompt {
     }
 
     public static String getDefaultGptReviewSystemPrompt() {
-        return DEFAULT_GPT_SYSTEM_PROMPT + DOT +
-                DEFAULT_GPT_SYSTEM_PROMPT_INPUT_DESCRIPTION + SPACE +
-                DEFAULT_GPT_SYSTEM_PROMPT_INPUT_DESCRIPTION_REVIEW;
+        return joinWithSpace(new ArrayList<>(List.of(
+                DEFAULT_GPT_SYSTEM_PROMPT + DOT,
+                DEFAULT_GPT_SYSTEM_PROMPT_INPUT_DESCRIPTION,
+                DEFAULT_GPT_SYSTEM_PROMPT_INPUT_DESCRIPTION_REVIEW
+        )));
     }
 
     public String getGptSystemPrompt() {
         List<String> prompt = new ArrayList<>(Arrays.asList(
-                config.getString(Configuration.KEY_GPT_SYSTEM_PROMPT, DEFAULT_GPT_SYSTEM_PROMPT), DOT,
+                config.getString(Configuration.KEY_GPT_SYSTEM_PROMPT, DEFAULT_GPT_SYSTEM_PROMPT) + DOT,
                 ChatGptPromptStateless.DEFAULT_GPT_SYSTEM_PROMPT_INPUT_DESCRIPTION
         ));
         if (!isCommentEvent) {
-            prompt.addAll(Arrays.asList(SPACE, ChatGptPromptStateless.DEFAULT_GPT_SYSTEM_PROMPT_INPUT_DESCRIPTION_REVIEW));
+            prompt.add(ChatGptPromptStateless.DEFAULT_GPT_SYSTEM_PROMPT_INPUT_DESCRIPTION_REVIEW);
         }
-        return concatenate(prompt);
+        return joinWithSpace(prompt);
     }
 
     public String getGptUserPrompt(ChangeSetData changeSetData, String patchSet) {
@@ -55,7 +54,7 @@ public class ChatGptPromptStateless extends ChatGptPrompt {
         String gptRequestUserPrompt = changeSetData.getGptRequestUserPrompt();
         boolean isValidRequestUserPrompt = gptRequestUserPrompt != null && !gptRequestUserPrompt.isEmpty();
         if (isCommentEvent && isValidRequestUserPrompt) {
-            log.debug("ConfigsDynamically value found: {}", gptRequestUserPrompt);
+            log.debug("Request User Prompt retrieved: {}", gptRequestUserPrompt);
             prompt.addAll(Arrays.asList(
                     DEFAULT_GPT_REQUEST_PROMPT_DIFF,
                     patchSet,
@@ -75,7 +74,7 @@ public class ChatGptPromptStateless extends ChatGptPrompt {
             }
             if (!changeSetData.getDirectives().isEmpty()) {
                 prompt.add(DEFAULT_GPT_REVIEW_PROMPT_DIRECTIVES);
-                prompt.add(getNumberedListString(new ArrayList<>(changeSetData.getDirectives())));
+                prompt.add(getNumberedListString(new ArrayList<>(changeSetData.getDirectives()), null, null));
             }
         }
         return joinWithNewLine(prompt);
@@ -83,18 +82,22 @@ public class ChatGptPromptStateless extends ChatGptPrompt {
 
     private void loadStatelessPrompts() {
         // Avoid repeated loading of prompt constants
-        if (DEFAULT_GPT_REVIEW_PROMPT == null) {
+        if (DEFAULT_GPT_SYSTEM_PROMPT_INPUT_DESCRIPTION == null) {
             loadPrompts("promptsStateless");
         }
     }
 
     private List<String> getReviewSteps() {
-        List<String> steps = new ArrayList<>(){};
-        steps.add(ChatGptPromptStateless.DEFAULT_GPT_REVIEW_PROMPT_REVIEW + SPACE + getPatchSetReviewUserPrompt());
+        List<String> steps = new ArrayList<>(List.of(
+                joinWithSpace(new ArrayList<>(List.of(
+                        DEFAULT_GPT_REVIEW_PROMPT_REVIEW,
+                        DEFAULT_GPT_PROMPT_FORCE_JSON_FORMAT,
+                        getPatchSetReviewUserPrompt()
+                )))
+        ));
         if (config.getGptReviewCommitMessages()) {
-            steps.add(DEFAULT_GPT_REVIEW_PROMPT_COMMIT_MESSAGES);
+            steps.add(getReviewPromptCommitMessages());
         }
         return steps;
     }
-
 }

@@ -41,5 +41,4 @@ public class MessageSanitizer {
 
         return message;
     }
-
 }

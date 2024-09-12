@@ -1,7 +1,7 @@
 package com.googlesource.gerrit.plugins.chatgpt.mode.common.client.prompt;
 
 import com.googlesource.gerrit.plugins.chatgpt.config.Configuration;
-import com.googlesource.gerrit.plugins.chatgpt.mode.common.client.api.gerrit.GerritChange;
+import com.googlesource.gerrit.plugins.chatgpt.localization.Localizer;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptMessageItem;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.api.chatgpt.ChatGptRequestMessage;
 import com.googlesource.gerrit.plugins.chatgpt.mode.common.model.data.ChangeSetData;
@@ -10,10 +10,20 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+import static com.googlesource.gerrit.plugins.chatgpt.settings.Settings.CHAT_GPT_ROLE_USER;
+
 @Slf4j
 public class ChatGptUserPromptRequests extends ChatGptUserPromptBase {
-    public ChatGptUserPromptRequests(Configuration config, ChangeSetData changeSetData, GerritChange change, GerritClientData gerritClientData) {
-        super(config, changeSetData, change, gerritClientData);
+    protected ChatGptMessageItem messageItem;
+    protected List<ChatGptRequestMessage> messageHistory;
+
+    public ChatGptUserPromptRequests(
+            Configuration config,
+            ChangeSetData changeSetData,
+            GerritClientData gerritClientData,
+            Localizer localizer
+    ) {
+        super(config, changeSetData, gerritClientData, localizer);
         commentProperties = commentData.getCommentProperties();
     }
 
@@ -24,13 +34,21 @@ public class ChatGptUserPromptRequests extends ChatGptUserPromptBase {
     }
 
     protected ChatGptMessageItem getMessageItem(int i) {
-        ChatGptMessageItem messageItem = super.getMessageItem(i);
-        List<ChatGptRequestMessage> messageHistories = gptMessageHistory.retrieveHistory(commentProperties.get(i));
-        ChatGptRequestMessage request = messageHistories.remove(messageHistories.size() -1);
+        messageItem = super.getMessageItem(i);
+        messageHistory = gptMessageHistory.retrieveHistory(commentProperties.get(i));
+        ChatGptRequestMessage request = extractLastUserMessageFromHistory();
         messageItem.setRequest(request.getContent());
-        setHistories(messageItem, messageHistories);
 
         return messageItem;
     }
 
+    private ChatGptRequestMessage extractLastUserMessageFromHistory() {
+        for (int i = messageHistory.size() - 1; i >= 0; i--) {
+            if (CHAT_GPT_ROLE_USER.equals(messageHistory.get(i).getRole())) {
+                return messageHistory.remove(i);
+            }
+        }
+        throw new RuntimeException("Error extracting request from message history: no user message found in " +
+                messageHistory);
+    }
 }
